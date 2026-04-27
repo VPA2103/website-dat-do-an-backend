@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -53,4 +55,14 @@ func GenerateToken(id uint, email string, role string) (string, error) {
 // ✅ Hàm dùng trong middleware để xác thực token
 func SecretKey() []byte {
 	return secretKey
+}
+
+func GenerateInvoice() string {
+    rand.Seed(time.Now().UnixNano())
+
+    return fmt.Sprintf(
+        "INV-%d-%04d",
+        time.Now().Unix(),
+        rand.Intn(10000),
+    )
 }
