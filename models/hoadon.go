@@ -8,7 +8,7 @@ type HoaDon struct {
 	NgayLap   time.Time
 	GioLap    time.Time
 	TongTien  float64
-	TrangThai uint
+	TrangThai string
 
 	MaNVOrder      *uint           `gorm:"size:10"`
 	NhanVienOrder  *NhanVien       `gorm:"foreignKey:MaNVOrder;references:MaNV"`

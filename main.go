@@ -54,7 +54,7 @@ func main() {
 		&models.LienHe{},
 		&models.Message{},
 		&models.Room{},
-		&models.PaymentEvent{},
+		&models.Payments{},
 	)
 
 	if err != nil {

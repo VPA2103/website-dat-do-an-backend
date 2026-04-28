@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test SePay Payment</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 40px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🧾 Test Thanh Toán SePay</h2>
+
+  <label>Order ID:</label><br/>
+  <input type="number" id="orderId" placeholder="Nhập Order ID" /><br/>
+
+  <button onclick="createPayment()">Thanh toán</button>
+
+  <p id="result"></p>
+
+  <script>
+    async function createPayment() {
+      const orderId = document.getElementById("orderId").value;
+
+      if (!orderId) {
+        alert("Nhập order ID trước!");
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:3000/api/payment/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            order_id: parseInt(orderId)
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.payment_url) {
+          document.getElementById("result").innerHTML =
+            `<a href="${data.payment_url}" target="_blank">👉 Đi tới thanh toán</a>`;
+
+          // auto redirect luôn nếu muốn
+          window.location.href = data.payment_url;
+        } else {
+          document.getElementById("result").innerText = "Lỗi: " + JSON.stringify(data);
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("Lỗi kết nối backend");
+      }
+    }
+  </script>
+
+</body>
+</html>

@@ -23,7 +23,7 @@ func GetOrCreateHoaDon(maBan uint) (*models.HoaDon, error) {
 				MaBan:     maBan,
 				NgayLap:   time.Now(),
 				GioLap:    time.Now(),
-				TrangThai: 0,
+				TrangThai: "pending",
 			}
 
 			if err := config.DB.Create(&hoaDon).Error; err != nil {

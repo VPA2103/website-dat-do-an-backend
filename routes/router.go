@@ -41,4 +41,5 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	GoiMonRoutes(r)
 	HoaDonRoutes(r)
 	Payment(r)
+	SePayPayment(r)
 }
