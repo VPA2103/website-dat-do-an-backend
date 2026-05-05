@@ -3,9 +3,13 @@ package controllers
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
@@ -48,12 +52,10 @@ func CreatePaymentService(orderID int64) (map[string]interface{}, error) {
 	}
 	config.DB.Create(&payment)
 
+	url := buildSePayURL(invoice, int64(order.TongTien))
+
 	return map[string]interface{}{
-		"bank_name":      "TPBank",
-		"account_number": "00005897596", // STK bạn cấu hình trong SePay
-		"account_name":   "Vo Phuc An",
-		"amount":         order.TongTien,
-		"content":        invoice,
+		"checkout_url": url,
 	}, nil
 }
 
@@ -76,54 +78,74 @@ func CreatePayment(c *gin.Context) {
 	c.JSON(200, data)
 }
 
-// func createSePayPayment(invoice string, amount int64) (string, error) {
-// 	url := "https://sepay.vn/api/payment" // ⚠️ có thể sai endpoint
+func sign(data string, secret string) string {
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write([]byte(data))
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
 
-// 	payload := map[string]interface{}{
-// 		"merchant_id":    os.Getenv("SEPAY_MERCHANT_ID"),
-// 		"amount":         amount,
-// 		"invoice_number": invoice,
-// 		"return_url":     "https://desirous-rodger-panlogistically.ngrok-free.dev/payment/success",
-// 	}
+func buildQuery(params map[string]string, keys []string) string {
+	var buf strings.Builder
 
-// 	body, _ := json.Marshal(payload)
+	for i, k := range keys {
+		buf.WriteString(k + "=" + params[k])
+		if i < len(keys)-1 {
+			buf.WriteString("&")
+		}
+	}
 
-// 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
-// 	req.Header.Set("Content-Type", "application/json")
+	return buf.String()
+}
 
-// 	// ⚠️ có thể sai header (rất nghi ngờ)
-// 	req.Header.Set("Authorization", "Bearer "+os.Getenv("SEPAY_SECRET_KEY"))
+func buildSePayURL(invoice string, amount int64) string {
+	baseURL := "https://pay-sandbox.sepay.vn/v1/checkout"
+	secret := os.Getenv("SEPAY_SECRET_KEY")
 
-// 	client := &http.Client{}
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	defer resp.Body.Close()
+	params := url.Values{}
+	params.Set("merchant", os.Getenv("SEPAY_MERCHANT_ID"))
+	params.Set("order_amount", fmt.Sprintf("%d", amount))
+	params.Set("currency", "VND")
+	params.Set("operation", "PURCHASE")
+	params.Set("order_description", "Thanh toan don hang")
+	params.Set("order_invoice_number", invoice)
+	params.Set("success_url", "https://desirous-rodger-panlogistically.ngrok-free.dev/success")
+	params.Set("cancel_url", "https://desirous-rodger-panlogistically.ngrok-free.dev/cancel")
+	params.Set("error_url", "https://desirous-rodger-panlogistically.ngrok-free.dev/error")
 
-// 	// 🔥 QUAN TRỌNG: đọc raw response
-// 	bodyBytes, _ := io.ReadAll(resp.Body)
+	keys := []string{
+		"cancel_url",
+		"currency",
+		"error_url",
+		"merchant",
+		"operation",
+		"order_amount",
+		"order_description",
+		"order_invoice_number",
+		"success_url",
+	}
+	// ✅ chuẩn hóa string
+	query := buildQuery(map[string]string{
+		"cancel_url":           params.Get("cancel_url"),
+		"currency":             "VND",
+		"error_url":            params.Get("error_url"),
+		"merchant":             params.Get("merchant"),
+		"operation":            "PURCHASE",
+		"order_amount":         params.Get("order_amount"),
+		"order_description":    params.Get("order_description"),
+		"order_invoice_number": params.Get("order_invoice_number"),
+		"success_url":          params.Get("success_url"),
+	}, keys)
 
-// 	fmt.Println("STATUS:", resp.Status)
-// 	fmt.Println("BODY:", string(bodyBytes))
+	fmt.Println("STRING TO SIGN:", query)
+	fmt.Println("TO SIGN:", query)
+	signature := sign(query, secret)
+	fmt.Println("SIGN:", signature)
+	fmt.Println("MERCHANT:", os.Getenv("SEPAY_MERCHANT_ID"))
+	fmt.Println("SECRET:", secret)
+	params.Set("signature", signature)
 
-// 	// thử parse
-// 	var result struct {
-// 		PaymentURL string `json:"payment_url"`
-// 		Error      string `json:"error"`
-// 		Message    string `json:"message"`
-// 	}
-
-// 	json.Unmarshal(bodyBytes, &result)
-
-// 	// 🔥 nếu không có URL → báo lỗi rõ ràng
-// 	if result.PaymentURL == "" {
-// 		return "", fmt.Errorf("sepay error: %s | %s | raw: %s",
-// 			result.Error, result.Message, string(bodyBytes))
-// 	}
-
-// 	return result.PaymentURL, nil
-// }
+	return baseURL + "?" + params.Encode()
+}
 
 func HandleIPN(c *gin.Context) {
 

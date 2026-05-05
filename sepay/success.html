@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Giao dịch thành công</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-deep: #0d7a55;
+      --green-main: #16a97a;
+      --green-light: #d4f5ea;
+      --green-pale: #f0fdf8;
+      --text-dark: #0f1f18;
+      --text-mid: #3d6b5a;
+      --text-soft: #7aab96;
+      --white: #ffffff;
+    }
+
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background: var(--green-pale);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Decorative blobs */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -120px; right: -120px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #a8edcf55, transparent 70%);
+      border-radius: 50%;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px; left: -100px;
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, #16a97a22, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 28px;
+      padding: 56px 48px 48px;
+      max-width: 460px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 60px rgba(13, 122, 85, 0.12), 0 2px 12px rgba(0,0,0,0.04);
+      position: relative;
+      animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Icon circle */
+    .icon-wrap {
+      width: 96px; height: 96px;
+      background: var(--green-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 32px;
+      position: relative;
+      animation: popIn 0.5s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    .icon-wrap svg {
+      width: 48px; height: 48px;
+      stroke: var(--green-deep);
+    }
+
+    /* Ripple ring */
+    .icon-wrap::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px solid var(--green-main);
+      opacity: 0;
+      animation: ripple 1.6s 0.8s ease-out infinite;
+    }
+
+    @keyframes ripple {
+      0%   { inset: -8px; opacity: 0.5; }
+      100% { inset: -28px; opacity: 0; }
+    }
+
+    .status-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--green-main);
+      margin-bottom: 10px;
+      animation: fadeIn 0.5s 0.5s both;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      animation: fadeIn 0.5s 0.55s both;
+    }
+
+    .desc {
+      font-size: 15px;
+      color: var(--text-mid);
+      line-height: 1.65;
+      margin-bottom: 36px;
+      animation: fadeIn 0.5s 0.6s both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Info rows */
+    .info-box {
+      background: var(--green-pale);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      text-align: left;
+      animation: fadeIn 0.5s 0.65s both;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e0f4ec;
+      font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label { color: var(--text-soft); }
+    .info-row .value { font-weight: 600; color: var(--text-dark); }
+    .info-row .value.amount { color: var(--green-deep); font-size: 16px; }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 15px 24px;
+      background: var(--green-main);
+      color: var(--white);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      animation: fadeIn 0.5s 0.75s both;
+      box-shadow: 0 4px 18px rgba(22, 169, 122, 0.35);
+    }
+    .btn:hover {
+      background: var(--green-deep);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(22, 169, 122, 0.45);
+    }
+    .btn:active { transform: translateY(0); }
+
+    .btn-outline {
+      display: inline-block;
+      margin-top: 12px;
+      width: 100%;
+      padding: 13px 24px;
+      background: transparent;
+      border: 1.5px solid var(--green-light);
+      color: var(--text-mid);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+      animation: fadeIn 0.5s 0.8s both;
+    }
+    .btn-outline:hover { border-color: var(--green-main); color: var(--green-deep); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+
+    <p class="status-label">Thành công</p>
+    <h1>Giao dịch hoàn tất!</h1>
+    <p class="desc">Thanh toán của bạn đã được xử lý thành công. Cảm ơn bạn đã tin dùng dịch vụ của chúng tôi.</p>
+
+    <!-- <div class="info-box">
+      <div class="info-row">
+        <span class="label">Mã giao dịch</span>
+        <span class="value">#TXN-20240428</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Thời gian</span>
+        <span class="value">28/04/2026 – 14:32</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Phương thức</span>
+        <span class="value">Thẻ Visa ****4892</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Số tiền</span>
+        <span class="value amount">1.250.000 ₫</span>
+      </div>
+    </div> -->
+
+    <a href="#" class="btn">Về trang chủ</a>
+    <a href="#" class="btn-outline">Xem lịch sử giao dịch</a>
+  </div>
+</body>
+</html>

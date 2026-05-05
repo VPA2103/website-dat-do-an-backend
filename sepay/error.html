@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Giao dịch thất bại</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red-deep: #991b1b;
+      --red-main: #dc2626;
+      --red-light: #fee2e2;
+      --red-pale: #fff8f8;
+      --text-dark: #1a0808;
+      --text-mid: #6b2020;
+      --text-soft: #b08080;
+      --white: #ffffff;
+    }
+
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background: var(--red-pale);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -130px; right: -110px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #fee2e255, transparent 70%);
+      border-radius: 50%;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px; left: -80px;
+      width: 340px; height: 340px;
+      background: radial-gradient(circle, #dc262622, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 28px;
+      padding: 56px 48px 48px;
+      max-width: 460px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 60px rgba(220, 38, 38, 0.10), 0 2px 12px rgba(0,0,0,0.04);
+      position: relative;
+      animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon-wrap {
+      width: 96px; height: 96px;
+      background: var(--red-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 32px;
+      position: relative;
+      animation: shake 0.5s 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes shake {
+      0%   { transform: translateX(0); }
+      15%  { transform: translateX(-8px); }
+      30%  { transform: translateX(8px); }
+      45%  { transform: translateX(-6px); }
+      60%  { transform: translateX(6px); }
+      75%  { transform: translateX(-3px); }
+      90%  { transform: translateX(3px); }
+      100% { transform: translateX(0); }
+    }
+
+    .icon-wrap svg {
+      width: 48px; height: 48px;
+      stroke: var(--red-deep);
+    }
+
+    /* Pulse ring */
+    .icon-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--red-light);
+      animation: pulse 2s 1s ease-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(1); opacity: 0.7; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+
+    .status-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--red-main);
+      margin-bottom: 10px;
+      animation: fadeIn 0.5s 0.5s both;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      animation: fadeIn 0.5s 0.55s both;
+    }
+
+    .desc {
+      font-size: 15px;
+      color: var(--text-mid);
+      line-height: 1.65;
+      margin-bottom: 32px;
+      animation: fadeIn 0.5s 0.6s both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .error-box {
+      background: #fff1f1;
+      border: 1px solid #fca5a5;
+      border-left: 3px solid var(--red-main);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      text-align: left;
+      animation: fadeIn 0.5s 0.62s both;
+    }
+    .error-box .error-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--red-main);
+      margin-bottom: 4px;
+    }
+    .error-box .error-msg {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.5;
+    }
+    .error-code {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-top: 6px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .info-box {
+      background: var(--red-pale);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      text-align: left;
+      animation: fadeIn 0.5s 0.65s both;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #fca5a533;
+      font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label { color: var(--text-soft); }
+    .info-row .value { font-weight: 600; color: var(--text-dark); }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 15px 24px;
+      background: var(--red-main);
+      color: var(--white);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      animation: fadeIn 0.5s 0.75s both;
+      box-shadow: 0 4px 18px rgba(220, 38, 38, 0.28);
+    }
+    .btn:hover {
+      background: var(--red-deep);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(220, 38, 38, 0.38);
+    }
+    .btn:active { transform: translateY(0); }
+
+    .btn-outline {
+      display: inline-block;
+      margin-top: 12px;
+      width: 100%;
+      padding: 13px 24px;
+      background: transparent;
+      border: 1.5px solid #fca5a5;
+      color: var(--text-mid);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+      animation: fadeIn 0.5s 0.8s both;
+    }
+    .btn-outline:hover { border-color: var(--red-main); color: var(--red-deep); }
+
+    .support-link {
+      display: block;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-soft);
+      animation: fadeIn 0.5s 0.85s both;
+    }
+    .support-link a { color: var(--red-main); text-decoration: none; font-weight: 500; }
+    .support-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+
+    <p class="status-label">Lỗi</p>
+    <h1>Giao dịch thất bại</h1>
+    <p class="desc">Rất tiếc, giao dịch của bạn không thể hoàn tất. Vui lòng kiểm tra thông tin và thử lại.</p>
+
+    <!-- <div class="error-box">
+      <div class="error-title">Chi tiết lỗi</div>
+      <div class="error-msg">Thẻ bị từ chối — Số dư không đủ hoặc thẻ đã hết hạn.</div>
+      <div class="error-code">ERR_CARD_DECLINED · 28/04/2026 14:37:05</div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-row">
+        <span class="label">Mã giao dịch</span>
+        <span class="value">#TXN-20240428</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Phương thức</span>
+        <span class="value">Thẻ Visa ****4892</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Số tiền</span>
+        <span class="value">1.250.000 ₫</span>
+      </div>
+    </div> -->
+
+    <a href="#" class="btn">Thử lại với thẻ khác</a>
+    <a href="#" class="btn-outline">Về trang chủ</a>
+    <span class="support-link">Cần hỗ trợ? <a href="#">Liên hệ chúng tôi</a></span>
+  </div>
+</body>
+</html>

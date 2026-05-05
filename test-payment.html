@@ -36,7 +36,7 @@
       }
 
       try {
-        const res = await fetch("http://localhost:3000/api/payment/create", {
+        const res = await fetch("https://desirous-rodger-panlogistically.ngrok-free.dev/api/payment/create", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -48,12 +48,11 @@
 
         const data = await res.json();
 
-        if (data.payment_url) {
+        if (data.checkout_url) {
           document.getElementById("result").innerHTML =
-            `<a href="${data.payment_url}" target="_blank">👉 Đi tới thanh toán</a>`;
+            `<a href="${data.checkout_url}" target="_blank">👉 Đi tới thanh toán</a>`;
 
-          // auto redirect luôn nếu muốn
-          window.location.href = data.payment_url;
+          window.location.href = data.checkout_url;
         } else {
           document.getElementById("result").innerText = "Lỗi: " + JSON.stringify(data);
         }
