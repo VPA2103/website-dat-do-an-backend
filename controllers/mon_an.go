@@ -25,6 +25,11 @@ func CreateMonAn(c *gin.Context) {
 		return
 	}
 
+	if monan.MoTa == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mô tả món ăn không được để trống"})
+		return
+	}
+
 	// Tạo trước để lấy ID
 	if err := config.DB.Create(&monan).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo món ăn: " + err.Error()})
@@ -46,7 +51,7 @@ func CreateMonAn(c *gin.Context) {
 				img := models.HinhAnh{
 					OwnerID:   monan.MaMonAn,
 					OwnerType: "mon_an",
-					Url:  uploadResult.SecureURL,
+					Url:       uploadResult.SecureURL,
 				}
 				config.DB.Create(&img)
 			}
@@ -99,6 +104,14 @@ func UpdateMonAn(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	if input.MoTa == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Mô tả món ăn không được để trống",
+		})
+		return
+	}
+
 	config.DB.Model(&monan).Updates(input)
 
 	// 3. Upload ảnh mới (nếu có)
@@ -126,7 +139,7 @@ func UpdateMonAn(c *gin.Context) {
 
 		// 🔥 THÊM ẢNH MỚI
 		config.DB.Create(&models.HinhAnh{
-			Url:  upload.SecureURL,
+			Url:       upload.SecureURL,
 			OwnerID:   monan.MaMonAn,
 			OwnerType: "mon_an",
 		})
