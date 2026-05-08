@@ -28,7 +28,7 @@ func Login(c *gin.Context) {
 	// =========================
 	// ✅ Check khách hàng trước
 	// =========================
-	var kh models.KhachHang
+	var kh models.NguoiDung
 	if err := config.DB.Where("email = ?", input.Email).First(&kh).Error; err == nil {
 		// So sánh mật khẩu (đã mã hoá)
 		if err := bcrypt.CompareHashAndPassword([]byte(kh.MatKhau), []byte(input.Password)); err != nil {
@@ -37,7 +37,7 @@ func Login(c *gin.Context) {
 		}
 
 		// Tạo token
-		token, err := utils.GenerateToken(kh.MaKH, kh.Email, "guest")
+		token, err := utils.GenerateToken(kh.MaNguoiDung, kh.Email, "user")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 			return
@@ -45,8 +45,8 @@ func Login(c *gin.Context) {
 
 		c.JSON(http.StatusOK, gin.H{
 			"message":  "Đăng nhập thành công",
-			"role":     "guest",
-			"redirect": "/account",
+			"role":     "user",
+			"redirect": "/user",
 			"token":    token,
 			"data":     kh,
 		})
@@ -137,7 +137,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(newKH.MaNguoiDung, newKH.Email, "guest")
+	token, err := utils.GenerateToken(newKH.MaNguoiDung, newKH.Email, "user")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 		return
@@ -146,7 +146,7 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Đăng ký thành công",
 		"role":     "user",
-		"redirect": "/account",
+		"redirect": "/user",
 		"token":    token,
 		"user": gin.H{
 			"id":    newKH.MaNguoiDung,
