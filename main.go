@@ -35,7 +35,7 @@ func main() {
 	err := config.DB.AutoMigrate(
 		// 1. Bảng nền (không phụ thuộc)
 		&models.KhachHang{},
-		&models.NhanVien{},
+		&models.NguoiDung{},
 		&models.LoaiMonAn{},
 		&models.BanAn{},
 
