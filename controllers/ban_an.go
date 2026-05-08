@@ -58,28 +58,28 @@ func CreateBanAn(c *gin.Context) {
 	// }
 
 	// ban.Anh_QR = uploadResult.SecureURL
-	// config.DB.Save(&ban)
+	config.DB.Save(&ban)
 
-	// // ✅ Upload ảnh bàn (nếu có)
-	// file, err := c.FormFile("image")
-	// if err == nil && file != nil {
-	// 	src, err := file.Open()
-	// 	if err == nil {
-	// 		defer src.Close()
+	// ✅ Upload ảnh bàn (nếu có)
+	file, err := c.FormFile("image")
+	if err == nil && file != nil {
+		src, err := file.Open()
+		if err == nil {
+			defer src.Close()
 
-	// 		uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-	// 			Folder: "banan",
-	// 		})
-	// 		if err == nil {
-	// 			img := models.Images{
-	// 				OwnerID:   ban.MaBan,
-	// 				OwnerType: "ban_an",
-	// 				ImageURL:  uploadResult.SecureURL,
-	// 			}
-	// 			config.DB.Create(&img)
-	// 		}
-	// 	}
-	// }
+			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
+				Folder: "banan",
+			})
+			if err == nil {
+				img := models.HinhAnh{
+					OwnerID:   ban.MaBan,
+					OwnerType: "ban_an",
+					Url:  uploadResult.SecureURL,
+				}
+				config.DB.Create(&img)
+			}
+		}
+	}
 
 	config.DB.Preload("AnhBan").First(&ban, ban.MaBan)
 
