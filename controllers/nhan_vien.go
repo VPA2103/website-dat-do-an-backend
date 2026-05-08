@@ -23,7 +23,7 @@ func CreateNhanVien(c *gin.Context) {
 	}
 
 	// ✅ Kiểm tra loại nhân viên chỉ được phép là "user" hoặc "admin"
-	if nv.LoaiNhanVien != "user" && nv.LoaiNhanVien != "admin" {
+	if nv.LoaiNguoiDung != "user" && nv.LoaiNguoiDung != "admin" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Loại nhân viên không hợp lệ. Chỉ chấp nhận 'user' hoặc 'admin'."})
 		return
 	}
@@ -73,7 +73,7 @@ func CreateNhanVien(c *gin.Context) {
 			})
 			if err == nil {
 				img := models.HinhAnh{
-					OwnerID:   nv.MaNV,
+					OwnerID:   nv.MaNguoiDung,
 					OwnerType: "nhan_vien",
 					Url:       uploadResult.SecureURL,
 				}
@@ -83,7 +83,7 @@ func CreateNhanVien(c *gin.Context) {
 	}
 
 	// ✅ Preload ảnh khi trả về
-	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNV)
+	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNguoiDung)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Tạo nhân viên thành công",
@@ -163,7 +163,7 @@ func UpdateNhanVien(c *gin.Context) {
 		nv.Email = email
 	}
 	if loaiNhanVien != "" {
-		nv.LoaiNhanVien = loaiNhanVien
+		nv.LoaiNguoiDung = loaiNhanVien
 	}
 	if gioiTinh != "" {
 		nv.GioiTinh = gioiTinh
@@ -181,11 +181,11 @@ func UpdateNhanVien(c *gin.Context) {
 		}
 
 		// Xóa ảnh cũ
-		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNV, "nhan_vien").Delete(&models.HinhAnh{})
+		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nhan_vien").Delete(&models.HinhAnh{})
 
 		// Lưu ảnh mới
 		newImg := models.HinhAnh{
-			OwnerID:   nv.MaNV,
+			OwnerID:   nv.MaNguoiDung,
 			OwnerType: "nhan_vien",
 			Url:       uploadResult.SecureURL,
 		}
@@ -200,7 +200,7 @@ func UpdateNhanVien(c *gin.Context) {
 
 	// ✅ Lấy lại thông tin mới
 	// Trả về kết quả
-	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNV)
+	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNguoiDung)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Cập nhật thành công",
@@ -312,10 +312,10 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 			return
 		}
 
-		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNV, "nhan_vien").Delete(&models.HinhAnh{})
+		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nhan_vien").Delete(&models.HinhAnh{})
 
 		newImg := models.HinhAnh{
-			OwnerID:   nv.MaNV,
+			OwnerID:   nv.MaNguoiDung,
 			OwnerType: "nhan_vien",
 			Url:       uploadResult.SecureURL,
 		}
@@ -328,7 +328,7 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 		return
 	}
 
-	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNV)
+	config.DB.Preload("AnhNhanVien").First(&nv, nv.MaNguoiDung)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Cập nhật thông tin cá nhân thành công",

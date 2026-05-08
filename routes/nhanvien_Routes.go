@@ -6,22 +6,22 @@ import (
 	"github.com/vpa/quanlynhahang-backend/middleware"
 )
 
-func NhanVienRoutes(r *gin.Engine) {
-	nhanvien := r.Group("/nhanvien")
+func NguoiDungRoutes(r *gin.Engine) {
+	nguoidung := r.Group("/nhanvien")
 	{
 		// ✅ Chỉ admin được phép
-		nhanvien.POST("/create", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.CreateNhanVien)
-		nhanvien.PATCH("/update/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
-		nhanvien.DELETE("/delete/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.DeleteNhanVien)
-		nhanvien.POST("/create-nv-db", controllers.CreateNhanVien)
+		nguoidung.POST("/create", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.CreateNhanVien)
+		nguoidung.PATCH("/update/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
+		nguoidung.DELETE("/delete/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.DeleteNhanVien)
+		nguoidung.POST("/create-nv-db", controllers.CreateNhanVien)
 
-		nhanvien.GET("/layRaThongTinNhanVien/:id", controllers.GetNhanVienByID)
+		nguoidung.GET("/layRaThongTinNhanVien/:id", controllers.GetNhanVienByID)
 
 		// ✅ Chỉ nhân viên được phép
-		nhanvien.PATCH("/capNhatThongTinCaNhan/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("user"), controllers.UpdateThongTinCaNhan)
+		nguoidung.PATCH("/capNhatThongTinCaNhan/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("user"), controllers.UpdateThongTinCaNhan)
 
 		// ✅ Cả admin và user đều có thể xem danh sách
-		nhanvien.GET("/layTatCa", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin", "user"), controllers.GetAllNhanVien)
+		nguoidung.GET("/layTatCa", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin", "user"), controllers.GetAllNhanVien)
 
 	}
 }

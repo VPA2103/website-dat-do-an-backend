@@ -71,13 +71,13 @@ func Login(c *gin.Context) {
 	}
 
 	redirect := "/account"
-	if nv.LoaiNhanVien == "admin" {
+	if nv.LoaiNguoiDung == "admin" {
 		redirect = "/admin"
-	} else if nv.LoaiNhanVien == "user" {
+	} else if nv.LoaiNguoiDung == "user" {
 		redirect = "/user/home"
 	}
 
-	token, err := utils.GenerateToken(nv.MaNV, nv.Email, nv.LoaiNhanVien)
+	token, err := utils.GenerateToken(nv.MaNguoiDung, nv.Email, nv.LoaiNguoiDung)
 	//token, err := utils.generateToken(nv.MaNV, nv.Email, nv.LoaiNhanVien)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
@@ -86,7 +86,7 @@ func Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Đăng nhập thành công",
-		"role":     nv.LoaiNhanVien,
+		"role":     nv.LoaiNguoiDung,
 		"redirect": redirect,
 		"token":    token,
 		"data":     nv,
@@ -107,7 +107,7 @@ func Register(c *gin.Context) {
 	}
 
 	// Kiểm tra trùng email
-	var existingKH models.KhachHang
+	var existingKH models.NguoiDung
 	if err := config.DB.Where("email = ?", input.Email).First(&existingKH).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
 		return
@@ -125,7 +125,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	newKH := models.KhachHang{
+	newKH := models.NguoiDung{
 		HoTen:   input.HoTen,
 		Email:   input.Email,
 		MatKhau: string(hashedPassword),
@@ -137,7 +137,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(newKH.MaKH, newKH.Email, "guest")
+	token, err := utils.GenerateToken(newKH.MaNguoiDung, newKH.Email, "guest")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 		return
@@ -145,11 +145,11 @@ func Register(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Đăng ký thành công",
-		"role":     "guest",
+		"role":     "user",
 		"redirect": "/account",
 		"token":    token,
 		"user": gin.H{
-			"id":    newKH.MaKH,
+			"id":    newKH.MaNguoiDung,
 			"hoten": newKH.HoTen,
 			"email": newKH.Email,
 			"sdt":   newKH.SDT,

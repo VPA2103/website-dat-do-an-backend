@@ -14,5 +14,5 @@ type DatBan struct {
 
 	// 🔑 Khóa ngoại – cho phép NULL
 	IDNhanVienXacNhan *uint     `json:"id_nhan_vien_xac_nhan"`
-	NhanVienXacNhan   *NguoiDung `gorm:"foreignKey:IDNhanVienXacNhan;references:MaNV" json:"nhan_vien_xac_nhan,omitempty"`
+	NhanVienXacNhan   *NguoiDung `gorm:"foreignKey:IDNhanVienXacNhan;references:MaNguoiDung" json:"nhan_vien_xac_nhan,omitempty"`
 }
