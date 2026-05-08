@@ -28,57 +28,25 @@ func Login(c *gin.Context) {
 	// =========================
 	// ✅ Check khách hàng trước
 	// =========================
-	var kh models.NguoiDung
-	if err := config.DB.Where("email = ?", input.Email).First(&kh).Error; err == nil {
-		// So sánh mật khẩu (đã mã hoá)
-		if err := bcrypt.CompareHashAndPassword([]byte(kh.MatKhau), []byte(input.Password)); err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Mật khẩu không đúng"})
-			return
-		}
-
-		// Tạo token
-		token, err := utils.GenerateToken(kh.MaNguoiDung, kh.Email, "user")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"message":  "Đăng nhập thành công",
-			"role":     "user",
-			"redirect": "/user",
-			"token":    token,
-			"data":     kh,
-		})
-		return
-	}
-
-	// =========================
-	// ✅ Check nhân viên
-	// =========================
-	var nv models.NguoiDung
-	if err := config.DB.Where("email = ?", input.Email).First(&nv).Error; err != nil {
+	var nd models.NguoiDung
+	if err := config.DB.Where("email = ?", input.Email).First(&nd).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email không tồn tại"})
 		return
 	}
 
-	// Nếu mật khẩu không được mã hoá thì so sánh trực tiếp
-	// Nếu đã mã hoá thì dùng bcrypt.CompareHashAndPassword
-	if bcrypt.CompareHashAndPassword([]byte(nv.MatKhau), []byte(input.Password)) != nil &&
-		nv.MatKhau != input.Password {
+	// check password
+	if bcrypt.CompareHashAndPassword([]byte(nd.MatKhau), []byte(input.Password)) != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Mật khẩu không đúng"})
 		return
 	}
 
-	redirect := "/account"
-	if nv.LoaiNguoiDung == "admin" {
+	role := nd.LoaiNguoiDung
+	redirect := "/user"
+	if role == "admin" {
 		redirect = "/admin"
-	} else if nv.LoaiNguoiDung == "user" {
-		redirect = "/user/home"
 	}
 
-	token, err := utils.GenerateToken(nv.MaNguoiDung, nv.Email, nv.LoaiNguoiDung)
-	//token, err := utils.generateToken(nv.MaNV, nv.Email, nv.LoaiNhanVien)
+	token, err := utils.GenerateToken(nd.MaNguoiDung, nd.Email, role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
 		return
@@ -86,10 +54,10 @@ func Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Đăng nhập thành công",
-		"role":     nv.LoaiNguoiDung,
+		"role":     role,
 		"redirect": redirect,
 		"token":    token,
-		"data":     nv,
+		"data":     nd,
 	})
 }
 
@@ -126,10 +94,11 @@ func Register(c *gin.Context) {
 	}
 
 	newKH := models.NguoiDung{
-		HoTen:   input.HoTen,
-		Email:   input.Email,
-		MatKhau: string(hashedPassword),
-		SDT:     input.SDT,
+		HoTen:         input.HoTen,
+		Email:         input.Email,
+		MatKhau:       string(hashedPassword),
+		SDT:           input.SDT,
+		LoaiNguoiDung: "user",
 	}
 
 	if err := config.DB.Create(&newKH).Error; err != nil {
@@ -144,8 +113,8 @@ func Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":  "Đăng ký thành công",
-		"role":     "user",
+		"message": "Đăng ký thành công",
+
 		"redirect": "/user",
 		"token":    token,
 		"user": gin.H{
@@ -153,6 +122,7 @@ func Register(c *gin.Context) {
 			"hoten": newKH.HoTen,
 			"email": newKH.Email,
 			"sdt":   newKH.SDT,
+			"role":  newKH.LoaiNguoiDung,
 		},
 	})
 }
