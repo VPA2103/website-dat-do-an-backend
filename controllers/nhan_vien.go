@@ -134,7 +134,17 @@ func UpdateNhanVien(c *gin.Context) {
 
 	// Cập nhật từng trường nếu có dữ liệu
 	if matKhau != "" {
-		nv.MatKhau = matKhau
+
+		// Mã hóa mật khẩu mới
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(matKhau), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Mã hóa mật khẩu thất bại",
+			})
+			return
+		}
+
+		nv.MatKhau = string(hashedPassword)
 	}
 
 	if hoTen != "" {
