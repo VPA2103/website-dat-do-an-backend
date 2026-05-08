@@ -11,5 +11,5 @@ type ThanhToan struct {
 	GioThanhToan      time.Time
 
 	MaNVThanhToan     string   `gorm:"size:10"` // foreign key
-	NhanVienThanhToan NhanVien `gorm:"foreignKey:MaNVThanhToan;references:MaNV"`
+	NhanVienThanhToan NguoiDung `gorm:"foreignKey:MaNVThanhToan;references:MaNV"`
 }

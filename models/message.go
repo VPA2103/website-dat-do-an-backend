@@ -11,7 +11,7 @@ type Message struct {
 	CreatedAt time.Time `gorm:"index:idx_room_created" json:"created_at"`
 
 	Room   Room     `gorm:"foreignKey:RoomID" json:"room,omitempty"`
-	Sender NhanVien `gorm:"foreignKey:SenderID" json:"sender,omitempty"`
+	Sender NguoiDung `gorm:"foreignKey:SenderID" json:"sender,omitempty"`
 }
 
 type MessageReadReceipt struct {

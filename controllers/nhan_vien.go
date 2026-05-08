@@ -14,7 +14,7 @@ import (
 
 // 🧱 Thêm nhân viên
 func CreateNhanVien(c *gin.Context) {
-	var nv models.NhanVien
+	var nv models.NguoiDung
 
 	// ✅ Lấy dữ liệu từ form-data
 	if err := c.ShouldBind(&nv); err != nil {
@@ -85,7 +85,7 @@ func CreateNhanVien(c *gin.Context) {
 
 // 📋 Lấy danh sách nhân viên
 func GetAllNhanVien(c *gin.Context) {
-	var nhanViens []models.NhanVien
+	var nhanViens []models.NguoiDung
 	if err := config.DB.Preload("AnhNhanVien").Find(&nhanViens).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -96,7 +96,7 @@ func GetAllNhanVien(c *gin.Context) {
 // 🔍 Lấy 1 nhân viên theo ID
 func GetNhanVienByID(c *gin.Context) {
 	id := c.Param("id")
-	var nv models.NhanVien
+	var nv models.NguoiDung
 	if err := config.DB.Preload("AnhNhanVien").Find(&nv, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -107,7 +107,7 @@ func GetNhanVienByID(c *gin.Context) {
 // ✏️ Cập nhật nhân viên
 func UpdateNhanVien(c *gin.Context) {
 	id := c.Param("id")
-	var nv models.NhanVien
+	var nv models.NguoiDung
 
 	// Tìm nhân viên theo ID
 	if err := config.DB.First(&nv, id).Error; err != nil {
@@ -193,7 +193,7 @@ func UpdateNhanVien(c *gin.Context) {
 // 🗑️ Xóa nhân viên
 func DeleteNhanVien(c *gin.Context) {
 	id := c.Param("id")
-	var nv models.NhanVien
+	var nv models.NguoiDung
 	if err := config.DB.First(&nv, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy nhân viên"})
 		return
@@ -220,7 +220,7 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 		return
 	}
 
-	var nv models.NhanVien
+	var nv models.NguoiDung
 	if err := config.DB.Preload("AnhNhanVien").First(&nv, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy nhân viên"})
 		return

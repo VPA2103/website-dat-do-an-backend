@@ -1,6 +1,6 @@
 package models
 
-type NhanVien struct {
+type NguoiDung struct {
 	MaNV         uint   `gorm:"primaryKey;autoIncrement" json:"ma_nv"`
 	HoTen        string `json:"ho_ten" form:"ho_ten"`
 	GioiTinh     string `json:"gioi_tinh" form:"gioi_tinh"`

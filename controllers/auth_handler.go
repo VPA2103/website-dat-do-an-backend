@@ -56,7 +56,7 @@ func Login(c *gin.Context) {
 	// =========================
 	// ✅ Check nhân viên
 	// =========================
-	var nv models.NhanVien
+	var nv models.NguoiDung
 	if err := config.DB.Where("email = ?", input.Email).First(&nv).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email không tồn tại"})
 		return
@@ -112,7 +112,7 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
 		return
 	}
-	var existingNV models.NhanVien
+	var existingNV models.NguoiDung
 	if err := config.DB.Where("email = ?", input.Email).First(&existingNV).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
 		return
