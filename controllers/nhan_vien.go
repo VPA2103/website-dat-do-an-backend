@@ -40,12 +40,20 @@ func CreateNhanVien(c *gin.Context) {
 	}
 
 	// ✅ Hash mật khẩu
-	//hashedPassword, err := bcrypt.GenerateFromPassword([]byte(nv.MatKhau), bcrypt.DefaultCost)
-	//if err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể mã hóa mật khẩu"})
-	//	return
-	//}
-	nv.MatKhau = nv.MatKhau
+	hashedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(nv.MatKhau),
+		bcrypt.DefaultCost,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể mã hóa mật khẩu",
+		})
+		return
+	}
+
+	// Gán lại mật khẩu đã mã hóa
+	nv.MatKhau = string(hashedPassword)
 
 	// ✅ Lưu nhân viên trước để có MaNV (ID)
 	if err := config.DB.Create(&nv).Error; err != nil {
@@ -67,7 +75,7 @@ func CreateNhanVien(c *gin.Context) {
 				img := models.HinhAnh{
 					OwnerID:   nv.MaNV,
 					OwnerType: "nhan_vien",
-					Url:  uploadResult.SecureURL,
+					Url:       uploadResult.SecureURL,
 				}
 				config.DB.Create(&img)
 			}
@@ -169,7 +177,7 @@ func UpdateNhanVien(c *gin.Context) {
 		newImg := models.HinhAnh{
 			OwnerID:   nv.MaNV,
 			OwnerType: "nhan_vien",
-			Url:  uploadResult.SecureURL,
+			Url:       uploadResult.SecureURL,
 		}
 		config.DB.Create(&newImg)
 	}
@@ -299,7 +307,7 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 		newImg := models.HinhAnh{
 			OwnerID:   nv.MaNV,
 			OwnerType: "nhan_vien",
-			Url:  uploadResult.SecureURL,
+			Url:       uploadResult.SecureURL,
 		}
 		config.DB.Create(&newImg)
 	}
