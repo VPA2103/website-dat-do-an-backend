@@ -11,7 +11,7 @@ func AdminRoutes(r *gin.Engine) {
 	{
 		// ✅ Chỉ admin được phép
 		nhanvien.POST("/create/nhanvien", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.CreateNhanVien)
-		nhanvien.PUT("/update/nhanvien/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
+		nhanvien.PATCH("/update/nhanvien/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.UpdateNhanVien)
 		nhanvien.DELETE("/delete/nhanvien/:id", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.DeleteNhanVien)
 		// ✅ chỉ admin có thể xem danh sách
 		nhanvien.GET("/nhanvien/layTatCa", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.GetAllNhanVien)
