@@ -7,5 +7,5 @@ type MonAn struct {
 	GiaTien     float64 `json:"gia_tien" form:"gia_tien"`
 	TrangThai   uint    `json:"trang_thai" form:"trang_thai"`
 
-	AnhMonAn []Images `gorm:"polymorphic:Owner;polymorphicValue:mon_an" json:"anh_mon_an,omitempty"`
+	AnhMonAn []HinhAnh `gorm:"polymorphic:Owner;polymorphicValue:mon_an" json:"anh_mon_an,omitempty"`
 }

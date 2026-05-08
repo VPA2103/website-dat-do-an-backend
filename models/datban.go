@@ -1,9 +1,9 @@
 package models
 
 type DatBan struct {
-	Id           uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	TenKhachHang string `json:"ten_khach_hang" form:"ten_khach_hang" binding:"required"`
+	MaDatBan           uint   `gorm:"primaryKey;autoIncrement" json:"id"`
 	SDT          string `json:"sdt" form:"sdt" binding:"required"`
+	TenKhachHang string `json:"ten_khach_hang" form:"ten_khach_hang" binding:"required"`
 	Email        string `json:"email" form:"email" binding:"required"`
 	GhiChu       string `json:"ghi_chu" form:"ghi_chu"`
 	MaBanAn      uint   `json:"ma_ban_an" form:"ma_ban_an" binding:"required"`

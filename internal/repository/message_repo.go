@@ -33,13 +33,13 @@ type GormNotificationRepository struct {
 }
 
 type NotificationRepository interface {
-	Create(noti *models.Notification) error
+	Create(noti *models.ThongBao) error
 }
 
 func NewNotificationRepository(db *gorm.DB) *GormNotificationRepository {
 	return &GormNotificationRepository{DB: db}
 }
 
-func (r *GormNotificationRepository) Create(noti *models.Notification) error {
+func (r *GormNotificationRepository) Create(noti *models.ThongBao) error {
 	return r.DB.Create(noti).Error
 }

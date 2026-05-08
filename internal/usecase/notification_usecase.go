@@ -12,12 +12,12 @@ type NotificationUseCase struct {
 }
 
 func (uc *NotificationUseCase) Notify(msg dto.WSMessage) {
-	noti := &models.Notification{
-		UserID:  msg.TargetUserID,
+	noti := &models.ThongBao{
+		MaNguoiDung:  msg.TargetUserID,
 		Title:   "Thông báo",
 		Content: msg.Content,
 		Type:    msg.Type,
-		IsRead:  false,
+		TrangThai:  false,
 	}
 
 	uc.Repo.Create(noti)

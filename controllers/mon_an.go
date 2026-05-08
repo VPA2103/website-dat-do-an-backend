@@ -43,10 +43,10 @@ func CreateMonAn(c *gin.Context) {
 			})
 
 			if err == nil {
-				img := models.Images{
+				img := models.HinhAnh{
 					OwnerID:   monan.MaMonAn,
 					OwnerType: "mon_an",
-					ImageURL:  uploadResult.SecureURL,
+					Url:  uploadResult.SecureURL,
 				}
 				config.DB.Create(&img)
 			}
@@ -122,11 +122,11 @@ func UpdateMonAn(c *gin.Context) {
 		// 🔥 XÓA TẤT CẢ ẢNH CŨ
 		config.DB.
 			Where("owner_id = ? AND owner_type = ?", monan.MaMonAn, "mon_an").
-			Delete(&models.Images{})
+			Delete(&models.HinhAnh{})
 
 		// 🔥 THÊM ẢNH MỚI
-		config.DB.Create(&models.Images{
-			ImageURL:  upload.SecureURL,
+		config.DB.Create(&models.HinhAnh{
+			Url:  upload.SecureURL,
 			OwnerID:   monan.MaMonAn,
 			OwnerType: "mon_an",
 		})
@@ -153,7 +153,7 @@ func DeleteMonAn(c *gin.Context) {
 	}
 
 	// Xóa ảnh thuộc món ăn
-	config.DB.Where("owner_id = ? AND owner_type = ?", id, "mon_an").Delete(&models.Images{})
+	config.DB.Where("owner_id = ? AND owner_type = ?", id, "mon_an").Delete(&models.HinhAnh{})
 
 	// Xóa món ăn
 	config.DB.Delete(&monan)

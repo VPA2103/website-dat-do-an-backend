@@ -5,12 +5,11 @@ import "time"
 type HoaDon struct {
 	MaHD      uint `gorm:"primaryKey;size:10;autoIncrement"`
 	MaBan     uint `gorm:"size:10"`
-	NgayLap   time.Time
-	GioLap    time.Time
+	Ngay   time.Time
 	TongTien  float64
 	TrangThai string
 
-	MaNVOrder      *uint           `gorm:"size:10"`
-	NhanVienOrder  *NhanVien       `gorm:"foreignKey:MaNVOrder;references:MaNV"`
-	ChiTietHoaDons []ChiTietHoaDon `gorm:"foreignKey:MaHD"`
+	// MaNVOrder      *uint           `gorm:"size:10"`
+	// NhanVienOrder  *NhanVien       `gorm:"foreignKey:MaNVOrder;references:MaNV"`
+	ChiTietHoaDons []ChiTietHoaDon `gorm:"foreignKey:MaHoaDon"`
 }

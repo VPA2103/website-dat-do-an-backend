@@ -29,10 +29,10 @@ func UploadAndSaveImage(c *gin.Context, fieldName string, folder string, ownerID
 	}
 
 	// Lưu vào Database
-	img := models.Images{
+	img := models.HinhAnh{
 		OwnerID:   ownerID,
 		OwnerType: ownerType,
-		ImageURL:  uploadResult.SecureURL,
+		Url:  uploadResult.SecureURL,
 	}
 
 	return config.DB.Create(&img).Error

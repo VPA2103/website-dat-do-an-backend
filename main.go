@@ -49,8 +49,8 @@ func main() {
 		&models.ThanhToan{},     // phụ thuộc HoaDon
 
 		// 4. Polymorphic / phụ
-		&models.Images{},
-		&models.Notification{},
+		&models.HinhAnh{},
+		&models.ThongBao{},
 		&models.LienHe{},
 		&models.Message{},
 		&models.Room{},

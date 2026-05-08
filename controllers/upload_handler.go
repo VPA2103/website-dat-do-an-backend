@@ -40,7 +40,7 @@ func UploadHandler(c *gin.Context) {
 }
 
 func GetImage(c *gin.Context) {
-	var images []models.Images
+	var images []models.HinhAnh
 	if err := config.DB.Find(&images).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get product images"})
 		return

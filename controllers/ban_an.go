@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"bytes"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -10,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
-	"github.com/vpa/quanlynhahang-backend/utils"
 )
 
 func CreateBanAn(c *gin.Context) {
@@ -35,54 +32,54 @@ func CreateBanAn(c *gin.Context) {
 	}
 
 	// ✅ Tạo URL menu
-	menuURL := fmt.Sprintf(
-		"http://localhost:4200/#/customer/goimon/menu?table=%d",
-		ban.MaBan,
-	)
+	// menuURL := fmt.Sprintf(
+	// 	"http://localhost:4200/#/customer/goimon/menu?table=%d",
+	// 	ban.MaBan,
+	// )
 
 	// ✅ Tạo QR
-	qrBytes, err := utils.GenerateQRBytes(menuURL)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã QR: " + err.Error()})
-		return
-	}
+	// qrBytes, err := utils.GenerateQRBytes(menuURL)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã QR: " + err.Error()})
+	// 	return
+	// }
 
 	// ✅ Upload QR trực tiếp lên Cloudinary
-	uploadResult, err := config.CLD.Upload.Upload(c, bytes.NewReader(qrBytes), uploader.UploadParams{
-		Folder:   "banan_qr",
-		PublicID: fmt.Sprintf("qr_ban_%d", ban.MaBan),
-	})
+	// uploadResult, err := config.CLD.Upload.Upload(c, bytes.NewReader(qrBytes), uploader.UploadParams{
+	// 	Folder:   "banan_qr",
+	// 	PublicID: fmt.Sprintf("qr_ban_%d", ban.MaBan),
+	// })
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Upload QR thất bại: " + err.Error(),
-		})
-		return
-	}
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"error": "Upload QR thất bại: " + err.Error(),
+	// 	})
+	// 	return
+	// }
 
-	ban.Anh_QR = uploadResult.SecureURL
-	config.DB.Save(&ban)
+	// ban.Anh_QR = uploadResult.SecureURL
+	// config.DB.Save(&ban)
 
-	// ✅ Upload ảnh bàn (nếu có)
-	file, err := c.FormFile("image")
-	if err == nil && file != nil {
-		src, err := file.Open()
-		if err == nil {
-			defer src.Close()
+	// // ✅ Upload ảnh bàn (nếu có)
+	// file, err := c.FormFile("image")
+	// if err == nil && file != nil {
+	// 	src, err := file.Open()
+	// 	if err == nil {
+	// 		defer src.Close()
 
-			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-				Folder: "banan",
-			})
-			if err == nil {
-				img := models.Images{
-					OwnerID:   ban.MaBan,
-					OwnerType: "ban_an",
-					ImageURL:  uploadResult.SecureURL,
-				}
-				config.DB.Create(&img)
-			}
-		}
-	}
+	// 		uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
+	// 			Folder: "banan",
+	// 		})
+	// 		if err == nil {
+	// 			img := models.Images{
+	// 				OwnerID:   ban.MaBan,
+	// 				OwnerType: "ban_an",
+	// 				ImageURL:  uploadResult.SecureURL,
+	// 			}
+	// 			config.DB.Create(&img)
+	// 		}
+	// 	}
+	// }
 
 	config.DB.Preload("AnhBan").First(&ban, ban.MaBan)
 
@@ -184,13 +181,13 @@ func UpdateBanAn(c *gin.Context) {
 		// 🔥 XÓA TOÀN BỘ ẢNH CŨ CỦA BÀN ĂN
 		config.DB.
 			Where("owner_id = ? AND owner_type = ?", ban.MaBan, "ban_an").
-			Delete(&models.Images{})
+			Delete(&models.HinhAnh{})
 
 		// 🔥 THÊM ẢNH MỚI
-		config.DB.Create(&models.Images{
+		config.DB.Create(&models.HinhAnh{
 			OwnerID:   ban.MaBan,
 			OwnerType: "ban_an",
-			ImageURL:  uploadResult.SecureURL,
+			Url:  uploadResult.SecureURL,
 		})
 	}
 
@@ -220,7 +217,7 @@ func DeleteBanAn(c *gin.Context) {
 	}
 
 	// 🔹 Xóa ảnh liên quan (nếu có)
-	config.DB.Where("owner_id = ? AND owner_type = ?", id, "ban_an").Delete(&models.Images{})
+	config.DB.Where("owner_id = ? AND owner_type = ?", id, "ban_an").Delete(&models.HinhAnh{})
 
 	// 🔹 Xóa bàn ăn
 	if err := config.DB.Delete(&ban).Error; err != nil {

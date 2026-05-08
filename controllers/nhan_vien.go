@@ -64,10 +64,10 @@ func CreateNhanVien(c *gin.Context) {
 				Folder: "nhanvien",
 			})
 			if err == nil {
-				img := models.Images{
+				img := models.HinhAnh{
 					OwnerID:   nv.MaNV,
 					OwnerType: "nhan_vien",
-					ImageURL:  uploadResult.SecureURL,
+					Url:  uploadResult.SecureURL,
 				}
 				config.DB.Create(&img)
 			}
@@ -163,13 +163,13 @@ func UpdateNhanVien(c *gin.Context) {
 		}
 
 		// Xóa ảnh cũ
-		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNV, "nhan_vien").Delete(&models.Images{})
+		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNV, "nhan_vien").Delete(&models.HinhAnh{})
 
 		// Lưu ảnh mới
-		newImg := models.Images{
+		newImg := models.HinhAnh{
 			OwnerID:   nv.MaNV,
 			OwnerType: "nhan_vien",
-			ImageURL:  uploadResult.SecureURL,
+			Url:  uploadResult.SecureURL,
 		}
 		config.DB.Create(&newImg)
 	}
@@ -294,12 +294,12 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 			return
 		}
 
-		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNV, "nhan_vien").Delete(&models.Images{})
+		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNV, "nhan_vien").Delete(&models.HinhAnh{})
 
-		newImg := models.Images{
+		newImg := models.HinhAnh{
 			OwnerID:   nv.MaNV,
 			OwnerType: "nhan_vien",
-			ImageURL:  uploadResult.SecureURL,
+			Url:  uploadResult.SecureURL,
 		}
 		config.DB.Create(&newImg)
 	}

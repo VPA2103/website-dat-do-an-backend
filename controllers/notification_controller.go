@@ -11,7 +11,7 @@ import (
 func GetNotifications(c *gin.Context) {
 	userID := c.Query("user_id")
 
-	var notifications []models.Notification
+	var notifications []models.ThongBao
 	config.DB.
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
@@ -24,7 +24,7 @@ func GetNotifications(c *gin.Context) {
 func MarkAsRead(c *gin.Context) {
 	id := c.Param("id")
 
-	config.DB.Model(&models.Notification{}).
+	config.DB.Model(&models.ThongBao{}).
 		Where("id = ?", id).
 		Update("is_read", true)
 
