@@ -74,7 +74,7 @@ func CreateNhanVien(c *gin.Context) {
 			if err == nil {
 				img := models.HinhAnh{
 					OwnerID:   nv.MaNguoiDung,
-					OwnerType: "nhan_vien",
+					OwnerType: "nguoi_dung",
 					Url:       uploadResult.SecureURL,
 				}
 				config.DB.Create(&img)
@@ -128,7 +128,7 @@ func UpdateNhanVien(c *gin.Context) {
 	hoTen := c.PostForm("ho_ten")
 	ngaySinh := c.PostForm("ngay_sinh")
 	sdt := c.PostForm("sdt")
-	diaChi := c.PostForm("dia_chi")
+
 	loaiNhanVien := c.PostForm("loai_nhan_vien")
 	email := c.PostForm("email")
 
@@ -156,9 +156,7 @@ func UpdateNhanVien(c *gin.Context) {
 	if sdt != "" {
 		nv.SDT = sdt
 	}
-	if diaChi != "" {
-		nv.DiaChi = diaChi
-	}
+
 	if email != "" {
 		nv.Email = email
 	}
@@ -181,12 +179,12 @@ func UpdateNhanVien(c *gin.Context) {
 		}
 
 		// Xóa ảnh cũ
-		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nhan_vien").Delete(&models.HinhAnh{})
+		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nguoi_dung").Delete(&models.HinhAnh{})
 
 		// Lưu ảnh mới
 		newImg := models.HinhAnh{
 			OwnerID:   nv.MaNguoiDung,
-			OwnerType: "nhan_vien",
+			OwnerType: "nguoi_dung",
 			Url:       uploadResult.SecureURL,
 		}
 		config.DB.Create(&newImg)
@@ -239,7 +237,10 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 	}
 
 	var nv models.NguoiDung
-	if err := config.DB.Preload("AnhNhanVien").First(&nv, id).Error; err != nil {
+	if err := config.DB.
+		Preload("AnhNhanVien").
+		Preload("DiaChis").
+		First(&nv, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy nhân viên"})
 		return
 	}
@@ -249,7 +250,7 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 	gioiTinh := c.PostForm("gioi_tinh")
 	ngaySinh := c.PostForm("ngay_sinh")
 	sdt := c.PostForm("sdt")
-	diaChi := c.PostForm("dia_chi")
+
 	email := c.PostForm("email")
 
 	oldPassword := c.PostForm("mat_khau_cu")
@@ -269,9 +270,7 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 	if sdt != "" {
 		nv.SDT = sdt
 	}
-	if diaChi != "" {
-		nv.DiaChi = diaChi
-	}
+
 	if email != "" {
 		nv.Email = email
 	}
@@ -312,11 +311,11 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 			return
 		}
 
-		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nhan_vien").Delete(&models.HinhAnh{})
+		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nguoi_dung").Delete(&models.HinhAnh{})
 
 		newImg := models.HinhAnh{
 			OwnerID:   nv.MaNguoiDung,
-			OwnerType: "nhan_vien",
+			OwnerType: "nguoi_dung",
 			Url:       uploadResult.SecureURL,
 		}
 		config.DB.Create(&newImg)

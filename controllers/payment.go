@@ -27,6 +27,7 @@ func GetVietQR(c *gin.Context) {
 		config.PaymentCfg.AccountNo,
 		req.Note,
 	)
+	
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không tạo được QR: " + err.Error()})
 		return

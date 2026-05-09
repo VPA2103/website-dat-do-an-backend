@@ -34,19 +34,21 @@ func main() {
 	// 🧱 Tự động migrate
 	err := config.DB.AutoMigrate(
 		// 1. Bảng nền (không phụ thuộc)
-		&models.KhachHang{},
+		// &models.KhachHang{},
 		&models.NguoiDung{},
 		&models.LoaiMonAn{},
 		&models.BanAn{},
+		&models.GiamGia{}, // ✅ thêm ở đây
 
 		// 2. Bảng phụ thuộc mức 1
-		&models.MonAn{},  // phụ thuộc LoaiMonAn
-		&models.DatBan{}, // phụ thuộc NhanVien, BanAn
-		&models.HoaDon{}, // phụ thuộc KhachHang, NhanVien
+		&models.MonAn{},
+		&models.DatBan{},
+		&models.HoaDon{},
+		&models.DiaChi{},
 
 		// 3. Bảng phụ thuộc mức 2
-		&models.ChiTietHoaDon{}, // phụ thuộc HoaDon, MonAn
-		&models.ThanhToan{},     // phụ thuộc HoaDon
+		&models.ChiTietHoaDon{},
+		&models.ThanhToan{},
 
 		// 4. Polymorphic / phụ
 		&models.HinhAnh{},

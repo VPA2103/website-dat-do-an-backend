@@ -14,7 +14,6 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 		c.JSON(200, gin.H{"message": "Hello Gin!"})
 	})
 
-	// 🔐 Auth routes (không cần token)
 	r.POST("/register", controllers.Register)
 	r.POST("/login", controllers.Login)
 
@@ -40,6 +39,7 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	DatBanRoutes(r)
 	GoiMonRoutes(r)
 	HoaDonRoutes(r)
+	DiaChiRoutes(r)
 	Payment(r)
 	SePayPayment(r)
 }

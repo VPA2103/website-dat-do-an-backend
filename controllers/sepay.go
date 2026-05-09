@@ -98,19 +98,24 @@ func buildQuery(params map[string]string, keys []string) string {
 }
 
 func buildSePayURL(invoice string, amount int64) string {
-	baseURL := "https://pay-sandbox.sepay.vn/v1/checkout"
+	baseURL := "https://pgapi-sandbox.sepay.vn"
+	//Production	https://pgapi.sepay.vn
+	//Sandbox	https://pgapi-sandbox.sepay.vn
+
+	merchant := os.Getenv("SEPAY_MERCHANT_ID")
 	secret := os.Getenv("SEPAY_SECRET_KEY")
 
-	params := url.Values{}
-	params.Set("merchant", os.Getenv("SEPAY_MERCHANT_ID"))
-	params.Set("order_amount", fmt.Sprintf("%d", amount))
-	params.Set("currency", "VND")
-	params.Set("operation", "PURCHASE")
-	params.Set("order_description", "Thanh toan don hang")
-	params.Set("order_invoice_number", invoice)
-	params.Set("success_url", "https://desirous-rodger-panlogistically.ngrok-free.dev/success")
-	params.Set("cancel_url", "https://desirous-rodger-panlogistically.ngrok-free.dev/cancel")
-	params.Set("error_url", "https://desirous-rodger-panlogistically.ngrok-free.dev/error")
+	params := map[string]string{
+		"merchant":             merchant,
+		"order_amount":         fmt.Sprintf("%d", amount),
+		"currency":             "VND",
+		"operation":            "PURCHASE",
+		"order_description":    "Thanh toán đơn hàng",
+		"order_invoice_number": invoice,
+		"success_url":          "https://desirous-rodger-panlogistically.ngrok-free.dev/success",
+		"cancel_url":           "https://desirous-rodger-panlogistically.ngrok-free.dev/cancel",
+		"error_url":            "https://desirous-rodger-panlogistically.ngrok-free.dev/error",
+	}
 
 	keys := []string{
 		"cancel_url",
@@ -123,28 +128,30 @@ func buildSePayURL(invoice string, amount int64) string {
 		"order_invoice_number",
 		"success_url",
 	}
-	// ✅ chuẩn hóa string
-	query := buildQuery(map[string]string{
-		"cancel_url":           params.Get("cancel_url"),
-		"currency":             "VND",
-		"error_url":            params.Get("error_url"),
-		"merchant":             params.Get("merchant"),
-		"operation":            "PURCHASE",
-		"order_amount":         params.Get("order_amount"),
-		"order_description":    params.Get("order_description"),
-		"order_invoice_number": params.Get("order_invoice_number"),
-		"success_url":          params.Get("success_url"),
-	}, keys)
+
+	query := buildQuery(params, keys)
 
 	fmt.Println("STRING TO SIGN:", query)
-	fmt.Println("TO SIGN:", query)
-	signature := sign(query, secret)
-	fmt.Println("SIGN:", signature)
-	fmt.Println("MERCHANT:", os.Getenv("SEPAY_MERCHANT_ID"))
-	fmt.Println("SECRET:", secret)
-	params.Set("signature", signature)
 
-	return baseURL + "?" + params.Encode()
+	signature := sign(query, secret)
+
+	fmt.Println("SIGNATURE:", signature)
+
+	// build final URL
+	v := url.Values{}
+
+	for _, k := range keys {
+		v.Set(k, params[k])
+	}
+
+	// QUAN TRỌNG
+	v.Set("signature", signature)
+
+	finalURL := baseURL + "?" + v.Encode()
+
+	fmt.Println("FINAL URL:", finalURL)
+
+	return finalURL
 }
 
 func HandleIPN(c *gin.Context) {

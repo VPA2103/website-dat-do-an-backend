@@ -21,7 +21,7 @@ func GetOrCreateHoaDon(maBan uint) (*models.HoaDon, error) {
 
 			hoaDon = models.HoaDon{
 				MaBan:     maBan,
-				Ngay:   time.Now(),
+				Ngay:      time.Now(),
 				TrangThai: "pending",
 			}
 
@@ -115,7 +115,7 @@ func AddMon(maBan uint, maMon uint, soLuong int) error {
 		}
 
 		chiTiet = models.ChiTietHoaDon{
-			MaHoaDon:      hoaDon.MaHD,
+			MaHoaDon:  hoaDon.MaHD,
 			MaMonAn:   maMon,
 			SoLuong:   soLuong,
 			DonGia:    mon.GiaTien,
