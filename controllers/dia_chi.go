@@ -137,3 +137,54 @@ func DeleteDiaChi(c *gin.Context) {
 		"message": "Xóa thành công",
 	})
 }
+func SetDiaChiMacDinh(c *gin.Context) {
+	id := c.Param("id")
+
+	var dc models.DiaChi
+
+	// kiểm tra địa chỉ tồn tại
+	if err := config.DB.First(&dc, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Không tìm thấy địa chỉ",
+		})
+		return
+	}
+
+	// transaction để đảm bảo dữ liệu đồng bộ
+	tx := config.DB.Begin()
+
+	// reset tất cả địa chỉ của user
+	if err := tx.Model(&models.DiaChi{}).
+		Where("ma_nguoi_dung = ?", dc.MaNguoiDung).
+		Update("mac_dinh", false).Error; err != nil {
+
+		tx.Rollback()
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể cập nhật địa chỉ",
+		})
+		return
+	}
+
+	// set địa chỉ hiện tại thành mặc định
+	if err := tx.Model(&dc).
+		Updates(map[string]interface{}{
+			"mac_dinh":  true,
+			"updated_at": time.Now(),
+		}).Error; err != nil {
+
+		tx.Rollback()
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể đặt mặc định",
+		})
+		return
+	}
+
+	tx.Commit()
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Đặt địa chỉ mặc định thành công",
+		"data":    dc,
+	})
+}

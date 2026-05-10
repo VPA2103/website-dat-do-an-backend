@@ -14,5 +14,6 @@ func DiaChiRoutes(r *gin.Engine) {
 		dc.GET("/:id", middleware.AuthMiddleware(), controllers.GetDiaChiByID)
 		dc.PATCH("/:id", middleware.AuthMiddleware(), controllers.UpdateDiaChi)
 		dc.DELETE("/:id", middleware.AuthMiddleware(), controllers.DeleteDiaChi)
+		dc.PATCH("/:id/mac-dinh", controllers.SetDiaChiMacDinh)
 	}
 }
