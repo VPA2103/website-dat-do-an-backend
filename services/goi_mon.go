@@ -20,7 +20,6 @@ func GetOrCreateHoaDon(maBan uint) (*models.HoaDon, error) {
 		if err == gorm.ErrRecordNotFound {
 
 			hoaDon = models.HoaDon{
-				MaBan:     maBan,
 				Ngay:      time.Now(),
 				TrangThai: "pending",
 			}
@@ -36,6 +35,7 @@ func GetOrCreateHoaDon(maBan uint) (*models.HoaDon, error) {
 
 	return &hoaDon, nil
 }
+
 func CloseHoaDon(maBan uint) error {
 
 	var hoaDon models.HoaDon

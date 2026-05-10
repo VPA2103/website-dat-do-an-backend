@@ -9,6 +9,6 @@ func HoaDonRoutes(r *gin.Engine) {
 
 	hoadon := r.Group("/hoa-don")
 	{
-		hoadon.POST("/thanh-toan", controllers.ThanhToanHoaDon)
+		hoadon.POST("/dat-do-an", controllers.DatDoAn)
 	}
 }
