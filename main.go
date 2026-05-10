@@ -33,24 +33,28 @@ func main() {
 
 	// 🧱 Tự động migrate
 	err := config.DB.AutoMigrate(
-		// 1. Bảng nền (không phụ thuộc)
-		// &models.KhachHang{},
+		// core
 		&models.NguoiDung{},
 		&models.LoaiMonAn{},
-		&models.BanAn{},
-		&models.GiamGia{}, // ✅ thêm ở đây
-
-		// 2. Bảng phụ thuộc mức 1
 		&models.MonAn{},
-		&models.DatBan{},
-		&models.HoaDon{},
+
+		// mid
+		&models.BanAn{},
+		&models.GiamGia{},
 		&models.DiaChi{},
 
-		// 3. Bảng phụ thuộc mức 2
+		// order/payment
+		&models.DatBan{},
+		&models.HoaDon{},
 		&models.ChiTietHoaDon{},
 		&models.ThanhToan{},
 
-		// 4. Polymorphic / phụ
+		// interaction (SAU CÙNG)
+		&models.BinhLuan{},
+		&models.DanhGia{},
+		&models.YeuThich{},
+
+		// misc
 		&models.HinhAnh{},
 		&models.ThongBao{},
 		&models.LienHe{},
@@ -64,7 +68,6 @@ func main() {
 	}
 
 	// 🚏 Đăng ký route
-
 	routes.UploadRoutes(r)
 
 	//realtime

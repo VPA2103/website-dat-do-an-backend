@@ -14,7 +14,12 @@ type NguoiDung struct {
 
 	// Quan hệ
 	DiaChis []DiaChi `gorm:"foreignKey:MaNguoiDung;references:MaNguoiDung" json:"dia_chis,omitempty"`
+	
 
 	DatBans     []DatBan  `gorm:"foreignKey:IDNhanVienXacNhan" json:"dat_bans,omitempty"`
 	AnhNhanVien []HinhAnh `gorm:"polymorphic:Owner;polymorphicValue:nguoi_dung" json:"anh_nguoi_dung,omitempty"`
+	
+	YeuThichs []YeuThich `gorm:"foreignKey:MaNguoiDung"`
+	DanhGias  []DanhGia `gorm:"foreignKey:MaNguoiDung"`
+	BinhLuans []BinhLuan `gorm:"foreignKey:MaNguoiDung"`
 }

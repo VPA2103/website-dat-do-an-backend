@@ -2,11 +2,14 @@ package models
 
 type MonAn struct {
 	MaMonAn     uint    `gorm:"primaryKey;autoIncrement" json:"ma_mon_an"`
-	MaLoaiMonAn uint    `json:"ma_loai_mon_an" form:"ma_loai_mon_an"`
+	MaLoaiMonAn uint    `json:"ma_loai_mon_an" form:"ma_loai_mon_an" gorm:"index"`
 	TenMonAn    string  `json:"ten_mon_an" form:"ten_mon_an"`
 	GiaTien     float64 `json:"gia_tien" form:"gia_tien"`
 	TrangThai   uint    `json:"trang_thai" form:"trang_thai"`
 	MoTa        string  `json:"mo_ta" form:"mo_ta"`
 
 	AnhMonAn []HinhAnh `gorm:"polymorphic:Owner;polymorphicValue:mon_an" json:"anh_mon_an,omitempty"`
+	// relation
+	// LoaiMonAn LoaiMonAn `gorm:"foreignKey:MaLoaiMonAn;references:MaLoaiMonAn;constraint:OnDelete:SET NULL"`
+
 }
