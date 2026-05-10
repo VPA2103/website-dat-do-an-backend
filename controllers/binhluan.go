@@ -25,8 +25,17 @@ func CreateBinhLuan(c *gin.Context) {
 		return
 	}
 
+	// lấy user từ token
+	maNguoiDungAny, exists := c.Get("ma_nguoi_dung")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Không tìm thấy người dùng trong token"})
+		return
+	}
+
+	maNguoiDung := maNguoiDungAny.(uint)
+
 	binhLuan := models.BinhLuan{
-		MaNguoiDung: input.MaNguoiDung,
+		MaNguoiDung: maNguoiDung,
 		MaMonAn:     input.MaMonAn,
 		NoiDung:     input.NoiDung,
 		MaCha:       input.MaCha,
@@ -48,6 +57,8 @@ func GetBinhLuanByMonAn(c *gin.Context) {
 	err := config.DB.
 		Where("ma_mon_an = ? AND ma_cha IS NULL", maMon).
 		Preload("BinhLuans").
+		Preload("BinhLuans.BinhLuans").
+		Preload("NguoiDung").
 		Find(&binhLuans).Error
 
 	if err != nil {
@@ -65,6 +76,7 @@ func GetBinhLuanByID(c *gin.Context) {
 
 	if err := config.DB.
 		Preload("BinhLuans").
+		Preload("NguoiDung").
 		First(&binhLuan, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy bình luận"})
 		return
@@ -76,10 +88,20 @@ func GetBinhLuanByID(c *gin.Context) {
 func UpdateBinhLuan(c *gin.Context) {
 	id := c.Param("id")
 
+	maNguoiDungAny, _ := c.Get("ma_nguoi_dung")
+	maNguoiDung := maNguoiDungAny.(uint)
+
 	var binhLuan models.BinhLuan
 
+	// 1. lấy data trước
 	if err := config.DB.First(&binhLuan, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy bình luận"})
+		return
+	}
+
+	// 2. check quyền sau
+	if binhLuan.MaNguoiDung != maNguoiDung {
+		c.JSON(403, gin.H{"error": "Không có quyền sửa bình luận này"})
 		return
 	}
 
@@ -89,15 +111,34 @@ func UpdateBinhLuan(c *gin.Context) {
 		return
 	}
 
-	config.DB.Model(&binhLuan).Update("noi_dung", input.NoiDung)
+	// 3. update
+	if err := config.DB.Model(&binhLuan).
+		Update("noi_dung", input.NoiDung).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Không thể cập nhật"})
+		return
+	}
 
 	c.JSON(200, gin.H{"data": binhLuan})
 }
 
 func DeleteBinhLuan(c *gin.Context) {
 	id := c.Param("id")
+	maNguoiDungAny, _ := c.Get("ma_nguoi_dung")
 
-	if err := config.DB.Delete(&models.BinhLuan{}, id).Error; err != nil {
+	maNguoiDung := maNguoiDungAny.(uint)
+
+	var binhLuan models.BinhLuan
+	if err := config.DB.First(&binhLuan, id).Error; err != nil {
+		c.JSON(404, gin.H{"error": "Không tìm thấy bình luận"})
+		return
+	}
+
+	if binhLuan.MaNguoiDung != maNguoiDung {
+		c.JSON(403, gin.H{"error": "Không có quyền xóa bình luận này"})
+		return
+	}
+
+	if err := config.DB.Delete(&binhLuan, id).Error; err != nil {
 		c.JSON(500, gin.H{"error": "Không thể xóa"})
 		return
 	}

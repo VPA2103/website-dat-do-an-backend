@@ -53,6 +53,10 @@ func DatDoAn(c *gin.Context) {
 
 	tx := config.DB.Begin()
 
+	// backend tự tính
+	var tongTienServer float64
+
+	// tạo hóa đơn trước
 	hoaDon := models.HoaDon{
 		HoTen:     input.HoTen,
 		SDT:       input.SDT,
@@ -60,10 +64,8 @@ func DatDoAn(c *gin.Context) {
 		GhiChu:    input.GhiChu,
 		Ngay:      time.Now(),
 		TrangThai: "cho_xac_nhan",
-		TongTien:  input.TongTien, // lấy từ FE
 	}
 
-	// tạo hóa đơn
 	if err := tx.Create(&hoaDon).Error; err != nil {
 
 		tx.Rollback()
@@ -93,11 +95,16 @@ func DatDoAn(c *gin.Context) {
 			return
 		}
 
+		thanhTien := monAn.GiaTien * float64(item.SoLuong)
+
+		tongTienServer += thanhTien
+
 		chiTiet := models.ChiTietHoaDon{
 			MaHoaDon:  hoaDon.MaHD,
 			MaMonAn:   item.MaMonAn,
 			SoLuong:   item.SoLuong,
 			DonGia:    monAn.GiaTien,
+			ThanhTien: thanhTien,
 			TrangThai: "cho_xac_nhan",
 			GhiChu:    item.GhiChu,
 		}
@@ -111,6 +118,29 @@ func DatDoAn(c *gin.Context) {
 			})
 			return
 		}
+	}
+
+	// so sánh FE và BE
+	if input.TongTien != tongTienServer {
+
+		tx.Rollback()
+
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Tổng tiền không hợp lệ",
+		})
+		return
+	}
+
+	// cập nhật tổng tiền thật từ backend
+	if err := tx.Model(&hoaDon).
+		Update("tong_tien", tongTienServer).Error; err != nil {
+
+		tx.Rollback()
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể cập nhật tổng tiền",
+		})
+		return
 	}
 
 	tx.Commit()
