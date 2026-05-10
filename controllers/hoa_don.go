@@ -17,11 +17,12 @@ type MonDatInput struct {
 }
 
 type DatDoAnInput struct {
-	HoTen  string         `json:"ho_ten"`
-	SDT    string         `json:"sdt"`
-	DiaChi string         `json:"dia_chi"`
-	GhiChu string         `json:"ghi_chu"`
-	MonAns []MonDatInput  `json:"mon_ans"`
+	HoTen    string        `json:"ho_ten"`
+	SDT      string        `json:"sdt"`
+	DiaChi   string        `json:"dia_chi"`
+	GhiChu   string        `json:"ghi_chu"`
+	TongTien float64       `json:"tong_tien"`
+	MonAns   []MonDatInput `json:"mon_ans"`
 }
 
 func DatDoAn(c *gin.Context) {
@@ -50,7 +51,6 @@ func DatDoAn(c *gin.Context) {
 		return
 	}
 
-	// transaction
 	tx := config.DB.Begin()
 
 	hoaDon := models.HoaDon{
@@ -60,11 +60,12 @@ func DatDoAn(c *gin.Context) {
 		GhiChu:    input.GhiChu,
 		Ngay:      time.Now(),
 		TrangThai: "cho_xac_nhan",
-		TongTien:  0,
+		TongTien:  input.TongTien, // lấy từ FE
 	}
 
 	// tạo hóa đơn
 	if err := tx.Create(&hoaDon).Error; err != nil {
+
 		tx.Rollback()
 
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -72,8 +73,6 @@ func DatDoAn(c *gin.Context) {
 		})
 		return
 	}
-
-	var tongTien float64
 
 	// thêm món
 	for _, item := range input.MonAns {
@@ -94,14 +93,11 @@ func DatDoAn(c *gin.Context) {
 			return
 		}
 
-		thanhTien := float64(item.SoLuong) * monAn.GiaTien
-
 		chiTiet := models.ChiTietHoaDon{
 			MaHoaDon:  hoaDon.MaHD,
 			MaMonAn:   item.MaMonAn,
 			SoLuong:   item.SoLuong,
 			DonGia:    monAn.GiaTien,
-			ThanhTien: thanhTien,
 			TrangThai: "cho_xac_nhan",
 			GhiChu:    item.GhiChu,
 		}
@@ -115,18 +111,67 @@ func DatDoAn(c *gin.Context) {
 			})
 			return
 		}
-
-		tongTien += thanhTien
 	}
 
-	// cập nhật tổng tiền
-	if err := tx.Model(&hoaDon).
-		Update("tong_tien", tongTien).Error; err != nil {
+	tx.Commit()
+
+	var result models.HoaDon
+
+	if err := config.DB.
+		Preload("ChiTietHoaDons").
+		First(&result, "ma_hd = ?", hoaDon.MaHD).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể lấy hóa đơn",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Đặt đồ ăn thành công",
+		"data":    result,
+	})
+}
+
+func XoaHoaDon(c *gin.Context) {
+
+	id := c.Param("id")
+
+	var hoaDon models.HoaDon
+
+	// kiểm tra hóa đơn tồn tại
+	if err := config.DB.
+		First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
+
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Hóa đơn không tồn tại",
+		})
+		return
+	}
+
+	tx := config.DB.Begin()
+
+	// xóa chi tiết hóa đơn trước
+	if err := tx.
+		Where("ma_hoa_don = ?", id).
+		Delete(&models.ChiTietHoaDon{}).Error; err != nil {
 
 		tx.Rollback()
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Không thể cập nhật tổng tiền",
+			"error": "Không thể xóa chi tiết hóa đơn",
+		})
+		return
+	}
+
+	// xóa hóa đơn
+	if err := tx.
+		Delete(&hoaDon).Error; err != nil {
+
+		tx.Rollback()
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể xóa hóa đơn",
 		})
 		return
 	}
@@ -134,14 +179,9 @@ func DatDoAn(c *gin.Context) {
 	tx.Commit()
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Đặt đồ ăn thành công",
-		"data":    hoaDon,
+		"message": "Xóa hóa đơn thành công",
 	})
 }
-
-
-
-
 
 func ThanhToanHoaDon(c *gin.Context) {
 

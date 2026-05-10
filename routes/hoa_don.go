@@ -10,5 +10,6 @@ func HoaDonRoutes(r *gin.Engine) {
 	hoadon := r.Group("/hoa-don")
 	{
 		hoadon.POST("/dat-do-an", controllers.DatDoAn)
+		hoadon.DELETE("/:id", controllers.XoaHoaDon)
 	}
 }
