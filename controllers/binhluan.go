@@ -34,6 +34,31 @@ func CreateBinhLuan(c *gin.Context) {
 
 	maNguoiDung := maNguoiDungAny.(uint)
 
+	// kiểm tra món ăn tồn tại
+	var monAn models.MonAn
+	if err := config.DB.First(&monAn, input.MaMonAn).Error; err != nil {
+		c.JSON(404, gin.H{"error": "Món ăn không tồn tại"})
+		return
+	}
+
+	// kiểm tra comment cha nếu có
+	if input.MaCha != nil {
+		var parent models.BinhLuan
+
+		if err := config.DB.First(&parent, *input.MaCha).Error; err != nil {
+			c.JSON(404, gin.H{"error": "Bình luận cha không tồn tại"})
+			return
+		}
+
+		// đảm bảo reply đúng món ăn
+		if parent.MaMonAn != input.MaMonAn {
+			c.JSON(400, gin.H{
+				"error": "Bình luận cha không thuộc món ăn này",
+			})
+			return
+		}
+	}
+
 	binhLuan := models.BinhLuan{
 		MaNguoiDung: maNguoiDung,
 		MaMonAn:     input.MaMonAn,
@@ -46,7 +71,13 @@ func CreateBinhLuan(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"data": binhLuan})
+	// preload user trả về frontend luôn
+	config.DB.Preload("NguoiDung").First(&binhLuan, binhLuan.ID)
+
+	c.JSON(200, gin.H{
+		"message": "Tạo bình luận thành công",
+		"data":    binhLuan,
+	})
 }
 
 func GetBinhLuanByMonAn(c *gin.Context) {

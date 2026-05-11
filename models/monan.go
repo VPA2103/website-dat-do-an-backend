@@ -9,7 +9,5 @@ type MonAn struct {
 	MoTa        string  `json:"mo_ta" form:"mo_ta"`
 
 	AnhMonAn []HinhAnh `gorm:"polymorphic:Owner;polymorphicValue:mon_an" json:"anh_mon_an,omitempty"`
-	// relation
-	// LoaiMonAn LoaiMonAn `gorm:"foreignKey:MaLoaiMonAn;references:MaLoaiMonAn;constraint:OnDelete:SET NULL"`
-
+	
 }

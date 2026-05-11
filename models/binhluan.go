@@ -16,4 +16,6 @@ type BinhLuan struct {
 
 	BinhLuanCha *BinhLuan  `gorm:"foreignKey:MaCha" json:"binh_luan_cha,omitempty"`
 	BinhLuans   []BinhLuan `gorm:"foreignKey:MaCha" json:"binh_luans,omitempty"`
+
+	NguoiDung NguoiDung `gorm:"foreignKey:MaNguoiDung;" json:"nguoi_dung"`
 }
