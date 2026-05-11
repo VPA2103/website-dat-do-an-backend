@@ -7,10 +7,8 @@ import (
 )
 
 type CreateBinhLuanInput struct {
-	MaNguoiDung uint   `json:"ma_nguoi_dung" binding:"required"`
-	MaMonAn     uint   `json:"ma_mon_an" binding:"required"`
-	NoiDung     string `json:"noi_dung" binding:"required"`
-	MaCha       *uint  `json:"ma_cha"`
+	MaMonAn uint   `json:"ma_mon_an" binding:"required"`
+	NoiDung string `json:"noi_dung" binding:"required"`
 }
 
 type UpdateBinhLuanInput struct {
@@ -26,7 +24,8 @@ func CreateBinhLuan(c *gin.Context) {
 	}
 
 	// lấy user từ token
-	maNguoiDungAny, exists := c.Get("ma_nguoi_dung")
+	maNguoiDungAny, exists := c.Get("user_id")
+
 	if !exists {
 		c.JSON(401, gin.H{"error": "Không tìm thấy người dùng trong token"})
 		return
@@ -41,29 +40,12 @@ func CreateBinhLuan(c *gin.Context) {
 		return
 	}
 
-	// kiểm tra comment cha nếu có
-	if input.MaCha != nil {
-		var parent models.BinhLuan
-
-		if err := config.DB.First(&parent, *input.MaCha).Error; err != nil {
-			c.JSON(404, gin.H{"error": "Bình luận cha không tồn tại"})
-			return
-		}
-
-		// đảm bảo reply đúng món ăn
-		if parent.MaMonAn != input.MaMonAn {
-			c.JSON(400, gin.H{
-				"error": "Bình luận cha không thuộc món ăn này",
-			})
-			return
-		}
-	}
+	
 
 	binhLuan := models.BinhLuan{
 		MaNguoiDung: maNguoiDung,
 		MaMonAn:     input.MaMonAn,
 		NoiDung:     input.NoiDung,
-		MaCha:       input.MaCha,
 	}
 
 	if err := config.DB.Create(&binhLuan).Error; err != nil {
@@ -86,14 +68,12 @@ func GetBinhLuanByMonAn(c *gin.Context) {
 	var binhLuans []models.BinhLuan
 
 	err := config.DB.
-		Where("ma_mon_an = ? AND ma_cha IS NULL", maMon).
-		Preload("BinhLuans").
-		Preload("BinhLuans.BinhLuans").
+		Where("ma_mon_an = ?", maMon).
 		Preload("NguoiDung").
 		Find(&binhLuans).Error
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Lỗi khi lấy dữ liệu"})
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 

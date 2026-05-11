@@ -102,7 +102,9 @@ func Register(c *gin.Context) {
 	}
 
 	if err := config.DB.Create(&newKH).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo tài khoản"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
