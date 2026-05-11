@@ -49,7 +49,7 @@ func GetAllYeuThich(c *gin.Context) {
 
 	if err := config.DB.
 		Preload("NguoiDung").
-		Preload("MonAn").
+		Preload("MonAn.AnhMonAn").
 		Find(&list).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -65,7 +65,7 @@ func GetYeuThichByUser(c *gin.Context) {
 
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", userID).
-		Preload("MonAn").
+		Preload("MonAn.AnhMonAn").
 		Find(&list).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
