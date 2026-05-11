@@ -9,5 +9,4 @@ type YeuThich struct {
 	MaMonAn     uint `gorm:"uniqueIndex:idx_user_mon"`
 
 	CreatedAt time.Time
-
 }

@@ -7,24 +7,35 @@ import (
 )
 
 type YeuThichInput struct {
-	MaNguoiDung uint `json:"ma_nguoi_dung" binding:"required"`
-	MaMonAn     uint `json:"ma_mon_an" binding:"required"`
+	MaMonAn uint `json:"ma_mon_an" binding:"required"`
 }
 
 func CreateYeuThich(c *gin.Context) {
 	var input YeuThichInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": "Dữ liệu không hợp lệ"})
+		return
+	}
+
+	// lấy user từ token
+	maNguoiDungAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Không tìm thấy user từ token"})
+		return
+	}
+
+	maNguoiDung, ok := maNguoiDungAny.(uint)
+	if !ok {
+		c.JSON(500, gin.H{"error": "Sai kiểu dữ liệu user"})
 		return
 	}
 
 	yt := models.YeuThich{
-		MaNguoiDung: input.MaNguoiDung,
+		MaNguoiDung: maNguoiDung,
 		MaMonAn:     input.MaMonAn,
 	}
 
-	// tránh duplicate (unique index)
 	if err := config.DB.Create(&yt).Error; err != nil {
 		c.JSON(500, gin.H{"error": "Món đã được yêu thích hoặc lỗi DB"})
 		return
@@ -64,11 +75,24 @@ func GetYeuThichByUser(c *gin.Context) {
 }
 
 func DeleteYeuThich(c *gin.Context) {
-	userID := c.Query("user")
-	monID := c.Query("mon")
+	monID := c.Param("id")
 
+	// lấy user từ token
+	maNguoiDungAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Không tìm thấy user từ token"})
+		return
+	}
+
+	maNguoiDung, ok := maNguoiDungAny.(uint)
+	if !ok {
+		c.JSON(500, gin.H{"error": "Sai kiểu dữ liệu user"})
+		return
+	}
+
+	// chỉ xoá món của chính user đó
 	if err := config.DB.
-		Where("ma_nguoi_dung = ? AND ma_mon_an = ?", userID, monID).
+		Where("ma_nguoi_dung = ? AND ma_mon_an = ?", maNguoiDung, monID).
 		Delete(&models.YeuThich{}).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
