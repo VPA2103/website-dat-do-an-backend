@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/gorilla/websocket"
 	"github.com/vpa/quanlynhahang-backend/internal/dto"
@@ -25,13 +26,17 @@ type Handler struct {
 func HandleWS(hub *Hub, handler *Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		log.Println("🔌 WS request URL:", r.URL.String())
+		log.Println("🔑 Token query:", r.URL.Query().Get("token"))
+
 		userID, role, err := utils.ParseToken(r)
 
 		if err != nil {
+			log.Println("❌ ParseToken error:", err)
 			http.Error(w, "unauthorized", 401)
 			return
 		}
-
+		log.Println("✅ UserID:", userID, "Role:", role)
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return

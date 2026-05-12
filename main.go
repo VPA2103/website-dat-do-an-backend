@@ -31,37 +31,6 @@ func main() {
 	// 💾 Kết nối DB
 	config.ConnectDB()
 
-	// 🧱 Tự động migrate
-	// err := config.DB.AutoMigrate(
-	// 	// core
-	// 	&models.NguoiDung{},
-	// 	&models.LoaiMonAn{},
-	// 	&models.MonAn{},
-
-	// 	// mid
-	// 	&models.BanAn{},
-	// 	&models.GiamGia{},
-	// 	&models.DiaChi{},
-
-	// 	// order/payment
-	// 	&models.DatBan{},
-	// 	&models.HoaDon{},
-	// 	&models.ChiTietHoaDon{},
-	// 	&models.ThanhToan{},
-
-	// 	// interaction (SAU CÙNG)
-	// 	&models.BinhLuan{},
-	// 	&models.DanhGia{},
-	// 	&models.YeuThich{},
-
-	// 	// misc
-	// 	&models.HinhAnh{},
-	// 	&models.ThongBao{},
-	// 	&models.LienHe{},
-	// 	&models.Message{},
-	// 	&models.Room{},
-	// 	&models.Payments{},
-	// )
 	config.DB.DisableForeignKeyConstraintWhenMigrating = true
 	// Bước 1: Migrate bảng cha riêng, kiểm tra lỗi
 	err := config.DB.AutoMigrate(
@@ -118,7 +87,7 @@ func main() {
 		Repo: notiRepo,
 	}
 
-	routes.SetupRoutes(r, chatUC, notiUC)
+	routes.SetupRoutes(r, chatUC, notiUC, hub)
 
 	handler := &websocket.Handler{
 		ChatUC: chatUC,

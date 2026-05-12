@@ -7,6 +7,7 @@ import (
 type Client struct {
 	UserID uint
 	Role   string
+	RoomID uint
 	Conn   *websocket.Conn
 	Send   chan []byte
 	Hub    *Hub
@@ -23,7 +24,10 @@ func NewClient(conn *websocket.Conn, hub *Hub, userID uint, role string) *Client
 }
 
 func (c *Client) WritePump() {
+	defer c.Conn.Close()
 	for msg := range c.Send {
-		c.Conn.WriteMessage(websocket.TextMessage, msg)
+		if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			return
+		}
 	}
 }

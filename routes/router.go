@@ -4,11 +4,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/controllers"
 	"github.com/vpa/quanlynhahang-backend/internal/usecase"
+	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/middleware"
 )
 
 func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
-	notiUC *usecase.NotificationUseCase) {
+	notiUC *usecase.NotificationUseCase, hub *websocket.Hub,) {
 	// 🌐 Route gốc
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "Hello Gin!"})
@@ -43,7 +44,7 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	GiamGiaRoutes(r)
 	BinhLuanRoutes(r)
 	YeuThichRoutes(r)
-	DanhGiaRoutes(r)
+	DanhGiaRoutes(r,hub)
 	GioHangRoutes(r)
 	Payment(r)
 	SePayPayment(r)

@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -12,25 +15,39 @@ import (
 var secretKey = []byte("MY_SECRET_KEY")
 
 func ParseToken(r *http.Request) (uint, string, error) {
-	tokenStr := r.Header.Get("Authorization")
+    tokenStr := r.URL.Query().Get("token")
+    if tokenStr == "" {
+        tokenStr = r.Header.Get("Authorization")
+    }
 
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return []byte("SECRET_KEY"), nil
-	})
+    if tokenStr == "" {
+        return 0, "", errors.New("missing token")
+    }
 
-	if err != nil {
-		return 0, "", err
-	}
+    // ✅ Đọc từ .env thay vì hardcode
+    secretKey := os.Getenv("SECRET_KEY")
+	log.Println("🔑 SECRET_KEY:", secretKey)
+    if secretKey == "" {
+        secretKey = "SECRET_KEY"
+    }
 
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return 0, "", err
-	}
+    token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+        return []byte(secretKey), nil // ✅ dùng secretKey từ .env
+    })
 
-	userID := uint(claims["user_id"].(float64))
-	role := claims["role"].(string)
+    if err != nil {
+        return 0, "", err
+    }
 
-	return userID, role, nil
+    claims, ok := token.Claims.(jwt.MapClaims)
+    if !ok {
+        return 0, "", errors.New("invalid claims")
+    }
+
+    userID := uint(claims["id"].(float64))
+    role := claims["role"].(string)
+
+    return userID, role, nil
 }
 
 type JWTClaims struct {

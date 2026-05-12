@@ -6,4 +6,5 @@ type WSMessage struct {
 	RoomID       uint   `json:"room_id,omitempty"`
 	Content      string `json:"content,omitempty"`
 	Role         string `json:"role,omitempty"`
+	Payload      interface{} `json:"payload,omitempty"`
 }

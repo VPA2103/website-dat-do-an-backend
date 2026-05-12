@@ -35,7 +35,8 @@ func SetupCORS(r *gin.Engine) {
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
+		AllowCredentials: false,
+		AllowWebSockets: true,
 		MaxAge:           12 * time.Hour,
 	}))
 }
