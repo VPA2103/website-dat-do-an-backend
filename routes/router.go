@@ -44,6 +44,7 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	BinhLuanRoutes(r)
 	YeuThichRoutes(r)
 	DanhGiaRoutes(r)
+	GioHangRoutes(r)
 	Payment(r)
 	SePayPayment(r)
 }

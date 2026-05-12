@@ -57,6 +57,7 @@ func AddToCart(c *gin.Context) {
 	var monAn models.MonAn
 
 	if err := config.DB.
+		Preload("AnhMonAn").
 		Where("ma_mon_an = ?", input.MaMonAn).
 		First(&monAn).Error; err != nil {
 
@@ -77,21 +78,47 @@ func AddToCart(c *gin.Context) {
 		).
 		First(&existing).Error
 
+	// =========================
+	// ĐÃ TỒN TẠI -> UPDATE
+	// =========================
 	if err == nil {
-		// đã tồn tại -> cộng số lượng
+
 		existing.SoLuong += input.SoLuong
 		existing.GiaTien = existing.SoLuong * int(monAn.GiaTien)
 
-		config.DB.Save(&existing)
+		if err := config.DB.Save(&existing).Error; err != nil {
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		// preload lại dữ liệu
+		var result models.GioHang
+
+		if err := config.DB.
+			Preload("MonAn").
+			Preload("MonAn.AnhMonAn").
+			Where("ma_gio_hang = ?", existing.MaGioHang).
+			First(&result).Error; err != nil {
+
+			c.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 
 		c.JSON(200, gin.H{
 			"message": "Đã cập nhật số lượng",
-			"data":    existing,
+			"data":    result,
 		})
+
 		return
 	}
 
-	// tạo mới
+	// =========================
+	// CHƯA TỒN TẠI -> CREATE
+	// =========================
 	gioHang := models.GioHang{
 		MaNguoiDung: userID,
 		MaMonAn:     input.MaMonAn,
@@ -106,7 +133,25 @@ func AddToCart(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, gioHang)
+	// preload lại dữ liệu
+	var result models.GioHang
+
+	if err := config.DB.
+		Preload("MonAn").
+		Preload("MonAn.AnhMonAn").
+		Where("ma_gio_hang = ?", gioHang.MaGioHang).
+		First(&result).Error; err != nil {
+
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(201, gin.H{
+		"message": "Thêm vào giỏ hàng thành công",
+		"data":    result,
+	})
 }
 
 func GetAllCart(c *gin.Context) {
@@ -184,6 +229,8 @@ func UpdateSoLuongCart(c *gin.Context) {
 	var cart models.GioHang
 
 	if err := config.DB.
+		Preload("MonAn").
+		Preload("MonAn.AnhMonAn").
 		Where(
 			"ma_nguoi_dung = ? AND ma_mon_an = ?",
 			userID,
