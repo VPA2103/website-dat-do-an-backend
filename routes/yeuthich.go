@@ -9,7 +9,7 @@ import (
 func YeuThichRoutes(r *gin.Engine) {
 	yeuThich := r.Group("/yeu-thich")
 	{
-		yeuThich.POST("", middleware.AuthMiddleware(), controllers.CreateYeuThich)
+		yeuThich.POST("", middleware.AuthMiddleware(), controllers.AddMonAnYeuThich)
 		yeuThich.GET("", controllers.GetAllYeuThich)
 		yeuThich.GET("/user/:id", controllers.GetYeuThichByUser)
 		yeuThich.DELETE("/:id", middleware.AuthMiddleware(), controllers.DeleteYeuThich)
