@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"log"
 	"sync"
 
 	"github.com/vpa/quanlynhahang-backend/internal/dto"
@@ -64,14 +65,15 @@ func (h *Hub) SendToUser(userID uint, msg dto.WSMessage) {
 }
 
 func (h *Hub) BroadcastToRoom(roomID uint, msg dto.WSMessage) {
-	data, _ := json.Marshal(msg)
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	for c := range h.Clients {
-		if c.RoomID == roomID {
-			safeSend(c, data)
-		}
-	}
+    data, _ := json.Marshal(msg)
+    h.mu.RLock()
+    defer h.mu.RUnlock()
+
+    log.Printf("📡 Broadcasting type=%s to %d clients", msg.Type, len(h.Clients))
+
+    for c := range h.Clients {
+        safeSend(c, data) // ✅ bỏ filter c.RoomID == roomID
+    }
 }
 
 func (h *Hub) SendToRole(role string, msg dto.WSMessage) {
