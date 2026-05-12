@@ -302,3 +302,24 @@ func DeleteCart(c *gin.Context) {
 		"message": "Đã xoá khỏi giỏ hàng",
 	})
 }
+
+func XoaGioHangNguoiDung(c *gin.Context) {
+
+	maNguoiDungAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Không xác thực người dùng"})
+		return
+	}
+
+	maNguoiDung := maNguoiDungAny.(uint)
+
+	if err := config.DB.
+		Where("ma_nguoi_dung = ?", maNguoiDung).
+		Delete(&models.GioHang{}).Error; err != nil {
+
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Đã xóa giỏ hàng"})
+}

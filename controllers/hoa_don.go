@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
-	"github.com/vpa/quanlynhahang-backend/services"
 )
 
 type MonDatInput struct {
@@ -431,25 +430,4 @@ func UpdateHoaDon(c *gin.Context) {
 	})
 }
 
-func ThanhToanHoaDon(c *gin.Context) {
 
-	id := c.Param("ma_hd")
-
-	var hoaDon models.HoaDon
-
-	// check tồn tại
-	if err := config.DB.First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
-		c.JSON(404, gin.H{"error": "Hóa đơn không tồn tại"})
-		return
-	}
-
-	// gọi service (nên truyền ID luôn)
-	if err := services.CloseHoaDon(hoaDon.MaHD); err != nil {
-		c.JSON(500, gin.H{"error": "Không thể thanh toán"})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"message": "Xác nhận đã thanh toán",
-	})
-}

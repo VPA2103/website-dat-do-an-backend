@@ -25,6 +25,6 @@ func HoaDonRoutes(r *gin.Engine) {
 
 		hoaDon.DELETE("/:id", controllers.XoaHoaDon)
 
-		hoaDon.POST("/:ma_hd/thanh-toan", controllers.ThanhToanHoaDon)
+		// hoaDon.POST("/:ma_hd/thanh-toan", controllers.ThanhToanHoaDon)
 	}
 }
