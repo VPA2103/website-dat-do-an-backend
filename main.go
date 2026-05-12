@@ -98,6 +98,10 @@ func main() {
 		websocket.HandleWS(hub, handler)(c.Writer, c.Request)
 	})
 
+	r.GET("/ws/public", func(c *gin.Context) {
+		websocket.HandleWSPublic(hub)(c.Writer, c.Request)
+	})
+
 	// 🚀 Chạy server
 	port := os.Getenv("PORT")
 	if port == "" {

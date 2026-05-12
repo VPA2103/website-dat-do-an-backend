@@ -70,6 +70,32 @@ func HandleWS(hub *Hub, handler *Handler) http.HandlerFunc {
 	}
 }
 
+func HandleWSPublic(hub *Hub) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        conn, err := upgrader.Upgrade(w, r, nil)
+        if err != nil {
+            return
+        }
+
+        client := NewClient(conn, hub, 0, "guest")
+        hub.Register <- client
+
+        go client.WritePump()
+
+        go func() {
+            defer func() {
+                hub.Unregister <- client
+                conn.Close()
+            }()
+            for {
+                if _, _, err := conn.ReadMessage(); err != nil {
+                    break
+                }
+            }
+        }()
+    }
+}
+
 func (h *Handler) dispatchEvent(c *Client, msg dto.WSMessage) {
 	switch msg.Type {
 
