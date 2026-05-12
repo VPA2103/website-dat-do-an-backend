@@ -82,6 +82,7 @@ func main() {
 		&models.HoaDon{},
 		&models.ChiTietHoaDon{},
 		&models.ThanhToan{},
+		&models.GioHang{},
 
 		&models.BinhLuan{},
 		&models.DanhGia{},
