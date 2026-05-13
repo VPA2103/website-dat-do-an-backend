@@ -237,6 +237,7 @@ func GetHoaDons(c *gin.Context) {
 
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
+		Preload("ChiTietHoaDons.MonAn").
 		Order("ma_hd DESC").
 		Find(&hoaDons).Error; err != nil {
 
