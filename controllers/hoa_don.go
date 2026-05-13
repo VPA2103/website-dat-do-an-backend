@@ -35,6 +35,25 @@ func DatDoAn(c *gin.Context) {
 		return
 	}
 
+	// lấy user đăng nhập từ middleware
+	maNguoiDungAny, exists := c.Get("user_id")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Vui lòng đăng nhập",
+		})
+		return
+	}
+
+	maNguoiDung, ok := maNguoiDungAny.(uint)
+
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "user_id không hợp lệ",
+		})
+		return
+	}
+
 	// validate
 	if input.HoTen == "" || input.SDT == "" || input.DiaChi == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -52,17 +71,17 @@ func DatDoAn(c *gin.Context) {
 
 	tx := config.DB.Begin()
 
-	// backend tự tính
 	var tongTienServer float64
 
-	// tạo hóa đơn trước
+	// tạo hóa đơn
 	hoaDon := models.HoaDon{
-		HoTen:     input.HoTen,
-		SDT:       input.SDT,
-		DiaChi:    input.DiaChi,
-		GhiChu:    input.GhiChu,
-		Ngay:      time.Now(),
-		TrangThai: "cho_xac_nhan",
+		MaNguoiDung: maNguoiDung,
+		HoTen:       input.HoTen,
+		SDT:         input.SDT,
+		DiaChi:      input.DiaChi,
+		GhiChu:      input.GhiChu,
+		Ngay:        time.Now(),
+		TrangThai:   "cho_xac_nhan",
 	}
 
 	if err := tx.Create(&hoaDon).Error; err != nil {
@@ -70,7 +89,7 @@ func DatDoAn(c *gin.Context) {
 		tx.Rollback()
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Không thể tạo hóa đơn",
+			"error": err.Error(),
 		})
 		return
 	}
@@ -119,7 +138,7 @@ func DatDoAn(c *gin.Context) {
 		}
 	}
 
-	// so sánh FE và BE
+	// kiểm tra tổng tiền FE gửi
 	if input.TongTien != tongTienServer {
 
 		tx.Rollback()
@@ -130,7 +149,7 @@ func DatDoAn(c *gin.Context) {
 		return
 	}
 
-	// cập nhật tổng tiền thật từ backend
+	// cập nhật tổng tiền
 	if err := tx.Model(&hoaDon).
 		Update("tong_tien", tongTienServer).Error; err != nil {
 
@@ -430,4 +449,34 @@ func UpdateHoaDon(c *gin.Context) {
 	})
 }
 
+func GetHoaDonByNguoiDung(c *gin.Context) {
 
+	maNguoiDungAny, exists := c.Get("user_id")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Chưa đăng nhập",
+		})
+		return
+	}
+
+	maNguoiDung := maNguoiDungAny.(uint)
+
+	var hoaDons []models.HoaDon
+
+	if err := config.DB.
+		Where("ma_nguoi_dung = ?", maNguoiDung).
+		Preload("ChiTietHoaDons").
+		Order("ma_hd DESC").
+		Find(&hoaDons).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": hoaDons,
+	})
+}
