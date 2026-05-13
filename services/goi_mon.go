@@ -76,65 +76,65 @@ func UpdateTongTien(maHD uint) error {
 	return nil
 }
 
-func AddMon(maBan uint, maMon uint, soLuong int) error {
+// func AddMon(maBan uint, maMon uint, soLuong int) error {
 
-	if soLuong <= 0 {
-		return nil
-	}
+// 	if soLuong <= 0 {
+// 		return nil
+// 	}
 
-	// lấy hoặc tạo hóa đơn
-	hoaDon, err := GetOrCreateHoaDon(maBan)
-	if err != nil {
-		return err
-	}
+// 	// lấy hoặc tạo hóa đơn
+// 	hoaDon, err := GetOrCreateHoaDon(maBan)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	var chiTiet models.ChiTietHoaDon
+// 	var chiTiet models.ChiTietHoaDon
 
-	err = config.DB.
-		Where("ma_hd = ? AND ma_mon_an = ?", hoaDon.MaHD, maMon).
-		First(&chiTiet).Error
+// 	err = config.DB.
+// 		Where("ma_hd = ? AND ma_mon_an = ?", hoaDon.MaHD, maMon).
+// 		First(&chiTiet).Error
 
-	// nếu món đã tồn tại trong hóa đơn
-	if err == nil {
+// 	// nếu món đã tồn tại trong hóa đơn
+// 	if err == nil {
 
-		chiTiet.SoLuong += soLuong
-		chiTiet.ThanhTien = float64(chiTiet.SoLuong) * chiTiet.DonGia
+// 		chiTiet.SoLuong += soLuong
+// 		chiTiet.ThanhTien = float64(chiTiet.SoLuong) * chiTiet.DonGia
 
-		if err := config.DB.Save(&chiTiet).Error; err != nil {
-			return err
-		}
+// 		if err := config.DB.Save(&chiTiet).Error; err != nil {
+// 			return err
+// 		}
 
-		// nếu chưa có món trong hóa đơn
-	} else if err == gorm.ErrRecordNotFound {
+// 		// nếu chưa có món trong hóa đơn
+// 	} else if err == gorm.ErrRecordNotFound {
 
-		var mon models.MonAn
+// 		var mon models.MonAn
 
-		if err := config.DB.
-			First(&mon, "ma_mon_an = ?", maMon).Error; err != nil {
-			return err
-		}
+// 		if err := config.DB.
+// 			First(&mon, "ma_mon_an = ?", maMon).Error; err != nil {
+// 			return err
+// 		}
 
-		chiTiet = models.ChiTietHoaDon{
-			MaHoaDon:  hoaDon.MaHD,
-			MaMonAn:   maMon,
-			SoLuong:   soLuong,
-			DonGia:    mon.GiaTien,
-			ThanhTien: float64(soLuong) * mon.GiaTien,
-			TrangThai: "dang_goi",
-		}
+// 		chiTiet = models.ChiTietHoaDon{
+// 			MaHoaDon:  hoaDon.MaHD,
+// 			MaMonAn:   maMon,
+// 			SoLuong:   soLuong,
+// 			DonGia:    mon.GiaTien,
+// 			ThanhTien: float64(soLuong) * mon.GiaTien,
+// 			TrangThai: "dang_goi",
+// 		}
 
-		if err := config.DB.Create(&chiTiet).Error; err != nil {
-			return err
-		}
+// 		if err := config.DB.Create(&chiTiet).Error; err != nil {
+// 			return err
+// 		}
 
-	} else {
-		return err
-	}
+// 	} else {
+// 		return err
+// 	}
 
-	// cập nhật tổng tiền hóa đơn
-	if err := UpdateTongTien(hoaDon.MaHD); err != nil {
-		return err
-	}
+// 	// cập nhật tổng tiền hóa đơn
+// 	if err := UpdateTongTien(hoaDon.MaHD); err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

@@ -467,6 +467,7 @@ func GetHoaDonByNguoiDung(c *gin.Context) {
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", maNguoiDung).
 		Preload("ChiTietHoaDons").
+		Preload("ChiTietHoaDons.MonAn").
 		Order("ma_hd DESC").
 		Find(&hoaDons).Error; err != nil {
 

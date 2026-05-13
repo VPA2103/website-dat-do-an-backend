@@ -38,7 +38,6 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	MonAnRoutes(r)
 	LienHeRoutes(r, contactHandler)
 	DatBanRoutes(r)
-	GoiMonRoutes(r)
 	HoaDonRoutes(r)
 	DiaChiRoutes(r)
 	GiamGiaRoutes(r)
