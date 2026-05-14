@@ -3,30 +3,33 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/controllers"
+	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/middleware"
 )
 
-func HoaDonRoutes(r *gin.Engine) {
+func HoaDonRoutes(r *gin.Engine, hub *websocket.Hub) {
+
+	ctrl := controllers.NewHoaDonController(hub)
 
 	hoaDon := r.Group("/hoa-don")
 	{
-		hoaDon.POST("", middleware.AuthMiddleware(), controllers.DatDoAn)
+		hoaDon.POST("", middleware.AuthMiddleware(), ctrl.DatDoAn)
 
-		hoaDon.GET("", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.GetHoaDons)
+		hoaDon.GET("", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetHoaDons)
 
-		hoaDon.GET("/:id", controllers.GetHoaDonByID)
+		hoaDon.GET("/:id", ctrl.GetHoaDonByID)
 
-		hoaDon.PUT("/:id", controllers.UpdateHoaDon)
+		hoaDon.PUT("/:id", ctrl.UpdateHoaDon)
 
-		hoaDon.PUT("/:id/trang-thai", controllers.UpdateTrangThaiHoaDon)
+		hoaDon.PUT("/:id/trang-thai", ctrl.UpdateTrangThaiHoaDon)
 
-		hoaDon.GET("/user", middleware.AuthMiddleware(), controllers.GetHoaDonByNguoiDung)
+		hoaDon.GET("/user", middleware.AuthMiddleware(), ctrl.GetHoaDonByNguoiDung)
 
-		hoaDon.PUT("/:id/huy", controllers.HuyHoaDon)
+		hoaDon.PUT("/:id/huy", ctrl.HuyHoaDon)
 
-		hoaDon.GET("/trang-thai", controllers.GetHoaDonByTrangThai)
+		hoaDon.GET("/trang-thai", ctrl.GetHoaDonByTrangThai)
 
-		hoaDon.DELETE("/:id", controllers.XoaHoaDon)
+		hoaDon.DELETE("/:id", ctrl.XoaHoaDon)
 
 		// hoaDon.POST("/:ma_hd/thanh-toan", controllers.ThanhToanHoaDon)
 	}

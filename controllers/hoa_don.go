@@ -6,9 +6,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"gorm.io/gorm"
 )
+
+type HoaDonController struct {
+	Hub *websocket.Hub
+}
+
+func NewHoaDonController(hub *websocket.Hub) *HoaDonController {
+	return &HoaDonController{
+		Hub: hub,
+	}
+}
 
 type MonDatInput struct {
 	MaMonAn uint   `json:"ma_mon_an"`
@@ -25,7 +36,7 @@ type DatDoAnInput struct {
 	MonAns      []MonDatInput `json:"mon_ans"`
 }
 
-func DatDoAn(c *gin.Context) {
+func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 
 	var input DatDoAnInput
 
@@ -322,7 +333,7 @@ func DatDoAn(c *gin.Context) {
 	})
 }
 
-func XoaHoaDon(c *gin.Context) {
+func (ctrl *HoaDonController) XoaHoaDon(c *gin.Context) {
 
 	id := c.Param("id")
 
@@ -372,7 +383,7 @@ func XoaHoaDon(c *gin.Context) {
 	})
 }
 
-func GetHoaDons(c *gin.Context) {
+func (ctrl *HoaDonController) GetHoaDons(c *gin.Context) {
 
 	var hoaDons []models.HoaDon
 
@@ -393,7 +404,7 @@ func GetHoaDons(c *gin.Context) {
 	})
 }
 
-func GetHoaDonByID(c *gin.Context) {
+func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 
 	id := c.Param("id")
 
@@ -414,7 +425,7 @@ func GetHoaDonByID(c *gin.Context) {
 	})
 }
 
-func UpdateTrangThaiHoaDon(c *gin.Context) {
+func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 
 	id := c.Param("id")
 
@@ -484,7 +495,7 @@ func UpdateTrangThaiHoaDon(c *gin.Context) {
 	})
 }
 
-func HuyHoaDon(c *gin.Context) {
+func (ctrl *HoaDonController) HuyHoaDon(c *gin.Context) {
 
 	id := c.Param("id")
 
@@ -521,7 +532,7 @@ func HuyHoaDon(c *gin.Context) {
 	})
 }
 
-func GetHoaDonByTrangThai(c *gin.Context) {
+func (ctrl *HoaDonController) GetHoaDonByTrangThai(c *gin.Context) {
 
 	trangThai := c.Query("trang_thai")
 
@@ -543,7 +554,7 @@ func GetHoaDonByTrangThai(c *gin.Context) {
 	})
 }
 
-func UpdateHoaDon(c *gin.Context) {
+func (ctrl *HoaDonController) UpdateHoaDon(c *gin.Context) {
 
 	id := c.Param("id")
 
@@ -591,7 +602,7 @@ func UpdateHoaDon(c *gin.Context) {
 	})
 }
 
-func GetHoaDonByNguoiDung(c *gin.Context) {
+func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 
 	maNguoiDungAny, exists := c.Get("user_id")
 
