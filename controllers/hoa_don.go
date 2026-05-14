@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/internal/dto"
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"gorm.io/gorm"
@@ -327,6 +328,18 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		return
 	}
 
+	// realtime cho admin
+	ctrl.Hub.BroadcastToRoom(0, dto.WSMessage{
+		Type:    "new_hoa_don",
+		Payload: result,
+	})
+
+	// realtime cho user
+	ctrl.Hub.BroadcastToRoom(maNguoiDung, dto.WSMessage{
+		Type:    "new_hoa_don_user",
+		Payload: result,
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Đặt đồ ăn thành công",
 		"data":    result,
@@ -489,6 +502,16 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 		return
 	}
 
+	ctrl.Hub.BroadcastToRoom(0, dto.WSMessage{
+		Type:    "update_trang_thai_hoa_don",
+		Payload: hoaDon,
+	})
+
+	ctrl.Hub.BroadcastToRoom(hoaDon.MaNguoiDung, dto.WSMessage{
+		Type:    "update_trang_thai_hoa_don_user",
+		Payload: hoaDon,
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Cập nhật trạng thái thành công",
 		"hoa_don": hoaDon,
@@ -526,6 +549,18 @@ func (ctrl *HoaDonController) HuyHoaDon(c *gin.Context) {
 		})
 		return
 	}
+
+	config.DB.First(&hoaDon, "ma_hd = ?", id)
+
+	ctrl.Hub.BroadcastToRoom(0, dto.WSMessage{
+		Type:    "cancel_hoa_don",
+		Payload: hoaDon,
+	})
+
+	ctrl.Hub.BroadcastToRoom(hoaDon.MaNguoiDung, dto.WSMessage{
+		Type:    "cancel_hoa_don_user",
+		Payload: hoaDon,
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Hủy hóa đơn thành công",
