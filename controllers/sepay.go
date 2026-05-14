@@ -4,7 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -15,6 +15,7 @@ import (
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/utils"
+	"gorm.io/datatypes"
 )
 
 type SePayWebhook struct {
@@ -32,7 +33,7 @@ func verifySignature(body []byte, signature string) bool {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write(body)
 
-	expected := hex.EncodeToString(mac.Sum(nil))
+	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 
 	return hmac.Equal([]byte(expected), []byte(signature))
 }
@@ -47,7 +48,9 @@ func CreatePaymentService(orderID int64) (map[string]interface{}, error) {
 
 	payment := models.Payments{
 		OrderID:       uint64(orderID),
+		Provider:      "sepay",
 		InvoiceNumber: invoice,
+		Amount:        order.TongTien,
 		Status:        "pending",
 	}
 	config.DB.Create(&payment)
@@ -98,7 +101,7 @@ func buildQuery(params map[string]string, keys []string) string {
 }
 
 func buildSePayURL(invoice string, amount int64) string {
-	baseURL := "https://pgapi-sandbox.sepay.vn"
+	baseURL := "https://pgapi-sandbox.sepay.vn/payment/link"
 	//Production	https://pgapi.sepay.vn
 	//Sandbox	https://pgapi-sandbox.sepay.vn
 
@@ -156,44 +159,66 @@ func buildSePayURL(invoice string, amount int64) string {
 
 func HandleIPN(c *gin.Context) {
 
-	body, _ := io.ReadAll(c.Request.Body)
-
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "cannot read body"})
+		return
+	}
+	fmt.Println("SEPAY WEBHOOK:", string(body))
 	signature := c.GetHeader("X-SePay-Signature")
 
+	// verify signature trước
 	if !verifySignature(body, signature) {
 		c.JSON(400, gin.H{"error": "invalid signature"})
 		return
 	}
 
+	// parse JSON 1 lần duy nhất
 	var payload SePayWebhook
-
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(400, gin.H{"error": "invalid"})
+	if err := json.Unmarshal(body, &payload); err != nil {
+		c.JSON(400, gin.H{"error": "invalid payload"})
 		return
 	}
 
 	invoice := payload.Order.InvoiceNumber
 
+	// 1. find payment
 	var payment models.Payments
-	if err := config.DB.Where("invoice_number = ?", invoice).First(&payment).Error; err != nil {
+	if payment.Status == "paid" {
+		return
+	}
+	if err := config.DB.
+		Where("invoice_number = ?", invoice).
+		First(&payment).Error; err != nil {
 		c.Status(200)
 		return
 	}
 
-	// idempotent (tránh update 2 lần)
+	// 2. idempotent
 	if payment.Status == "paid" {
 		c.Status(200)
 		return
 	}
 
+	// 3. verify amount (SAU KHI LẤY PAYMENT)
+	if float64(payload.Order.Amount) < payment.Amount {
+		c.JSON(400, gin.H{"error": "invalid amount"})
+		return
+	}
+
+	// 4. update payment + raw data
 	if payload.NotificationType == "ORDER_PAID" {
+
 		payment.Status = "paid"
+		payment.RawData = datatypes.JSON(body)
+		payment.TransactionID = payload.Order.InvoiceNumber // nếu API có txn id thì thay
+
 		config.DB.Save(&payment)
 
-		// update order
+		// 5. update order (KHÔNG đổi DB structure)
 		config.DB.Model(&models.HoaDon{}).
-			Where("id = ?", payment.OrderID).
-			Update("status", "paid")
+			Where("ma_hd = ?", payment.OrderID).
+			Update("trang_thai", "da_thanh_toan")
 	}
 
 	c.Status(200)

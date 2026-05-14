@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Food API</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --go-blue: #00ACD7;
+      --go-dark: #00758D;
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #21262d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #3fb950;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.4;
+      z-index: 0;
+    }
+
+    /* Glow blob */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,172,215,0.08) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      animation: pulse 6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Golang Gopher SVG Logo */
+    .logo-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-wrap svg {
+      width: 140px;
+      height: 140px;
+      filter: drop-shadow(0 0 32px rgba(0,172,215,0.4));
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .badge {
+      position: absolute;
+      bottom: -8px;
+      right: -8px;
+      background: var(--green);
+      color: #0d1117;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .info {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .title span {
+      color: var(--go-blue);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* Status row */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--green);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 320px;
+      animation: fadeUp 0.8s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .card-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .endpoint {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+
+    .endpoint:hover {
+      border-color: var(--go-blue);
+    }
+
+    .method {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+    }
+
+    .get  { background: rgba(0,172,215,0.15); color: var(--go-blue); }
+    .post { background: rgba(63,185,80,0.15);  color: var(--green); }
+
+    .path { color: var(--text); }
+
+    /* Footer */
+    .footer {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      animation: fadeUp 0.8s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .footer a {
+      color: var(--go-blue);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="logo-wrap">
+      <!-- Official Go Gopher SVG -->
+      <svg viewBox="0 0 206.1 78" xmlns="http://www.w3.org/2000/svg" aria-label="Go Gopher">
+        <!-- Go text logo simplified as the Gopher mascot simplified inline -->
+        <!-- Using the Go brand colors with a stylized gopher -->
+        <ellipse cx="103" cy="39" rx="100" ry="36" fill="#00ACD7" opacity="0.08"/>
+        <!-- Gopher body -->
+        <ellipse cx="103" cy="48" rx="32" ry="28" fill="#00ACD7"/>
+        <!-- Head -->
+        <ellipse cx="103" cy="22" rx="26" ry="22" fill="#00ACD7"/>
+        <!-- Ears -->
+        <ellipse cx="80" cy="10" rx="9" ry="11" fill="#00ACD7"/>
+        <ellipse cx="126" cy="10" rx="9" ry="11" fill="#00ACD7"/>
+        <ellipse cx="80" cy="10" rx="5" ry="7" fill="#00758D"/>
+        <ellipse cx="126" cy="10" rx="5" ry="7" fill="#00758D"/>
+        <!-- Face -->
+        <ellipse cx="103" cy="26" rx="18" ry="14" fill="#e8f4f8"/>
+        <!-- Eyes -->
+        <circle cx="95" cy="20" r="5" fill="white"/>
+        <circle cx="111" cy="20" r="5" fill="white"/>
+        <circle cx="96" cy="20" r="2.5" fill="#1a1a2e"/>
+        <circle cx="112" cy="20" r="2.5" fill="#1a1a2e"/>
+        <circle cx="97" cy="19" r="1" fill="white"/>
+        <circle cx="113" cy="19" r="1" fill="white"/>
+        <!-- Nose -->
+        <ellipse cx="103" cy="27" rx="5" ry="3" fill="#00758D"/>
+        <circle cx="101" cy="26" r="1" fill="white" opacity="0.5"/>
+        <!-- Mouth -->
+        <path d="M97 31 Q103 35 109 31" stroke="#00758D" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <!-- Arms -->
+        <ellipse cx="72" cy="52" rx="10" ry="7" fill="#00ACD7" transform="rotate(-20 72 52)"/>
+        <ellipse cx="134" cy="52" rx="10" ry="7" fill="#00ACD7" transform="rotate(20 134 52)"/>
+        <!-- Hands/Feet -->
+        <ellipse cx="66" cy="57" rx="7" ry="5" fill="#00758D"/>
+        <ellipse cx="140" cy="57" rx="7" ry="5" fill="#00758D"/>
+        <!-- Belly -->
+        <ellipse cx="103" cy="52" rx="18" ry="16" fill="#e8f4f8" opacity="0.5"/>
+        <!-- Feet -->
+        <ellipse cx="91" cy="74" rx="9" ry="5" fill="#00758D"/>
+        <ellipse cx="115" cy="74" rx="9" ry="5" fill="#00758D"/>
+      </svg>
+      <span class="badge">RUNNING</span>
+    </div>
+
+    <div class="info">
+      <div class="title">Food Order <span>API</span></div>
+      <div class="subtitle">Powered by Go · Gin Framework</div>
+      <div class="status-row">
+        <div class="dot"></div>
+        Server đang hoạt động bình thường
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Endpoints có sẵn</div>
+      <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="path">/api/foods</span>
+      </div>
+      <div class="endpoint">
+        <span class="method post">POST</span>
+        <span class="path">/api/orders</span>
+      </div>
+      <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="path">/api/orders/:id</span>
+      </div>
+      <div class="endpoint">
+        <span class="method get">GET</span>
+        <span class="path">/health</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      Built with <a href="https://go.dev" target="_blank">Go</a> &amp; <a href="https://gin-gonic.com" target="_blank">Gin</a> · v1.0.0
+    </div>
+  </div>
+</body>
+</html>

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
+	"gorm.io/gorm"
 )
 
 type MonDatInput struct {
@@ -16,12 +17,12 @@ type MonDatInput struct {
 }
 
 type DatDoAnInput struct {
-	HoTen    string        `json:"ho_ten"`
-	SDT      string        `json:"sdt"`
-	DiaChi   string        `json:"dia_chi"`
-	GhiChu   string        `json:"ghi_chu"`
-	TongTien float64       `json:"tong_tien"`
-	MonAns   []MonDatInput `json:"mon_ans"`
+	HoTen       string        `json:"ho_ten"`
+	SDT         string        `json:"sdt"`
+	DiaChi      string        `json:"dia_chi"`
+	GhiChu      string        `json:"ghi_chu"`
+	CodeGiamGia string        `json:"code_giam_gia"`
+	MonAns      []MonDatInput `json:"mon_ans"`
 }
 
 func DatDoAn(c *gin.Context) {
@@ -29,16 +30,18 @@ func DatDoAn(c *gin.Context) {
 	var input DatDoAnInput
 
 	if err := c.ShouldBindJSON(&input); err != nil {
+
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Dữ liệu không hợp lệ",
 		})
 		return
 	}
 
-	// lấy user đăng nhập từ middleware
+	// lấy user từ middleware
 	maNguoiDungAny, exists := c.Get("user_id")
 
 	if !exists {
+
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Vui lòng đăng nhập",
 		})
@@ -48,14 +51,18 @@ func DatDoAn(c *gin.Context) {
 	maNguoiDung, ok := maNguoiDungAny.(uint)
 
 	if !ok {
+
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "user_id không hợp lệ",
 		})
 		return
 	}
 
-	// validate
-	if input.HoTen == "" || input.SDT == "" || input.DiaChi == "" {
+	// validate input
+	if input.HoTen == "" ||
+		input.SDT == "" ||
+		input.DiaChi == "" {
+
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Thiếu thông tin khách hàng",
 		})
@@ -63,6 +70,7 @@ func DatDoAn(c *gin.Context) {
 	}
 
 	if len(input.MonAns) == 0 {
+
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Chưa có món ăn",
 		})
@@ -70,6 +78,13 @@ func DatDoAn(c *gin.Context) {
 	}
 
 	tx := config.DB.Begin()
+
+	// rollback nếu panic
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
 	var tongTienServer float64
 
@@ -89,12 +104,12 @@ func DatDoAn(c *gin.Context) {
 		tx.Rollback()
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"error": "Không thể tạo hóa đơn",
 		})
 		return
 	}
 
-	// thêm món
+	// thêm món ăn
 	for _, item := range input.MonAns {
 
 		if item.SoLuong <= 0 {
@@ -103,7 +118,8 @@ func DatDoAn(c *gin.Context) {
 
 		var monAn models.MonAn
 
-		if err := tx.First(&monAn, "ma_mon_an = ?", item.MaMonAn).Error; err != nil {
+		if err := tx.
+			First(&monAn, "ma_mon_an = ?", item.MaMonAn).Error; err != nil {
 
 			tx.Rollback()
 
@@ -138,34 +154,159 @@ func DatDoAn(c *gin.Context) {
 		}
 	}
 
-	// kiểm tra tổng tiền FE gửi
-	if input.TongTien != tongTienServer {
+	// =========================
+	// xử lý mã giảm giá
+	// =========================
 
-		tx.Rollback()
+	var tienGiam float64
+	var giamGia models.GiamGia
 
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Tổng tiền không hợp lệ",
-		})
-		return
+	if input.CodeGiamGia != "" {
+
+		err := tx.
+			Where("code = ?", input.CodeGiamGia).
+			First(&giamGia).Error
+
+		if err != nil {
+
+			tx.Rollback()
+
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Mã giảm giá không tồn tại",
+			})
+			return
+		}
+
+		// check active
+		if !giamGia.IsActive {
+
+			tx.Rollback()
+
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Mã giảm giá đã bị khóa",
+			})
+			return
+		}
+
+		now := time.Now()
+
+		// check thời gian
+		if now.Before(giamGia.NgayBatDau) ||
+			now.After(giamGia.NgayKetThuc) {
+
+			tx.Rollback()
+
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Mã giảm giá đã hết hạn",
+			})
+			return
+		}
+
+		// check đơn tối thiểu
+		if tongTienServer < giamGia.DonToiThieu {
+
+			tx.Rollback()
+
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Chưa đủ giá trị đơn tối thiểu",
+			})
+			return
+		}
+
+		// check giới hạn sử dụng
+		if giamGia.GioiHanSuDung != nil &&
+			giamGia.SoLanDaDung >= *giamGia.GioiHanSuDung {
+
+			tx.Rollback()
+
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Mã giảm giá đã hết lượt sử dụng",
+			})
+			return
+		}
+
+		// tính giảm giá
+		switch giamGia.LoaiGiamGia {
+
+		case "percent":
+
+			tienGiam =
+				tongTienServer *
+					giamGia.GiaTriGiam / 100
+
+			// giới hạn giảm tối đa
+			if giamGia.GiamToiDa > 0 &&
+				tienGiam > giamGia.GiamToiDa {
+
+				tienGiam = giamGia.GiamToiDa
+			}
+
+		case "fixed":
+
+			tienGiam = giamGia.GiaTriGiam
+		}
+
+		// tránh âm tiền
+		if tienGiam > tongTienServer {
+			tienGiam = tongTienServer
+		}
+
+		// gắn voucher vào hóa đơn
+		hoaDon.GiamGiaID = &giamGia.ID
+
+		// tăng số lần sử dụng
+		if err := tx.Model(&giamGia).
+			Update(
+				"so_lan_da_dung",
+				gorm.Expr("so_lan_da_dung + ?", 1),
+			).Error; err != nil {
+
+			tx.Rollback()
+
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Không thể cập nhật mã giảm giá",
+			})
+			return
+		}
 	}
 
-	// cập nhật tổng tiền
-	if err := tx.Model(&hoaDon).
-		Update("tong_tien", tongTienServer).Error; err != nil {
+	// tổng cuối
+	tongCuoi := tongTienServer - tienGiam
+
+	// update hóa đơn
+	updateData := map[string]interface{}{
+		"tong_tien":   tongCuoi,
+		"tam_tinh":    tongTienServer,
+		"tien_giam":   tienGiam,
+		"giam_gia_id": hoaDon.GiamGiaID,
+	}
+
+	if err := tx.
+		Model(&hoaDon).
+		Updates(updateData).Error; err != nil {
 
 		tx.Rollback()
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Không thể cập nhật tổng tiền",
+			"error": "Không thể cập nhật hóa đơn",
 		})
 		return
 	}
 
-	tx.Commit()
+	// commit
+	if err := tx.Commit().Error; err != nil {
 
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể lưu hóa đơn",
+		})
+		return
+	}
+
+	// lấy kết quả cuối
 	var result models.HoaDon
 
 	if err := config.DB.
+		Preload("GiamGia").
 		Preload("ChiTietHoaDons").
 		First(&result, "ma_hd = ?", hoaDon.MaHD).Error; err != nil {
 

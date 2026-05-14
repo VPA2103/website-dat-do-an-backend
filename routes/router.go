@@ -9,10 +9,10 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
-	notiUC *usecase.NotificationUseCase, hub *websocket.Hub,) {
+	notiUC *usecase.NotificationUseCase, hub *websocket.Hub) {
 	// 🌐 Route gốc
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "Hello Gin!"})
+		c.File("./static/web-page.html")
 	})
 
 	r.POST("/register", controllers.Register)
@@ -41,9 +41,9 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	HoaDonRoutes(r)
 	DiaChiRoutes(r)
 	GiamGiaRoutes(r)
-	BinhLuanRoutes(r,hub)
+	BinhLuanRoutes(r, hub)
 	YeuThichRoutes(r)
-	DanhGiaRoutes(r,hub)
+	DanhGiaRoutes(r, hub)
 	GioHangRoutes(r)
 	Payment(r)
 	SePayPayment(r)
