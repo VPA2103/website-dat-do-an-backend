@@ -21,15 +21,10 @@ type GiamGia struct {
 
 	SoLanDaDung int `gorm:"default:0" json:"so_lan_da_dung"`
 
-	GioiHanMoiUser int `gorm:"default:1" json:"gioi_han_moi_user"`
-
 	NgayBatDau  time.Time `json:"ngay_bat_dau"`
 	NgayKetThuc time.Time `json:"ngay_ket_thuc"`
 
 	IsActive bool `gorm:"default:true" json:"is_active"`
-
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 
 	AnhGiamGia []HinhAnh `gorm:"polymorphic:Owner;polymorphicValue:giam_gia;constraint:OnDelete:CASCADE" json:"anh_giam_gia,omitempty"`
 }

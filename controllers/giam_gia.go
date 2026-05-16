@@ -18,8 +18,7 @@ type GiamGiaInput struct {
 	DonToiThieu    float64 `form:"don_toi_thieu"`
 	GiamToiDa      float64 `form:"giam_toi_da"`
 
-	GioiHanSuDung  *int `form:"gioi_han_su_dung"`
-	GioiHanMoiUser int  `form:"gioi_han_moi_user"`
+	GioiHanSuDung *int `form:"gioi_han_su_dung"`
 
 	NgayBatDau  string `form:"ngay_bat_dau"`
 	NgayKetThuc string `form:"ngay_ket_thuc"`
@@ -71,7 +70,6 @@ func CreateGiamGia(c *gin.Context) {
 		DonToiThieu:    input.DonToiThieu,
 		GiamToiDa:      input.GiamToiDa,
 		GioiHanSuDung:  input.GioiHanSuDung,
-		GioiHanMoiUser: input.GioiHanMoiUser,
 		NgayBatDau:     ngayBatDau,
 		NgayKetThuc:    ngayKetThuc,
 		IsActive:       input.IsActive,
@@ -131,7 +129,6 @@ func CreateGiamGia(c *gin.Context) {
 	})
 }
 
-
 func GetAllGiamGia(c *gin.Context) {
 	var giamGia []models.GiamGia
 
@@ -146,7 +143,6 @@ func GetAllGiamGia(c *gin.Context) {
 		"data": giamGia,
 	})
 }
-
 
 func GetGiamGiaById(c *gin.Context) {
 	id := c.Param("id")
@@ -164,7 +160,6 @@ func GetGiamGiaById(c *gin.Context) {
 		"data": giamGia,
 	})
 }
-
 
 func UpdateGiamGia(c *gin.Context) {
 	id := c.Param("id")
@@ -200,7 +195,6 @@ func UpdateGiamGia(c *gin.Context) {
 	giamGia.DonToiThieu = input.DonToiThieu
 	giamGia.GiamToiDa = input.GiamToiDa
 	giamGia.GioiHanSuDung = input.GioiHanSuDung
-	giamGia.GioiHanMoiUser = input.GioiHanMoiUser
 	giamGia.NgayBatDau = ngayBatDau
 	giamGia.NgayKetThuc = ngayKetThuc
 	giamGia.IsActive = input.IsActive

@@ -151,8 +151,6 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 			SoLuong:   item.SoLuong,
 			DonGia:    monAn.GiaTien,
 			ThanhTien: thanhTien,
-			TrangThai: "cho_xac_nhan",
-			GhiChu:    item.GhiChu,
 		}
 
 		if err := tx.Create(&chiTiet).Error; err != nil {
