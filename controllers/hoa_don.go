@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -9,6 +11,7 @@ import (
 	"github.com/vpa/quanlynhahang-backend/internal/dto"
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/utils"
 	"gorm.io/gorm"
 )
 
@@ -325,6 +328,31 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		})
 		return
 	}
+
+	// ✉️ gửi mail xác nhận — chạy nền, không block response
+	go func() {
+		// lấy email từ DB theo maNguoiDung
+		var nguoiDung models.NguoiDung
+		if err := config.DB.First(&nguoiDung, maNguoiDung).Error; err != nil {
+			log.Printf("SendMail: không lấy được email user %d: %v", maNguoiDung, err)
+			return
+		}
+
+		err := utils.SendMailSauKhiDatDoAn(nguoiDung.Email, utils.DatDoAnMailInfo{
+			TenKhachHang: result.HoTen,
+			MaDon:        fmt.Sprintf("%d", result.MaHD),
+			NgayGio:      result.Ngay.Format("02/01/2006 lúc 15:04"),
+			DiaChi:       result.DiaChi,
+			SoMonAn:      len(result.ChiTietHoaDons),
+			TamTinh:      result.TamTinh,
+			TienGiam:     result.TienGiam,
+			TongCuoi:     result.TongTien,
+			GhiChu:       result.GhiChu,
+		})
+		if err != nil {
+			log.Printf("SendMail: lỗi gửi mail đơn #%d: %v", result.MaHD, err)
+		}
+	}()
 
 	// realtime cho admin
 	ctrl.Hub.BroadcastToRoom(0, dto.WSMessage{

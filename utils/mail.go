@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/vpa/quanlynhahang-backend/config"
@@ -30,4 +31,109 @@ func SendMail(to, subject, body string) error {
 	)
 
 	return d.DialAndSend(m)
+}
+
+type DatDoAnMailInfo struct {
+	TenKhachHang string
+	MaDon        string
+	NgayGio      string
+	DiaChi       string
+	SoMonAn      int
+	TamTinh      float64
+	TienGiam     float64
+	TongCuoi     float64
+	GhiChu       string
+}
+
+func SendMailSauKhiDatDoAn(email string, info DatDoAnMailInfo) error {
+	body := fmt.Sprintf(`
+				<!DOCTYPE html>
+				<html lang="vi">
+				<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+				<body style="margin:0;padding:20px;background:#f4ede0;font-family:Georgia,'Times New Roman',serif;">
+				<div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;">
+
+					<!-- Header -->
+					<div style="background:#1a1a1a;padding:32px 32px 24px;text-align:center;">
+					<div style="font-size:22px;letter-spacing:4px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
+					<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">SAIGON KITCHEN</div>
+					</div>
+
+					<!-- Title -->
+					<div style="background:#f7f0e3;padding:24px 32px 16px;text-align:center;border-bottom:1px solid #e0d0b0;">
+					<div style="font-size:11px;letter-spacing:5px;color:#8a7a5a;font-family:'Courier New',monospace;margin-bottom:8px;">THÔNG BÁO</div>
+					<div style="font-size:22px;color:#2a1f0a;letter-spacing:1px;">Đặt bàn thành công</div>
+					<div style="width:40px;height:1px;background:#c4a55a;margin:12px auto 0;"></div>
+					</div>
+
+					<!-- Body -->
+					<div style="padding:24px 32px;background:#fdfaf4;">
+					<p style="font-size:14px;color:#4a3c20;line-height:1.8;margin:0 0 16px;">
+						Kính gửi <strong>%s</strong>,
+					</p>
+					<p style="font-size:14px;color:#4a3c20;line-height:1.8;margin:0 0 24px;">
+						Chúng tôi xin xác nhận bạn đã đặt đồ ăn tại quán thành công. Dưới đây là chi tiết đơn đặt của bạn:
+					</p>
+
+					<!-- Info table -->
+					<table style="width:100%%;border-collapse:collapse;font-size:13px;background:#fff;border:0.5px solid #e0d0b0;border-radius:8px;overflow:hidden;margin-bottom:24px;">
+						<tr style="border-bottom:0.5px solid #f0e4c8;">
+						<td style="padding:10px 14px;color:#8a7a5a;width:40%%;">Mã đơn</td>
+						<td style="padding:10px 14px;color:#2a1f0a;font-family:'Courier New',monospace;font-weight:600;">#%s</td>
+						</tr>
+						<tr style="border-bottom:0.5px solid #f0e4c8;">
+						<td style="padding:10px 14px;color:#8a7a5a;">Ngày &amp; giờ</td>
+						<td style="padding:10px 14px;color:#2a1f0a;">%s</td>
+						</tr>
+						<tr style="border-bottom:0.5px solid #f0e4c8;">
+						<td style="padding:10px 14px;color:#8a7a5a;">Số khách</td>
+						<td style="padding:10px 14px;color:#2a1f0a;">%d người</td>
+						</tr>
+						<tr>
+						<td style="padding:10px 14px;color:#8a7a5a;">Số điện thoại</td>
+						<td style="padding:10px 14px;color:#2a1f0a;">%s</td>
+						</tr>
+					</table>
+
+					<!-- Ghi chú -->
+					<div style="background:#f7f0e3;border-left:3px solid #c4a55a;padding:12px 14px;margin-bottom:24px;">
+						<p style="font-size:13px;color:#5a4520;margin:0;line-height:1.6;">
+						<strong>Ghi chú:</strong> %s
+						</p>
+					</div>
+
+					<p style="font-size:13px;color:#6a5a3a;line-height:1.8;margin:0;">
+						Nếu bạn cần thay đổi hoặc hủy đặt bàn, vui lòng liên hệ trước <strong>2 tiếng</strong> so với giờ đặt.
+					</p>
+					</div>
+
+					<!-- CTA -->
+					<div style="padding:16px 32px;background:#fdfaf4;border-top:0.5px solid #e0d0b0;text-align:center;">
+					<div style="display:inline-block;background:#1a1a1a;color:#e8d5b0;font-size:12px;letter-spacing:3px;padding:10px 28px;font-family:'Courier New',monospace;">
+						HẸN GẶP BẠN!
+					</div>
+					</div>
+
+					<!-- Footer -->
+					<div style="padding:16px 32px;background:#1a1a1a;text-align:center;">
+					<p style="font-size:11px;color:#6a5a3a;margin:0;letter-spacing:1px;font-family:'Courier New',monospace;">
+						123 Đường ABC, Q.1, TP.HCM &nbsp;|&nbsp; 028-xxxx-xxxx
+					</p>
+					</div>
+
+				</div>
+				</body>
+				</html>`,
+		info.TenKhachHang,
+		info.MaDon,
+		info.NgayGio,
+		info.DiaChi,
+		info.SoMonAn,
+		info.TamTinh,
+		info.TienGiam,
+		info.TongCuoi,
+		info.GhiChu,
+	)
+
+	return SendMail(email, "✦ Xác nhận đặt đồ ăn thành công", body)
 }
