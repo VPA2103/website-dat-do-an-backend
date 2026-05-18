@@ -37,6 +37,8 @@ func main() {
 		&models.NguoiDung{},
 		&models.LoaiMonAn{},
 		&models.MonAn{},
+		&models.NhomOption{},
+		&models.OptionItem{},
 	)
 	if err != nil {
 		log.Fatal("❌1 Migrate core failed:", err)
@@ -50,6 +52,7 @@ func main() {
 		&models.DatBan{},
 		&models.HoaDon{},
 		&models.ChiTietHoaDon{},
+		&models.ChiTietHoaDonOption{},
 		&models.ThanhToan{},
 		&models.GioHang{},
 
@@ -67,6 +70,7 @@ func main() {
 	if err != nil {
 		log.Fatal("❌2 Migrate relations failed:", err)
 	}
+	log.Println("✅ Database migrated")
 
 	// 🚏 Đăng ký route
 	routes.UploadRoutes(r)

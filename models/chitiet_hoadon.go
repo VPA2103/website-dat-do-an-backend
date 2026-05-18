@@ -11,4 +11,6 @@ type ChiTietHoaDon struct {
 	SoLuong   int     `json:"so_luong"`
 	DonGia    float64 `json:"don_gia"`
 	ThanhTien float64 `json:"thanh_tien"`
+
+	Options []ChiTietHoaDonOption `gorm:"foreignKey:MaChiTiet" json:"options"`
 }

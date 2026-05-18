@@ -1,38 +1,45 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/dto"
 	"github.com/vpa/quanlynhahang-backend/models"
 )
 
-type input struct {
-	HoTen   string `form:"ho_ten" json:"ho_ten"`
-	SDT     string `form:"sdt" json:"sdt"`
-	DiaChi  string `form:"dia_chi" json:"dia_chi"`
-	MacDinh bool   `form:"mac_dinh" json:"mac_dinh"`
-}
-
 func CreateDiaChi(c *gin.Context) {
-	var dc models.DiaChi
 
-	if err := c.ShouldBindJSON(&dc); err != nil {
+	var input dto.DiaChiInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Dữ liệu không hợp lệ",
 		})
 		return
 	}
 
-	dc.CreatedAt = time.Now()
-	dc.UpdatedAt = time.Now()
+	userIDAny, _ := c.Get("user_id")
+	userID := userIDAny.(uint)
 
-	// nếu là địa chỉ mặc định thì reset các địa chỉ khác
+	dc := models.DiaChi{
+		HoTen:       input.HoTen,
+		SDT:         input.SDT,
+		DiaChi:      input.DiaChi,
+		Latitude:    input.Latitude,
+		Longitude:   input.Longitude,
+		MacDinh:     input.MacDinh,
+		MaNguoiDung: userID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
 	if dc.MacDinh {
 		config.DB.Model(&models.DiaChi{}).
-			Where("ma_nguoi_dung = ?", dc.MaNguoiDung).
+			Where("ma_nguoi_dung = ?", userID).
 			Update("mac_dinh", false)
 	}
 
@@ -70,6 +77,16 @@ func GetDiaChiByID(c *gin.Context) {
 
 	var dc models.DiaChi
 
+	userIDAny, _ := c.Get("user_id")
+	userID := userIDAny.(uint)
+
+	if dc.MaNguoiDung != userID {
+		c.JSON(403, gin.H{
+			"error": "Không có quyền",
+		})
+		return
+	}
+
 	if err := config.DB.First(&dc, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Không tìm thấy địa chỉ",
@@ -91,7 +108,17 @@ func UpdateDiaChi(c *gin.Context) {
 		return
 	}
 
-	var input input
+	userIDAny, _ := c.Get("user_id")
+	userID := userIDAny.(uint)
+
+	if dc.MaNguoiDung != userID {
+		c.JSON(403, gin.H{
+			"error": "Không có quyền",
+		})
+		return
+	}
+
+	var input dto.DiaChiInput
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Dữ liệu không hợp lệ",
@@ -104,6 +131,8 @@ func UpdateDiaChi(c *gin.Context) {
 	dc.SDT = input.SDT
 	dc.DiaChi = input.DiaChi
 	dc.MacDinh = input.MacDinh
+	dc.Latitude = input.Latitude
+	dc.Longitude = input.Longitude
 	dc.UpdatedAt = time.Now()
 
 	// nếu set mặc định -> reset các địa chỉ khác
@@ -169,7 +198,7 @@ func SetDiaChiMacDinh(c *gin.Context) {
 	// set địa chỉ hiện tại thành mặc định
 	if err := tx.Model(&dc).
 		Updates(map[string]interface{}{
-			"mac_dinh":  true,
+			"mac_dinh":   true,
 			"updated_at": time.Now(),
 		}).Error; err != nil {
 
@@ -186,5 +215,35 @@ func SetDiaChiMacDinh(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Đặt địa chỉ mặc định thành công",
 		"data":    dc,
+	})
+}
+
+func GetGoogleMapDirection(c *gin.Context) {
+
+	id := c.Param("id")
+
+	var diaChi models.DiaChi
+
+	if err := config.DB.First(&diaChi, id).Error; err != nil {
+		c.JSON(404, gin.H{
+			"error": "Không tìm thấy địa chỉ",
+		})
+		return
+	}
+
+	// tọa độ quán
+	shopLat := 10.762622
+	shopLng := 106.660172
+
+	mapURL := fmt.Sprintf(
+		"https://www.google.com/maps/dir/%f,%f/%f,%f",
+		shopLat,
+		shopLng,
+		diaChi.Latitude,
+		diaChi.Longitude,
+	)
+
+	c.JSON(200, gin.H{
+		"map_url": mapURL,
 	})
 }

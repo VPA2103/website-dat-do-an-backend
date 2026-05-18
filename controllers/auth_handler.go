@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -66,85 +65,85 @@ func Login(c *gin.Context) {
 	})
 }
 
-func Register(c *gin.Context) {
-	var input struct {
-		HoTen   string `json:"name" form:"name" binding:"required"`
-		Email   string `json:"email" form:"email" binding:"required,email"`
-		MatKhau string `json:"password" form:"password" binding:"required"`
-		SDT     string `json:"sdt" form:"sdt"`
-	}
+// func Register(c *gin.Context) {
+// 	var input struct {
+// 		HoTen   string `json:"name" form:"name" binding:"required"`
+// 		Email   string `json:"email" form:"email" binding:"required,email"`
+// 		MatKhau string `json:"password" form:"password" binding:"required"`
+// 		SDT     string `json:"sdt" form:"sdt"`
+// 	}
 
-	if err := c.ShouldBind(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập đầy đủ thông tin"})
-		return
-	}
+// 	if err := c.ShouldBind(&input); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập đầy đủ thông tin"})
+// 		return
+// 	}
 
-	// Kiểm tra trùng email
-	var existingKH models.NguoiDung
-	if err := config.DB.Where("email = ?", input.Email).First(&existingKH).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
-		return
-	}
-	var existingNV models.NguoiDung
-	if err := config.DB.Where("email = ?", input.Email).First(&existingNV).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
-		return
-	}
+// 	// Kiểm tra trùng email
+// 	var existingKH models.NguoiDung
+// 	if err := config.DB.Where("email = ?", input.Email).First(&existingKH).Error; err == nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
+// 		return
+// 	}
+// 	var existingNV models.NguoiDung
+// 	if err := config.DB.Where("email = ?", input.Email).First(&existingNV).Error; err == nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email đã tồn tại trong hệ thống"})
+// 		return
+// 	}
 
-	// Mã hoá mật khẩu
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.MatKhau), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi mã hoá mật khẩu"})
-		return
-	}
+// 	// Mã hoá mật khẩu
+// 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.MatKhau), bcrypt.DefaultCost)
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi mã hoá mật khẩu"})
+// 		return
+// 	}
 
-	newKH := models.NguoiDung{
-		HoTen:         input.HoTen,
-		Email:         input.Email,
-		MatKhau:       string(hashedPassword),
-		SDT:           input.SDT,
-		LoaiNguoiDung: "user",
-	}
+// 	newKH := models.NguoiDung{
+// 		HoTen:         input.HoTen,
+// 		Email:         input.Email,
+// 		MatKhau:       string(hashedPassword),
+// 		SDT:           input.SDT,
+// 		LoaiNguoiDung: "user",
+// 	}
 
-	if err := config.DB.Create(&newKH).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+// 	if err := config.DB.Create(&newKH).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{
+// 			"error": err.Error(),
+// 		})
+// 		return
+// 	}
 
-	// Gửi mail chào mừng (bất đồng bộ, không block response)
-	go func() {
-		mailInfo := utils.DangKyMailInfo{
-			TenKhachHang: newKH.HoTen,
-			Email:        newKH.Email,
-			MaNguoiDung:  newKH.MaNguoiDung,
-		}
-		if err := utils.SendMailSauKhiDangKy(newKH.Email, mailInfo); err != nil {
-			log.Printf("Gửi mail đăng ký thất bại cho %s: %v", newKH.Email, err)
-		}
-	}()
+// 	// Gửi mail chào mừng (bất đồng bộ, không block response)
+// 	go func() {
+// 		mailInfo := utils.DangKyMailInfo{
+// 			TenKhachHang: newKH.HoTen,
+// 			Email:        newKH.Email,
+// 			MaNguoiDung:  newKH.MaNguoiDung,
+// 		}
+// 		if err := utils.SendMailSauKhiDangKy(newKH.Email, mailInfo); err != nil {
+// 			log.Printf("Gửi mail đăng ký thất bại cho %s: %v", newKH.Email, err)
+// 		}
+// 	}()
 
-	token, err := utils.GenerateToken(newKH.MaNguoiDung, newKH.Email, "user")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
-		return
-	}
+// 	token, err := utils.GenerateToken(newKH.MaNguoiDung, newKH.Email, "user")
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Đăng ký thành công",
+// 	c.JSON(http.StatusOK, gin.H{
+// 		"message": "Đăng ký thành công",
 
-		"redirect": "/user",
-		"token":    token,
-		"user": gin.H{
-			"id":    newKH.MaNguoiDung,
-			"hoten": newKH.HoTen,
-			"email": newKH.Email,
-			"sdt":   newKH.SDT,
-			"role":  newKH.LoaiNguoiDung,
-		},
-	})
-}
+// 		"redirect": "/user",
+// 		"token":    token,
+// 		"user": gin.H{
+// 			"id":    newKH.MaNguoiDung,
+// 			"hoten": newKH.HoTen,
+// 			"email": newKH.Email,
+// 			"sdt":   newKH.SDT,
+// 			"role":  newKH.LoaiNguoiDung,
+// 		},
+// 	})
+// }
 
 type OTPData struct {
 	Code      string
@@ -457,10 +456,11 @@ func VerifyRegisterOTP(c *gin.Context) {
 
 	// Tạo user
 	user := models.NguoiDung{
-		HoTen:   data.UserData.HoTen,
-		Email:   data.UserData.Email,
-		MatKhau: string(hashedPassword),
-		SDT:     data.UserData.SoDienThoai,
+		HoTen:         data.UserData.HoTen,
+		Email:         data.UserData.Email,
+		MatKhau:       string(hashedPassword),
+		LoaiNguoiDung: "user",
+		SDT:           data.UserData.SoDienThoai,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
