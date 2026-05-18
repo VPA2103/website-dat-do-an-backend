@@ -15,8 +15,7 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 		c.File("./static/web-page.html")
 	})
 
-	r.POST("/register", controllers.Register)
-	r.POST("/login", controllers.Login)
+	
 
 	// 🔒 Nhóm yêu cầu xác thực
 	auth := r.Group("/api")
@@ -35,18 +34,32 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	AuthRoutes(r)
 	
 	NguoiDungRoutes(r)
+
 	BanAnRoutes(r)
+
 	LoaiMonAnRoutes(r)
+
 	MonAnRoutes(r)
+
 	LienHeRoutes(r, contactHandler)
+
 	DatBanRoutes(r)
+
 	HoaDonRoutes(r, hub)
+
 	DiaChiRoutes(r)
+
 	GiamGiaRoutes(r)
+
 	BinhLuanRoutes(r, hub)
+
 	YeuThichRoutes(r)
+
 	DanhGiaRoutes(r, hub)
+
 	GioHangRoutes(r)
+
 	Payment(r)
+	
 	SePayPayment(r)
 }

@@ -2,67 +2,46 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Test SePay Payment</title>
+  <title>Test SePay</title>
   <style>
-    body {
-      font-family: Arial;
-      padding: 40px;
-    }
-    input, button {
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
-    }
+    body { font-family: Arial, sans-serif; padding: 40px; }
+    button { padding: 15px 30px; font-size: 18px; background: #0066ff; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #0052cc; }
+    #result { margin-top: 20px; }
   </style>
 </head>
 <body>
+  <h2>Test Thanh Toán SePay</h2>
 
-  <h2>🧾Test Thanh Toán SePay</h2>
+  <button onclick="createPayment()">1. Tạo form thanh toán</button>
 
-  <label>Order ID:</label><br/>
-  <input type="number" id="orderId" placeholder="Nhập Order ID" /><br/>
-
-  <button onclick="createPayment()">Thanh toán</button>
-
-  <p id="result"></p>
+  <div id="result"></div>
 
   <script>
     async function createPayment() {
-      const orderId = document.getElementById("orderId").value;
-
-      if (!orderId) {
-        alert("Nhập order ID trước!");
-        return;
-      }
+      document.getElementById("result").innerHTML = "<h3>Đang tạo form...</h3>";
 
       try {
-        const res = await fetch("https://desirous-rodger-panlogistically.ngrok-free.dev/api/payment/create", {
+        const res = await fetch("https://desirous-rodger-panlogistically.ngrok-free.dev/payment/create", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            order_id: parseInt(orderId)
+            amount: 100000,
+            invoice_number: "DH20250517_" + Date.now(),
+            description: "Test thanh toán " + new Date().toISOString(),
+            success_url: "https://yourdomain.com/success",
+            error_url:   "https://yourdomain.com/error",
+            cancel_url:  "https://yourdomain.com/cancel"
           })
         });
 
-        const data = await res.json();
+        const html = await res.text();
+        document.getElementById("result").innerHTML = html;
 
-        if (data.checkout_url) {
-          document.getElementById("result").innerHTML =
-            `<a href="${data.checkout_url}" target="_blank">👉 Đi tới thanh toán</a>`;
-
-          window.location.href = data.checkout_url;
-        } else {
-          document.getElementById("result").innerText = "Lỗi: " + JSON.stringify(data);
-        }
-
-      } catch (err) {
-        console.error(err);
-        alert("Lỗi kết nối backend");
+      } catch (e) {
+        document.getElementById("result").innerHTML = "<strong>Lỗi: " + e.message + "</strong>";
       }
     }
   </script>
-
 </body>
 </html>

@@ -4,222 +4,142 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/url"
-	"os"
+	"html/template"
+	"log"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/models"
-	"github.com/vpa/quanlynhahang-backend/utils"
-	"gorm.io/datatypes"
 )
 
-type SePayWebhook struct {
-	NotificationType string `json:"notification_type"`
-	Order            struct {
-		InvoiceNumber string `json:"invoice_number"`
-		Amount        int64  `json:"amount"`
-		Status        string `json:"status"`
-	} `json:"order"`
+// Sandbox: "https://pgapi-sandbox.sepay.vn"
+//https://pgapi.sepay.vn
+
+const (
+	SePayMerchantID = "SP-TEST-VP634685"
+	SePaySecretKey  = "spsk_test_gxUG9RkZiMW2DtP7EweSYHqQeXtMyXF5"
+	// Endpoint JSON
+	SePayCheckoutAPI = "https://pay.sepay.vn/v1/checkout/init"
+)
+
+type CheckoutRequest struct {
+	Amount        int64  `json:"amount" binding:"required"`
+	InvoiceNumber string `json:"invoice_number" binding:"required"`
+	Description   string `json:"description" binding:"required"`
+	SuccessURL    string `json:"success_url"`
+	ErrorURL      string `json:"error_url"`
+	CancelURL     string `json:"cancel_url"`
 }
 
-func verifySignature(body []byte, signature string) bool {
-	secret := os.Getenv("SEPAY_SECRET_KEY")
-
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write(body)
-
-	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
-
-	return hmac.Equal([]byte(expected), []byte(signature))
+type SePayResponse struct {
+	Message     string `json:"message"`
+	RedirectURL string `json:"redirect_url"`
 }
 
-func CreatePaymentService(orderID int64) (map[string]interface{}, error) {
-	invoice := utils.GenerateInvoice()
+func generateSignature(fields map[string]string, secretKey string) string {
+    // Thứ tự fields quan trọng - theo docs SePay
+    order := []string{
+        "order_amount",
+        "merchant",
+        "currency",
+        "operation",
+        "order_description",
+        "order_invoice_number",
+        "success_url",
+        "error_url",
+        "cancel_url",
+    }
 
-	var order models.HoaDon
-	if err := config.DB.First(&order, orderID).Error; err != nil {
-		return nil, err
-	}
+    var parts []string
+    for _, key := range order {
+        if val, exists := fields[key]; exists && val != "" {
+            parts = append(parts, key+"="+val)
+        }
+    }
 
-	payment := models.Payments{
-		OrderID:       uint64(orderID),
-		Provider:      "sepay",
-		InvoiceNumber: invoice,
-		Amount:        order.TongTien,
-		Status:        "pending",
-	}
-	config.DB.Create(&payment)
+    data := strings.Join(parts, ",")
+    fmt.Println("🔍 Data to sign:", data)   // Debug
 
-	url := buildSePayURL(invoice, int64(order.TongTien))
+    h := hmac.New(sha256.New, []byte(secretKey))
+    h.Write([]byte(data))
+    sig := base64.StdEncoding.EncodeToString(h.Sum(nil))
 
-	return map[string]interface{}{
-		"checkout_url": url,
-	}, nil
+    fmt.Println("🔑 Generated signature:", sig)  // Debug
+    return sig
 }
 
-func CreatePayment(c *gin.Context) {
-	var req struct {
-		OrderID int64 `json:"order_id"`
-	}
-
+func CreateSePayPaymentForm(c *gin.Context) {
+	var req CheckoutRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": "invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	data, err := CreatePaymentService(req.OrderID)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(200, data)
-}
-
-func sign(data string, secret string) string {
-	h := hmac.New(sha256.New, []byte(secret))
-	h.Write([]byte(data))
-	return base64.StdEncoding.EncodeToString(h.Sum(nil))
-}
-
-func buildQuery(params map[string]string, keys []string) string {
-	var buf strings.Builder
-
-	for i, k := range keys {
-		buf.WriteString(k + "=" + params[k])
-		if i < len(keys)-1 {
-			buf.WriteString("&")
-		}
-	}
-
-	return buf.String()
-}
-
-func buildSePayURL(invoice string, amount int64) string {
-	baseURL := "https://pgapi-sandbox.sepay.vn/payment/link"
-	//Production	https://pgapi.sepay.vn
-	//Sandbox	https://pgapi-sandbox.sepay.vn
-
-	merchant := os.Getenv("SEPAY_MERCHANT_ID")
-	secret := os.Getenv("SEPAY_SECRET_KEY")
-
-	params := map[string]string{
-		"merchant":             merchant,
-		"order_amount":         fmt.Sprintf("%d", amount),
+	fields := map[string]string{
+		"merchant":             SePayMerchantID,
 		"currency":             "VND",
+		"order_amount":         fmt.Sprintf("%d", req.Amount),
 		"operation":            "PURCHASE",
-		"order_description":    "Thanh toán đơn hàng",
-		"order_invoice_number": invoice,
-		"success_url":          "https://desirous-rodger-panlogistically.ngrok-free.dev/success",
-		"cancel_url":           "https://desirous-rodger-panlogistically.ngrok-free.dev/cancel",
-		"error_url":            "https://desirous-rodger-panlogistically.ngrok-free.dev/error",
+		"order_description":    req.Description,
+		"order_invoice_number": req.InvoiceNumber,
+		"success_url":          req.SuccessURL,
+		"error_url":            req.ErrorURL,
+		"cancel_url":           req.CancelURL,
 	}
 
-	keys := []string{
-		"cancel_url",
-		"currency",
-		"error_url",
-		"merchant",
-		"operation",
-		"order_amount",
-		"order_description",
-		"order_invoice_number",
-		"success_url",
+	fields["signature"] = generateSignature(fields, SePaySecretKey)
+
+	// Tạo form HTML
+	html := `<form action="https://pay.sepay.vn/v1/checkout/init" method="POST" id="sepayForm">`
+	for k, v := range fields {
+		html += fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`, k, template.HTMLEscapeString(v))
 	}
+	html += `</form>`
+	html += `<script>document.getElementById("sepayForm").submit();</script>`
 
-	query := buildQuery(params, keys)
-
-	fmt.Println("STRING TO SIGN:", query)
-
-	signature := sign(query, secret)
-
-	fmt.Println("SIGNATURE:", signature)
-
-	// build final URL
-	v := url.Values{}
-
-	for _, k := range keys {
-		v.Set(k, params[k])
-	}
-
-	// QUAN TRỌNG
-	v.Set("signature", signature)
-
-	finalURL := baseURL + "?" + v.Encode()
-
-	fmt.Println("FINAL URL:", finalURL)
-
-	return finalURL
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(http.StatusOK, html)
+}
+type SepayWebhookPayload struct {
+	ID              int64   `json:"id"`
+	Gateway         string  `json:"gateway"`
+	TransactionDate string  `json:"transactionDate"`
+	AccountNumber   string  `json:"accountNumber"`
+	SubAccount      string  `json:"subAccount"`
+	Code            *string `json:"code"` // có thể null
+	Content         string  `json:"content"`
+	TransferType    string  `json:"transferType"`
+	Description     string  `json:"description"`
+	TransferAmount  int64   `json:"transferAmount"`
+	Accumulated     int64   `json:"accumulated"`
+	ReferenceCode   string  `json:"referenceCode"`
 }
 
-func HandleIPN(c *gin.Context) {
+func SePayWebhookHandler(c *gin.Context) {
+	// Đọc raw body (quan trọng nếu sau này làm HMAC)
+	// bodyBytes, err := c.GetRawData()
 
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(400, gin.H{"error": "cannot read body"})
-		return
-	}
-	fmt.Println("SEPAY WEBHOOK:", string(body))
-	signature := c.GetHeader("X-SePay-Signature")
+	// if err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot read body"})
+	// 	return
+	// }
 
-	// verify signature trước
-	if !verifySignature(body, signature) {
-		c.JSON(400, gin.H{"error": "invalid signature"})
-		return
-	}
-
-	// parse JSON 1 lần duy nhất
-	var payload SePayWebhook
-	if err := json.Unmarshal(body, &payload); err != nil {
-		c.JSON(400, gin.H{"error": "invalid payload"})
+	// Parse JSON
+	var payload SepayWebhookPayload
+	if err := c.ShouldBindJSON(&payload); err != nil { // hoặc json.Unmarshal(bodyBytes, &payload)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 		return
 	}
 
-	invoice := payload.Order.InvoiceNumber
+	// === TODO: Xử lý business logic ===
+	// 1. Kiểm tra HMAC (nếu bạn bật xác thực)
+	// 2. Kiểm tra idempotency với payload.ID
+	// 3. Cập nhật trạng thái đơn hàng, ghi log, etc.
 
-	// 1. find payment
-	var payment models.Payments
-	if payment.Status == "paid" {
-		return
-	}
-	if err := config.DB.
-		Where("invoice_number = ?", invoice).
-		First(&payment).Error; err != nil {
-		c.Status(200)
-		return
-	}
+	log.Printf("[SePay Webhook] Received - ID: %d | Amount: %d VND | Content: %s | Code: %v",
+		payload.ID, payload.TransferAmount, payload.Content, payload.Code)
 
-	// 2. idempotent
-	if payment.Status == "paid" {
-		c.Status(200)
-		return
-	}
-
-	// 3. verify amount (SAU KHI LẤY PAYMENT)
-	if float64(payload.Order.Amount) < payment.Amount {
-		c.JSON(400, gin.H{"error": "invalid amount"})
-		return
-	}
-
-	// 4. update payment + raw data
-	if payload.NotificationType == "ORDER_PAID" {
-
-		payment.Status = "paid"
-		payment.RawData = datatypes.JSON(body)
-		payment.TransactionID = payload.Order.InvoiceNumber // nếu API có txn id thì thay
-
-		config.DB.Save(&payment)
-
-		// 5. update order (KHÔNG đổi DB structure)
-		config.DB.Model(&models.HoaDon{}).
-			Where("ma_hd = ?", payment.OrderID).
-			Update("trang_thai", "da_thanh_toan")
-	}
-
-	c.Status(200)
+	// Phản hồi BẮT BUỘC theo yêu cầu của SePay
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -111,6 +112,18 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Gửi mail chào mừng (bất đồng bộ, không block response)
+	go func() {
+		mailInfo := utils.DangKyMailInfo{
+			TenKhachHang: newKH.HoTen,
+			Email:        newKH.Email,
+			MaNguoiDung:  newKH.MaNguoiDung,
+		}
+		if err := utils.SendMailSauKhiDangKy(newKH.Email, mailInfo); err != nil {
+			log.Printf("Gửi mail đăng ký thất bại cho %s: %v", newKH.Email, err)
+		}
+	}()
+
 	token, err := utils.GenerateToken(newKH.MaNguoiDung, newKH.Email, "user")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
@@ -139,7 +152,6 @@ type OTPData struct {
 
 var OTPStore = map[string]OTPData{}
 
-
 func GenerateOTP() string {
 	return fmt.Sprintf("%06d", rand.Intn(1000000))
 }
@@ -147,7 +159,6 @@ func GenerateOTP() string {
 type ForgotPasswordInput struct {
 	Email string `json:"email"`
 }
-
 
 func SendOTP(c *gin.Context) {
 
@@ -175,7 +186,7 @@ func SendOTP(c *gin.Context) {
 	otp := GenerateOTP()
 
 	OTPStore[input.Email] = OTPData{
-		Code: otp,
+		Code:      otp,
 		ExpiredAt: time.Now().Add(5 * time.Minute),
 	}
 
@@ -204,9 +215,9 @@ func SendOTP(c *gin.Context) {
 }
 
 type ResetPasswordInput struct {
-	Email       string `json:"email"`
-	OTP         string `json:"otp"`
-	MatKhauMoi  string `json:"mat_khau_moi"`
+	Email      string `json:"email"`
+	OTP        string `json:"otp"`
+	MatKhauMoi string `json:"mat_khau_moi"`
 }
 
 func ResetPassword(c *gin.Context) {

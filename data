@@ -1,0 +1,77 @@
+INSERT INTO "gio_hangs" ("ma_gio_hang", "ma_nguoi_dung", "ma_mon_an", "so_luong", "gia_tien", "created_at") VALUES (13, 1, 8, 1, 10000, '2026-05-12 18:12:41.667615+07');
+INSERT INTO "gio_hangs" ("ma_gio_hang", "ma_nguoi_dung", "ma_mon_an", "so_luong", "gia_tien", "created_at") VALUES (14, 1, 9, 1, 25000, '2026-05-12 18:12:42.320321+07');
+INSERT INTO "gio_hangs" ("ma_gio_hang", "ma_nguoi_dung", "ma_mon_an", "so_luong", "gia_tien", "created_at") VALUES (17, 1, 4, 1, 120000, '2026-05-12 18:12:44.900523+07');
+INSERT INTO "gio_hangs" ("ma_gio_hang", "ma_nguoi_dung", "ma_mon_an", "so_luong", "gia_tien", "created_at") VALUES (16, 1, 5, 2, 80000, '2026-05-12 18:12:44.32364+07');
+INSERT INTO "gio_hangs" ("ma_gio_hang", "ma_nguoi_dung", "ma_mon_an", "so_luong", "gia_tien", "created_at") VALUES (15, 1, 6, 2, 110000, '2026-05-12 18:12:43.666637+07');
+INSERT INTO "gio_hangs" ("ma_gio_hang", "ma_nguoi_dung", "ma_mon_an", "so_luong", "gia_tien", "created_at") VALUES (12, 1, 7, 2, 70000, '2026-05-12 18:12:41.100695+07');
+
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (1, 'Hấp', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778573426/loaimonan/arj8p5qvxfusfiymfpfa.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (2, 'Chiên', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778573436/loaimonan/qmx9rjvu7rozecf5vk4e.webp');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (3, 'Xào', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583273/loaimonan/w6kq6mnfrqu1rlqqlyki.webp');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (4, 'Món nhật', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583315/loaimonan/pqptuhqtdcyb2qtrju1f.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (5, 'Món Việt', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583329/loaimonan/pgxlzcgl3lziq98t4m5h.webp');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (6, 'Nước uống', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583364/loaimonan/cneecdy0g6e1eyoc6mnv.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (7, 'Shushi', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583381/loaimonan/hogmbcgjljzov4to0poy.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (8, 'Lẩu thái', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583397/loaimonan/c2iizcqlfoi3cqzi57tz.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (9, 'Món Nướng', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583411/loaimonan/hvxjrtyxvevr3wywkimr.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (10, 'Gỏi cuốn', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583423/loaimonan/hcebhihfcw3ws53fi1l6.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (12, 'Bánh', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583662/loaimonan/e6c58zphopsbsvwvom3p.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (13, 'Hải sản', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583681/loaimonan/b4sltsg99t3ba0vrsrkn.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (14, 'Nước ép', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583705/loaimonan/dnymw4ui7e3al2cqllnb.jpg');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (15, 'Fast Food', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583731/loaimonan/h8rjxnpitjplmnxyvfr2.webp');
+INSERT INTO "loai_mon_ans" ("ma_loai_mon_an", "ten_loai_mon_an", "anh_loai_mon_an") VALUES (16, 'Món chưng', 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583748/loaimonan/kprtxipxealvquha3ewl.jpg');
+
+
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (2, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778573478/monan/k7qudfvjct02bero6k8s.jpg', 2, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (1, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778573458/monan/g7oo5en3xficcj531yn1.webp', 1, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (3, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583211/nhanvien/tekqoqlrqpzz7b2t8wsg.jpg', 1, 'nguoi_dung');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (4, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583250/nhanvien/lk12lxmyebee9tq5yk9k.jpg', 2, 'nguoi_dung');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (5, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583815/monan/e4ldjldaqjiacrp8eory.jpg', 3, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (6, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583856/monan/ahzccirtdpawjcwjuuw7.jpg', 4, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (7, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583898/monan/qdlgaew4cfdtzjdhjnme.jpg', 5, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (8, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583932/monan/h229qhkdyrg6cuuuekhj.webp', 6, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (9, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778583976/monan/ccxnbruviu4o56ozyvb3.jpg', 7, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (10, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778584014/monan/ubma840h6eobdkfc1chd.jpg', 8, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (11, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778584045/monan/sopaf5lzrwq0abicetaf.jpg', 9, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (12, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778584078/monan/ifkli5lorhydzcdu0tly.jpg', 10, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (13, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778584118/monan/elxotr3gxxhdsgmpkxgl.jpg', 11, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (14, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778584151/monan/opewtkfxoo6ksezmbur5.jpg', 12, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (15, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778584189/monan/nn50end6llvoxle3jqgw.jpg', 13, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (16, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778584225/monan/m7a0uqovy1d9ifk6q8bu.webp', 14, 'mon_an');
+INSERT INTO "hinh_anhs" ("id", "url", "owner_id", "owner_type") VALUES (17, 'https://res.cloudinary.com/duaptpzay/image/upload/v1778584259/monan/pjzdyfp1jtztz5yjstef.jpg', 15, 'mon_an');
+
+
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (3, 13, 'Tôm ', '345000', 1, 'Hải sản tươi sống gồm tôm, mực, nghêu, sò được chế biến đậm đà, giữ vị ngọt tự nhiên, thơm lừng, hấp dẫn, phù hợp mọi bữa ăn gia đình.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (4, 2, 'Gà Chiên Kiểu Pháp', '120000', 1, 'Gà chiên giòn rụm, vàng ươm hấp dẫn, lớp vỏ ngoài giòn tan, bên trong thịt mềm ngọt, thơm lừng gia vị, ăn kèm nước chấm đậm đà rất cuốn vị.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (5, 12, 'Bánh ngọt', '40000', 1, 'Bánh tráng miệng ngọt ngào, mềm mịn, hương vị thanh nhẹ, thường kết hợp trái cây hoặc kem, tạo cảm giác tươi mát, dễ ăn sau bữa chính.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (6, 15, 'Hambuger ý', '55000', 1, 'Thức ăn nhanh là các món chế biến sẵn, phục vụ nhanh chóng như hamburger, gà rán, khoai tây chiên, tiện lợi, ngon miệng nhưng thường nhiều năng lượng và chất béo.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (7, 14, 'Trà đào', '35000', 1, 'Trà đào thơm mát, vị trà thanh nhẹ hòa cùng đào ngọt dịu, có thể thêm miếng đào giòn và đá lạnh, tạo cảm giác sảng khoái, rất được yêu thích ngày hè.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (8, 6, 'Nước lọc', '10000', 1, 'Nước lọc tinh khiết hãng thân thuộc với người dùng việt nam');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (9, 14, 'Nước ép dưa lê', '25000', 1, 'Nước ép trái cây tươi mát, giàu vitamin, giữ nguyên hương vị tự nhiên của trái cây như cam, táo, dứa, giúp giải khát, thanh lọc cơ thể và bổ sung năng lượng.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (10, 12, 'Bánh tacos', '78000', 1, 'Bánh tacos giòn thơm, vỏ bánh gấp hình bán nguyệt, bên trong là thịt, rau, phô mai và sốt đậm đà, mang hương vị Mexico đặc trưng, hấp dẫn và dễ ăn.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (11, 9, 'Thịt trâu nướng lá ngón', '420000', 1, 'Thịt nướng thơm lừng, được tẩm ướp đậm đà rồi nướng trên than hoặc lò, bên ngoài xém nhẹ, bên trong mềm ngọt, ăn kèm rau sống và nước chấm rất hấp dẫn.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (12, 7, 'Shushi nhật bản', '560000', 1, 'Sushi là món ăn Nhật Bản tinh tế, gồm cơm trộn giấm kết hợp hải sản tươi sống, trứng hoặc rau củ, cuộn hoặc nắm gọn gàng, vị thanh nhẹ, đẹp mắt và giàu dinh dưỡng.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (13, 9, 'Gà nướng lá móc mật', '320000', 1, 'Gà nướng thơm lừng, được tẩm ướp đậm đà rồi nướng trên than hoặc lò, bên ngoài xém nhẹ, bên trong mềm ngọt, ăn kèm rau sống và nước chấm rất hấp dẫn.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (14, 8, 'Lẩu tứ xuyên trung quốc', '500000', 1, 'Lẩu Tứ Xuyên Trung Quốc nổi tiếng vị cay nồng, tê đặc trưng từ tiêu Tứ Xuyên, nước dùng đậm đà, kết hợp nhiều loại thịt, rau và nấm, mang hương vị mạnh mẽ, hấp dẫn và rất kích thích vị giác.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (15, 1, 'Nghêu hấp dừa', '80000', 1, 'Nghêu hấp dừa thơm béo, nghêu tươi ngọt tự nhiên hòa quyện cùng nước dừa thanh mát, vị ngọt dịu nhẹ, đậm đà, tạo cảm giác dễ ăn và rất hấp dẫn.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (2, 2, 'gà hấp', '123455', 1, 'Gà hấp thơm mềm, thịt gà giữ được độ ngọt tự nhiên, thấm nhẹ gia vị, da vàng óng, không dầu mỡ, thường ăn kèm muối tiêu chanh hoặc nước mắm gừng rất đậm đà.');
+INSERT INTO "mon_ans" ("ma_mon_an", "ma_loai_mon_an", "ten_mon_an", "gia_tien", "trang_thai", "mo_ta") VALUES (1, 2, 'Gà Chiên ', '123443', 1, 'Gà chiên giòn rụm, lớp vỏ vàng óng thơm lừng, bên trong thịt mềm ngọt, đậm vị gia vị, ăn kèm sốt hoặc tương ớt rất hấp dẫn và dễ gây “nghiện”.');
+
+
+INSERT INTO "nguoi_dungs" ("ma_nguoi_dung", "ho_ten", "gioi_tinh", "ngay_sinh", "sdt", "ngay_vao_lam", "email", "mat_khau", "loai_nguoi_dung") VALUES (1, 'Admin', 'Nam', 'Fri Mar 09 2001 00:00:00 GMT+0700 (Indochina Time)', '0933924075', '12-05-2026 15:09:37', 'admin@gmail.com', '$2a$10$xSOgqbH1nrB6CjC4GVFhfu1phl4Mrd13WLJsrVClZHc6T1FcdZUIm', 'admin');
+INSERT INTO "nguoi_dungs" ("ma_nguoi_dung", "ho_ten", "gioi_tinh", "ngay_sinh", "sdt", "ngay_vao_lam", "email", "mat_khau", "loai_nguoi_dung") VALUES (2, 'User', 'Nam', 'Sat Aug 10 2002 00:00:00 GMT+0700 (Indochina Time)', '0933924075', '12-05-2026 15:09:48', 'user@gmail.com', '$2a$10$zTbVl8KSKvTa.DaIsO3E.eczgGK3GGwsvYoOGROMM8uDvc1r2cL9O', 'user');
+
+
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (9, 2, 2, '2026-05-12 17:52:28.329748+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (10, 2, 1, '2026-05-12 17:52:28.942236+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (12, 1, 4, '2026-05-12 18:12:03.621115+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (13, 1, 7, '2026-05-12 18:12:04.668359+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (14, 1, 8, '2026-05-12 18:12:05.251427+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (15, 1, 9, '2026-05-12 18:12:05.856732+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (16, 1, 5, '2026-05-12 18:12:56.778339+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (17, 2, 4, '2026-05-13 00:27:43.301646+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (18, 2, 5, '2026-05-13 00:27:43.418396+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (19, 2, 8, '2026-05-13 00:27:43.454686+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (20, 2, 6, '2026-05-13 00:27:43.466077+07');
+INSERT INTO "yeu_thiches" ("id", "ma_nguoi_dung", "ma_mon_an", "created_at") VALUES (21, 2, 3, '2026-05-13 00:27:58.833958+07');
+
