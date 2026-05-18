@@ -227,3 +227,11 @@ func SendMailSauKhiDangKy(email string, info DangKyMailInfo) error {
 
 	return SendMail(email, "✦ Chào mừng bạn đến với Saigon Kitchen", body)
 }
+
+// type RegisterOTPData struct {
+// 	Code      string
+// 	ExpiredAt time.Time
+// 	UserData  RegisterInput
+// }
+
+// var RegisterOTPStore = map[string]RegisterOTPData{}

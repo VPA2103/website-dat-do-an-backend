@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/dto"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/utils"
 
@@ -289,6 +290,198 @@ func ResetPassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Đổi mật khẩu thành công",
+	})
+}
+
+func SendRegisterOTP(c *gin.Context) {
+
+	var input dto.RegisterInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Dữ liệu không hợp lệ",
+		})
+		return
+	}
+
+	// Kiểm tra email tồn tại chưa
+	var user models.NguoiDung
+
+	err := config.DB.
+		Where("email = ?", input.Email).
+		First(&user).Error
+
+	if err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Email đã tồn tại",
+		})
+		return
+	}
+
+	otp := GenerateOTP()
+
+	dto.RegisterOTPStore[input.Email] = dto.RegisterOTPData{
+		Code:      otp,
+		ExpiredAt: time.Now().Add(5 * time.Minute),
+		UserData:  input,
+	}
+
+	body := `<!DOCTYPE html>
+				<html lang="vi">
+				<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+				<body style="margin:0;padding:20px;background:#f4ede0;font-family:Georgia,'Times New Roman',serif;">
+				<div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;">
+
+					<!-- Header -->
+					<div style="background:#1a1a1a;padding:32px 32px 24px;text-align:center;">
+					<div style="font-size:22px;letter-spacing:4px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
+					<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">SAIGON KITCHEN</div>
+					</div>
+
+					<!-- Title -->
+					<div style="background:#f7f0e3;padding:24px 32px 16px;text-align:center;border-bottom:1px solid #e0d0b0;">
+					<div style="font-size:11px;letter-spacing:5px;color:#8a7a5a;font-family:'Courier New',monospace;margin-bottom:8px;">XÁC THỰC</div>
+					<div style="font-size:22px;color:#2a1f0a;letter-spacing:1px;">Mã OTP của bạn</div>
+					<div style="width:40px;height:1px;background:#c4a55a;margin:12px auto 0;"></div>
+					</div>
+
+					<!-- Body -->
+					<div style="padding:24px 32px;background:#fdfaf4;">
+					<p style="font-size:14px;color:#4a3c20;line-height:1.8;margin:0 0 16px;">
+						Kính gửi quý khách,
+					</p>
+					<p style="font-size:14px;color:#4a3c20;line-height:1.8;margin:0 0 24px;">
+						Chúng tôi nhận được yêu cầu xác thực tài khoản của bạn tại <strong>Saigon Kitchen</strong>. Vui lòng sử dụng mã OTP dưới đây:
+					</p>
+
+					<!-- OTP Box -->
+					<div style="text-align:center;background:#fff;border:0.5px solid #e0d0b0;border-radius:8px;padding:28px 14px;margin-bottom:24px;">
+						<div style="font-size:11px;letter-spacing:4px;color:#8a7a5a;font-family:'Courier New',monospace;margin-bottom:12px;">MÃ XÁC THỰC</div>
+						<div style="font-size:36px;font-weight:700;letter-spacing:10px;color:#1a1a1a;font-family:'Courier New',monospace;">` + otp + `</div>
+						<div style="width:40px;height:1px;background:#c4a55a;margin:16px auto 0;"></div>
+						<div style="font-size:12px;color:#8a7a5a;margin-top:10px;font-family:'Courier New',monospace;">Hiệu lực trong 5 phút</div>
+					</div>
+
+					<!-- Ghi chú -->
+					<div style="background:#f7f0e3;border-left:3px solid #c4a55a;padding:12px 14px;margin-bottom:24px;">
+						<p style="font-size:13px;color:#5a4520;margin:0;line-height:1.6;">
+						Vui lòng <strong>không chia sẻ</strong> mã OTP này với bất kỳ ai, kể cả nhân viên của chúng tôi.
+						</p>
+					</div>
+
+					<p style="font-size:13px;color:#6a5a3a;line-height:1.8;margin:0;">
+						Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email hoặc liên hệ ngay với chúng tôi để được hỗ trợ.
+					</p>
+					</div>
+
+					<!-- Footer -->
+					<div style="padding:16px 32px;background:#1a1a1a;text-align:center;">
+					<p style="font-size:11px;color:#6a5a3a;margin:0;letter-spacing:1px;font-family:'Courier New',monospace;">
+						123 Đường ABC, Q.1, TP.HCM &nbsp;|&nbsp; 028-xxxx-xxxx
+					</p>
+					</div>
+
+				</div>
+				</body>
+				</html>`
+
+	err = utils.SendMail(
+		input.Email,
+		"Xác nhận đăng ký tài khoản",
+		body,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gửi mail thất bại",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Đã gửi OTP xác nhận",
+	})
+}
+
+func VerifyRegisterOTP(c *gin.Context) {
+
+	var input dto.VerifyRegisterOTPInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Dữ liệu không hợp lệ",
+		})
+		return
+	}
+
+	data, exists := dto.RegisterOTPStore[input.Email]
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "OTP không tồn tại",
+		})
+		return
+	}
+
+	// Check hết hạn
+	if time.Now().After(data.ExpiredAt) {
+
+		delete(dto.RegisterOTPStore, input.Email)
+
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "OTP đã hết hạn",
+		})
+		return
+	}
+
+	// Check OTP
+	if data.Code != input.OTP {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "OTP không đúng",
+		})
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(data.UserData.MatKhau),
+		bcrypt.DefaultCost,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Lỗi hash password",
+		})
+		return
+	}
+
+	// Tạo user
+	user := models.NguoiDung{
+		HoTen:   data.UserData.HoTen,
+		Email:   data.UserData.Email,
+		MatKhau: string(hashedPassword),
+		SDT:     data.UserData.SoDienThoai,
+	}
+
+	if err := config.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể tạo tài khoản",
+		})
+		return
+	}
+
+	// Xóa OTP
+	delete(dto.RegisterOTPStore, input.Email)
+
+	// Gửi mail chào mừng
+	utils.SendMailSauKhiDangKy(user.Email, utils.DangKyMailInfo{
+		TenKhachHang: user.HoTen,
+		MaNguoiDung:  user.MaNguoiDung,
+		Email:        user.Email,
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Đăng ký thành công",
 	})
 }
 
