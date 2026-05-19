@@ -2,6 +2,8 @@ package utils
 
 import (
 	"encoding/base64"
+	"fmt"
+	"net/url"
 
 	"github.com/skip2/go-qrcode"
 	"github.com/subiz/vietqr"
@@ -28,4 +30,20 @@ func GenerateQRPayment(amount float64, bankBIN string, accountnumber, note strin
 	base64Img := base64.StdEncoding.EncodeToString(png)
 
 	return base64Img, nil
+}
+
+func GenerateSePayQR(account string, bank string, amount int, content string) string {
+
+	// encode nội dung chuyển khoản
+	encodedContent := url.QueryEscape(content)
+
+	qrURL := fmt.Sprintf(
+		"https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%d&des=%s",
+		account,
+		bank,
+		amount,
+		encodedContent,
+	)
+
+	return qrURL
 }

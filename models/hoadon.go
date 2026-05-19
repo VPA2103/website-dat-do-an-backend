@@ -11,10 +11,11 @@ type HoaDon struct {
 	GhiChu      string    `json:"ghi_chu"`
 	Ngay        time.Time `json:"ngay"`
 
-	TongTien  float64 `json:"tong_tien"` // sau giảm
-	TamTinh   float64 `json:"tam_tinh"`  // trước giảm
-	TienGiam  float64 `json:"tien_giam"`
-	TrangThai string  `gorm:"type:varchar(30);default:'cho_xac_nhan'" json:"trang_thai"`
+	TongTien           float64 `json:"tong_tien"` // sau giảm
+	TamTinh            float64 `json:"tam_tinh"`  // trước giảm
+	TienGiam           float64 `json:"tien_giam"`
+	TrangThai          string  `gorm:"type:varchar(30);default:'cho_xac_nhan'" json:"trang_thai"`
+	TrangThaiThanhToan string  `json:"trang_thai_thanh_toan"`
 
 	// MaNVOrder      *uint           `gorm:"size:10"`
 	// NhanVienOrder  *NhanVien       `gorm:"foreignKey:MaNVOrder;references:MaNV"`

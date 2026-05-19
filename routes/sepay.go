@@ -10,6 +10,6 @@ func SePayPayment(r *gin.Engine) {
 	r.POST("/payment/create", controllers.CreateSePayPaymentForm)
 
 	// webhook
-	r.POST("/hooks/sepay-payment", controllers.SePayWebhookHandler)
+	r.POST("/hooks/sepay-payment", controllers.SePayWebhook)
 
 }
