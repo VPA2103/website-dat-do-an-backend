@@ -79,7 +79,10 @@ func GetMonAnByID(c *gin.Context) {
 	id := c.Param("id")
 	var monan models.MonAn
 
-	if err := config.DB.Preload("AnhMonAn").First(&monan, id).Error; err != nil {
+	if err := config.DB.
+		Preload("AnhMonAn").
+		Preload("NhomOptions").
+		Preload("NhomOptions.OptionItems").First(&monan, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy món ăn"})
 		return
 	}
@@ -165,4 +168,28 @@ func DeleteMonAn(c *gin.Context) {
 	config.DB.Delete(&monan)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Xóa món ăn thành công"})
+}
+
+func GetMonAnDetail(c *gin.Context) {
+
+	id := c.Param("id")
+
+	var monan models.MonAn
+
+	err := config.DB.
+		Preload("AnhMonAn").
+		Preload("NhomOptions").
+		Preload("NhomOptions.OptionItems").
+		First(&monan, id).Error
+
+	if err != nil {
+		c.JSON(404, gin.H{
+			"error": "Không tìm thấy món ăn",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": monan,
+	})
 }

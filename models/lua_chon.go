@@ -4,7 +4,7 @@ type NhomOption struct {
 	MaNhomOption uint `gorm:"primaryKey;autoIncrement" json:"ma_nhom_option"`
 
 	MaMonAn uint  `json:"ma_mon_an"`
-	MonAn   MonAn `gorm:"foreignKey:MaMonAn;references:MaMonAn"`
+	MonAn   MonAn `gorm:"foreignKey:MaMonAn;references:MaMonAn" json:"-"`
 
 	TenNhom string `json:"ten_nhom"`
 
@@ -16,6 +16,8 @@ type NhomOption struct {
 	SoLuongToiThieu int `json:"so_luong_toi_thieu"`
 
 	TrangThai uint `json:"trang_thai"`
+
+	OptionItems []OptionItem `gorm:"foreignKey:MaNhomOption;constraint:OnDelete:CASCADE" json:"-"`
 }
 
 type OptionItem struct {

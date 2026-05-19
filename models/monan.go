@@ -8,6 +8,6 @@ type MonAn struct {
 	TrangThai   uint    `json:"trang_thai" form:"trang_thai"`
 	MoTa        string  `json:"mo_ta" form:"mo_ta"`
 
-	AnhMonAn []HinhAnh `gorm:"polymorphic:Owner;polymorphicValue:mon_an" json:"anh_mon_an,omitempty"`
-	
+	AnhMonAn    []HinhAnh    `gorm:"polymorphic:Owner;polymorphicValue:mon_an" json:"anh_mon_an,omitempty"`
+	NhomOptions []NhomOption `gorm:"foreignKey:MaMonAn" json:"nhom_options"`
 }

@@ -11,6 +11,7 @@ func MonAnRoutes(r *gin.Engine) {
 		mon_an.POST("/create", controllers.CreateMonAn)
 		mon_an.GET("/all", controllers.GetAllMonAn)
 		mon_an.GET("/:id", controllers.GetMonAnByID)
+		mon_an.GET("/:id/detail", controllers.GetMonAnDetail)
 		mon_an.PATCH("/update/:id", controllers.UpdateMonAn)
 		mon_an.DELETE("/delete/:id", controllers.DeleteMonAn)
 	}
