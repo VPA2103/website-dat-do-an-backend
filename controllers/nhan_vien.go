@@ -23,7 +23,7 @@ func CreateNhanVien(c *gin.Context) {
 	}
 
 	// ✅ Kiểm tra loại nhân viên chỉ được phép là "user" hoặc "admin"
-	if nv.LoaiNguoiDung != "user" && nv.LoaiNguoiDung != "admin" {
+	if nv.LoaiNguoiDung != "user" && nv.LoaiNguoiDung != "admin"&& nv.LoaiNguoiDung != "shipper" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Loại nhân viên không hợp lệ. Chỉ chấp nhận 'user' hoặc 'admin'."})
 		return
 	}
