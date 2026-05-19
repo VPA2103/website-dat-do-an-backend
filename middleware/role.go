@@ -8,28 +8,36 @@ import (
 
 func RoleMiddleware(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		roleValue, exists := c.Get("role")
-		if !exists {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Không tìm thấy quyền truy cập (token thiếu role)"})
+
+		roleAny, exists := c.Get("role")
+		if !exists || roleAny == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Không xác định quyền người dùng",
+			})
 			c.Abort()
 			return
 		}
 
-		roleStr, ok := roleValue.(string)
+		role, ok := roleAny.(string)
 		if !ok {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Dữ liệu quyền truy cập không hợp lệ"})
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Role không hợp lệ",
+			})
 			c.Abort()
 			return
 		}
 
+		// kiểm tra role có nằm trong danh sách cho phép không
 		for _, allowed := range roles {
-			if roleStr == allowed {
+			if role == allowed {
 				c.Next()
 				return
 			}
 		}
 
-		c.JSON(http.StatusForbidden, gin.H{"error": "Không có quyền truy cập vào tài nguyên này"})
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Không có quyền truy cập",
+		})
 		c.Abort()
 	}
 }
