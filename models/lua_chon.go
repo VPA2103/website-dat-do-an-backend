@@ -17,7 +17,7 @@ type NhomOption struct {
 
 	TrangThai uint `json:"trang_thai"`
 
-	OptionItems []OptionItem `gorm:"foreignKey:MaNhomOption;constraint:OnDelete:CASCADE" json:"-"`
+	OptionItems []OptionItem `gorm:"foreignKey:MaNhomOption;constraint:OnDelete:CASCADE" json:"OptionItems"`
 }
 
 type OptionItem struct {
