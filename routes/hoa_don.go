@@ -17,17 +17,18 @@ func HoaDonRoutes(r *gin.Engine, hub *websocket.Hub) {
 
 		hoaDon.GET("", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetHoaDons)
 
-		hoaDon.GET("/:id", ctrl.GetHoaDonByID)
-
 		hoaDon.PUT("/:id", ctrl.UpdateHoaDon)
 
-		hoaDon.PUT("/:id/trang-thai", ctrl.UpdateTrangThaiHoaDon)
+		hoaDon.PUT("/:id/trang-thai", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin", "shipper"), ctrl.UpdateTrangThaiHoaDon)
 
 		hoaDon.GET("/user", middleware.AuthMiddleware(), ctrl.GetHoaDonByNguoiDung)
 
+		hoaDon.GET("/trang-thai", ctrl.GetHoaDonByTrangThai)
+		
+		hoaDon.GET("/:id", ctrl.GetHoaDonByID)
+
 		hoaDon.PUT("/:id/huy", ctrl.HuyHoaDon)
 
-		hoaDon.GET("/trang-thai", ctrl.GetHoaDonByTrangThai)
 
 		hoaDon.DELETE("/:id", ctrl.XoaHoaDon)
 

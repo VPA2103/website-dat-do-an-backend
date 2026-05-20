@@ -105,13 +105,13 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 
 	// tạo hóa đơn
 	hoaDon := models.HoaDon{
-		MaNguoiDung: maNguoiDung,
-		HoTen:       input.HoTen,
-		SDT:         input.SDT,
-		DiaChi:      input.DiaChi,
-		GhiChu:      input.GhiChu,
-		Ngay:        time.Now(),
-		TrangThai:   "cho_xac_nhan",
+		MaNguoiDung:        maNguoiDung,
+		HoTen:              input.HoTen,
+		SDT:                input.SDT,
+		DiaChi:             input.DiaChi,
+		GhiChu:             input.GhiChu,
+		Ngay:               time.Now(),
+		TrangThai:          "cho_xac_nhan",
 		TrangThaiThanhToan: "cho_thanh_toan",
 	}
 
@@ -364,13 +364,13 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 	}()
 
 	// realtime cho admin
-	ctrl.Hub.BroadcastToRoom(0, dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "new_hoa_don",
 		Payload: result,
 	})
 
 	// realtime cho user
-	ctrl.Hub.BroadcastToRoom(maNguoiDung, dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "new_hoa_don_user",
 		Payload: result,
 	})
@@ -490,8 +490,21 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 	}
 
 	// Lấy role từ middleware JWT
-	roleAny, _ := c.Get("role")
-	role := roleAny.(string)
+	roleAny, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Không tìm thấy role trong token",
+		})
+		return
+	}
+
+	role, ok := roleAny.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Role không hợp lệ",
+		})
+		return
+	}
 
 	var hoaDon models.HoaDon
 
@@ -581,12 +594,12 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 	config.DB.First(&hoaDon, "ma_hd = ?", id)
 
 	// WebSocket
-	ctrl.Hub.BroadcastToRoom(0, dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "update_trang_thai_hoa_don",
 		Payload: hoaDon,
 	})
 
-	ctrl.Hub.BroadcastToRoom(hoaDon.MaNguoiDung, dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "update_trang_thai_hoa_don_user",
 		Payload: hoaDon,
 	})
@@ -631,12 +644,12 @@ func (ctrl *HoaDonController) HuyHoaDon(c *gin.Context) {
 
 	config.DB.First(&hoaDon, "ma_hd = ?", id)
 
-	ctrl.Hub.BroadcastToRoom(0, dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "cancel_hoa_don",
 		Payload: hoaDon,
 	})
 
-	ctrl.Hub.BroadcastToRoom(hoaDon.MaNguoiDung, dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "cancel_hoa_don_user",
 		Payload: hoaDon,
 	})

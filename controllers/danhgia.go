@@ -9,11 +9,11 @@ import (
 )
 
 type DanhGiaController struct {
-    Hub *websocket.Hub
+	Hub *websocket.Hub
 }
 
 func NewDanhGiaController(hub *websocket.Hub) *DanhGiaController {
-    return &DanhGiaController{Hub: hub}
+	return &DanhGiaController{Hub: hub}
 }
 
 type DanhGiaInput struct {
@@ -47,34 +47,34 @@ type DanhGiaInput struct {
 // }
 
 func (ctrl *DanhGiaController) CreateDanhGia(c *gin.Context) {
-    var input DanhGiaInput
-    if err := c.ShouldBindJSON(&input); err != nil {
-        c.JSON(400, gin.H{"error": err.Error()})
-        return
-    }
+	var input DanhGiaInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
 
-    dg := models.DanhGia{
-        MaNguoiDung: input.MaNguoiDung,
-        MaMonAn:     input.MaMonAn,
-        SoSao:       input.SoSao,
-        NoiDung:     input.NoiDung,
-    }
+	dg := models.DanhGia{
+		MaNguoiDung: input.MaNguoiDung,
+		MaMonAn:     input.MaMonAn,
+		SoSao:       input.SoSao,
+		NoiDung:     input.NoiDung,
+	}
 
-    if err := config.DB.Create(&dg).Error; err != nil {
-        c.JSON(500, gin.H{"error": err.Error()})
-        return
-    }
+	if err := config.DB.Create(&dg).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 
-    // ✅ Load relation trước khi broadcast
-    config.DB.Preload("NguoiDung").Preload("MonAn").First(&dg, dg.ID)
+	// ✅ Load relation trước khi broadcast
+	config.DB.Preload("NguoiDung").Preload("MonAn").First(&dg, dg.ID)
 
-    // ✅ Broadcast realtime cho tất cả client
-    ctrl.Hub.BroadcastToRoom(0, dto.WSMessage{
-        Type:    "new_danh_gia",
-        Payload: dg,
-    })
+	// ✅ Broadcast realtime cho tất cả client
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type:    "new_danh_gia",
+		Payload: dg,
+	})
 
-    c.JSON(200, dg)
+	c.JSON(200, dg)
 }
 
 // Các hàm còn lại convert sang method tương tự
@@ -97,7 +97,7 @@ func (ctrl *DanhGiaController) GetDanhSachDanhGia(c *gin.Context) {
 	c.JSON(200, list)
 }
 
-func (ctrl *DanhGiaController) GetDanhGiaByID(c *gin.Context)  {
+func (ctrl *DanhGiaController) GetDanhGiaByID(c *gin.Context) {
 	id := c.Param("id")
 
 	var dg models.DanhGia

@@ -17,7 +17,7 @@ func (uc *ChatUseCase) SendMessage(userID uint, msg dto.WSMessage) error {
 	}
 
 	// 2. Realtime
-	uc.RT.BroadcastToRoom(msg.RoomID, msg)
+	uc.RT.Broadcast(msg)
 
 	return nil
 }

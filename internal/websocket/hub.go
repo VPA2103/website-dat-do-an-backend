@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"log"
 	"sync"
 
 	"github.com/vpa/quanlynhahang-backend/internal/dto"
@@ -52,28 +51,58 @@ func safeSend(c *Client, data []byte) {
 }
 
 func (h *Hub) SendToUser(userID uint, msg dto.WSMessage) {
+
 	data, _ := json.Marshal(msg)
 
-	h.mu.RLock()
-	defer h.mu.RUnlock()
+	h.mu.Lock()
+	defer h.mu.Unlock()
 
 	for c := range h.Clients {
+
 		if c.UserID == userID {
-			c.Send <- data
+
+			select {
+
+			case c.Send <- data:
+
+			default:
+				close(c.Send)
+				delete(h.Clients, c)
+			}
 		}
 	}
 }
 
-func (h *Hub) BroadcastToRoom(roomID uint, msg dto.WSMessage) {
-    data, _ := json.Marshal(msg)
-    h.mu.RLock()
-    defer h.mu.RUnlock()
+// func (h *Hub) BroadcastToRoom(roomID uint, msg dto.WSMessage) {
+//     data, _ := json.Marshal(msg)
+//     h.mu.RLock()
+//     defer h.mu.RUnlock()
 
-    log.Printf("📡 Broadcasting type=%s to %d clients", msg.Type, len(h.Clients))
+//     log.Printf("📡 Broadcasting type=%s to %d clients", msg.Type, len(h.Clients))
 
-    for c := range h.Clients {
-        safeSend(c, data) // ✅ bỏ filter c.RoomID == roomID
-    }
+//     for c := range h.Clients {
+//         safeSend(c, data) // ✅ bỏ filter c.RoomID == roomID
+//     }
+// }
+
+func (h *Hub) Broadcast(msg dto.WSMessage) {
+
+	data, _ := json.Marshal(msg)
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	for c := range h.Clients {
+
+		select {
+
+		case c.Send <- data:
+
+		default:
+			close(c.Send)
+			delete(h.Clients, c)
+		}
+	}
 }
 
 func (h *Hub) SendToRole(role string, msg dto.WSMessage) {

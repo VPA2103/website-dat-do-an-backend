@@ -74,7 +74,7 @@ func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
 	config.DB.Preload("NguoiDung").Preload("Replies.NguoiDung").First(&binhLuan, binhLuan.ID)
 
 	// ✅ Broadcast realtime
-	ctrl.Hub.BroadcastToRoom(input.MaMonAn, dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "new_binh_luan",
 		Payload: binhLuan,
 	})
@@ -165,7 +165,7 @@ func (ctrl *BinhLuanController) GetBinhLuanByID(c *gin.Context) {
 	}
 
 	// ✅ Broadcast realtime
-	ctrl.Hub.BroadcastToRoom(binhLuan.MaMonAn, dto.WSMessage{
+	ctrl.Hub.Broadcast( dto.WSMessage{
 		Type:    "update_binh_luan",
 		Payload: binhLuan,
 	})
@@ -196,7 +196,7 @@ func (ctrl *BinhLuanController) DeleteBinhLuan(c *gin.Context) {
 	}
 
 	// ✅ Broadcast realtime
-	ctrl.Hub.BroadcastToRoom(binhLuan.MaMonAn, dto.WSMessage{
+	ctrl.Hub.Broadcast( dto.WSMessage{
 		Type:    "delete_binh_luan",
 		Payload: gin.H{"id": id},
 	})
