@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chi Tiết Hóa Đơn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inconsolata:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161a24;
+      --card:      #1e2333;
+      --border:    #2a3048;
+      --accent:    #f0b429;
+      --accent2:   #e05c2e;
+      --text:      #e8ecf4;
+      --muted:     #6b7494;
+      --success:   #2dd68c;
+      --danger:    #f0524f;
+      --warn:      #f0b429;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+    }
+
+    /* ── Page layout ── */
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+      animation: fadeUp .5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── Header ── */
+    .hd-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-family: 'Inconsolata', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .hd-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .hd-title span {
+      color: var(--accent);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Trạng thái */
+    .tt-cho_xac_nhan   { background:#2a2518; color:var(--warn);    border-color:#4a3f1a; }
+    .tt-dang_giao      { background:#1a2432; color:#5ab4ff;        border-color:#1e3a5a; }
+    .tt-da_giao        { background:#162a22; color:var(--success); border-color:#1e3d2f; }
+    .tt-huy            { background:#2a1a1a; color:var(--danger);  border-color:#4a2020; }
+    .dot-cho_xac_nhan  { background:var(--warn); }
+    .dot-dang_giao     { background:#5ab4ff; }
+    .dot-da_giao       { background:var(--success); }
+    .dot-huy           { background:var(--danger); }
+
+    /* Thanh toán */
+    .ttp-chua    { background:#2a1a18; color:var(--danger);  border-color:#4a2a22; }
+    .ttp-da      { background:#162a22; color:var(--success); border-color:#1e3d2f; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Info grid ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .info-item .val {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .info-item .val.mono {
+      font-family: 'Inconsolata', monospace;
+      font-size: 15px;
+    }
+
+    /* ── Items table ── */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .items-table thead th {
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: left;
+      padding: 0 12px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .items-table thead th:last-child { text-align: right; }
+
+    .items-table tbody tr {
+      border-bottom: 1px solid rgba(42,48,72,.6);
+      transition: background .15s;
+    }
+
+    .items-table tbody tr:last-child { border-bottom: none; }
+    .items-table tbody tr:hover { background: rgba(255,255,255,.025); }
+
+    .items-table tbody td {
+      padding: 14px 12px;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    .items-table tbody td:last-child { text-align: right; }
+
+    .item-name { font-weight: 500; }
+    .item-note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Summary ── */
+    .summary {
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      margin-top: 4px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .summary-row.total {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      padding-top: 12px;
+      margin-top: 6px;
+      border-top: 1px solid var(--border);
+    }
+
+    .summary-row.discount .val { color: var(--success); }
+
+    /* ── QR Section ── */
+    .qr-section {
+      text-align: center;
+    }
+
+    .qr-wrap {
+      display: inline-block;
+      background: #fff;
+      padding: 14px;
+      border-radius: 16px;
+      margin: 0 auto 18px;
+      box-shadow: 0 0 40px rgba(240,180,41,.15);
+    }
+
+    .qr-wrap img {
+      display: block;
+      width: 220px;
+      height: 220px;
+      border-radius: 6px;
+    }
+
+    .qr-hint {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .qr-bank-info {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .qr-bank-info .bi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing:.07em; margin-bottom:3px; }
+    .qr-bank-info .bi-val  { font-family: 'Inconsolata', monospace; font-size: 15px; font-weight: 600; }
+
+    /* ── Paid overlay ── */
+    .paid-overlay {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      gap: 12px;
+    }
+
+    .paid-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(45,214,140,.12);
+      border: 2px solid var(--success);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .paid-title { font-size: 20px; font-weight: 700; color: var(--success); }
+    .paid-sub   { font-size: 13px; color: var(--muted); }
+
+    /* ── Btn ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0d0f14;
+    }
+
+    .btn-primary:hover { background: #e6a820; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(240,180,41,.3); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Loading / error ── */
+    .loader {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      background: rgba(240,82,79,.08);
+      border: 1px solid var(--danger);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      color: var(--danger);
+    }
+
+    /* ── Search bar ── */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 28px;
+      align-items: center;
+    }
+
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-wrap .prefix {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Inconsolata', monospace;
+      font-size: 14px;
+      color: var(--muted);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inconsolata', monospace;
+      font-size: 16px;
+      padding: 11px 14px 11px 42px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      -moz-appearance: textfield;
+    }
+
+    .search-input::-webkit-outer-spin-button,
+    .search-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(240,180,41,.12);
+    }
+
+    .search-input::placeholder { color: var(--muted); }
+
+    /* ── Responsive ── */
+    @media (max-width: 540px) {
+      .hd-header { flex-direction: column; }
+      .items-table thead th:nth-child(3),
+      .items-table tbody td:nth-child(3) { display: none; }
+      .qr-bank-info { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page" id="app">
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <div style="color:var(--muted);font-size:14px;">Đang tải hóa đơn…</div>
+  </div>
+</div>
+
+<script>
+/* ====================================================
+   CONFIG — thay đổi theo dự án của bạn
+   ==================================================== */
+const CONFIG = {
+  API_BASE:     'http://localhost:3000',   // base URL của Gin server
+  SEPAY_BANK:   'MBBank',                 // tên ngân hàng trên SePay
+  SEPAY_ACC:    '0123456789',             // số tài khoản
+  POLL_INTERVAL: 6000,                    // ms kiểm tra thanh toán
+};
+
+/* ====================================================
+   Lấy id hóa đơn từ query string: ?id=5
+   hoặc từ path: /hoa-don.html/5
+   ==================================================== */
+function getInvoiceId() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('id')) return params.get('id');
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  return parts[parts.length - 1] || null;
+}
+
+/* ====================================================
+   Helpers
+   ==================================================== */
+const fmt = (n) =>
+  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
+
+const fmtDate = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('vi-VN', {
+    day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+};
+
+const trangThaiLabel = {
+  cho_xac_nhan: 'Chờ xác nhận',
+  dang_giao:    'Đang giao',
+  da_giao:      'Đã giao',
+  huy:          'Đã huỷ',
+};
+
+const ttThanhToanLabel = {
+  chua_thanh_toan: 'Chưa thanh toán',
+  da_thanh_toan:   'Đã thanh toán',
+};
+
+function badge(val, map, prefix) {
+  const label = map[val] || val;
+  const cls   = val.replace(/[^a-z0-9_]/gi, '_');
+  return `<span class="badge ${prefix}-${cls}">
+    <span class="badge-dot dot-${cls}"></span>${label}
+  </span>`;
+}
+
+/* SePay QR URL */
+function sePayQR(amount, content) {
+  return `https://qr.sepay.vn/img?acc=${CONFIG.SEPAY_ACC}&bank=${CONFIG.SEPAY_BANK}&amount=${amount}&des=${encodeURIComponent(content)}`;
+}
+
+/* ====================================================
+   Fetch hóa đơn
+   ==================================================== */
+async function fetchHoaDon(id) {
+  const res = await fetch(`${CONFIG.API_BASE}/hoa-don/${id}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const body = await res.json();
+  return body.data || body;
+}
+
+/* ====================================================
+   Render
+   ==================================================== */
+function render(hd) {
+  const isPaid = hd.trang_thai_thanh_toan === 'da_thanh_toan';
+  const qrContent = `HD${hd.ma_hd}`;
+  const qrURL = sePayQR(Math.round(hd.tong_tien), qrContent);
+
+  /* ── Items rows ── */
+  const rows = (hd.chi_tiet_hoa_dons || []).map(ct => `
+    <tr>
+      <td>
+        <div class="item-name">${ct.ten_mon || ct.ma_mon || '—'}</div>
+        ${ct.ghi_chu ? `<div class="item-note">${ct.ghi_chu}</div>` : ''}
+      </td>
+      <td>${ct.so_luong ?? 1}</td>
+      <td>${fmt(ct.don_gia ?? 0)}</td>
+      <td>${fmt((ct.so_luong ?? 1) * (ct.don_gia ?? 0))}</td>
+    </tr>
+  `).join('');
+
+  /* ── QR / Paid block ── */
+  const qrBlock = isPaid ? `
+    <div class="paid-overlay" style="display:flex;">
+      <div class="paid-icon">✓</div>
+      <div class="paid-title">Đã thanh toán</div>
+      <div class="paid-sub">Hóa đơn #${hd.ma_hd} đã được xác nhận thanh toán</div>
+    </div>
+  ` : `
+    <div class="qr-section" id="qr-section">
+      <div class="card-title">Thanh toán qua QR</div>
+
+      <div class="qr-wrap">
+        <img id="qr-img" src="${qrURL}" alt="QR Thanh Toán" />
+      </div>
+
+      <p class="qr-hint">
+        Mở app ngân hàng → Quét mã QR → Chuyển khoản.<br>
+        Nội dung chuyển khoản: <strong style="color:var(--accent);font-family:'Inconsolata',monospace;">${qrContent}</strong>
+      </p>
+
+      <div class="qr-bank-info">
+        <div>
+          <div class="bi-label">Ngân hàng</div>
+          <div class="bi-val">${CONFIG.SEPAY_BANK}</div>
+        </div>
+        <div>
+          <div class="bi-label">Số tài khoản</div>
+          <div class="bi-val">${CONFIG.SEPAY_ACC}</div>
+        </div>
+        <div>
+          <div class="bi-label">Số tiền</div>
+          <div class="bi-val" style="color:var(--accent)">${fmt(hd.tong_tien)}</div>
+        </div>
+        <div>
+          <div class="bi-label">Nội dung</div>
+          <div class="bi-val">${qrContent}</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="checkPayment(${hd.ma_hd})" id="btn-check">
+        <span id="btn-icon">↻</span> Kiểm tra thanh toán
+      </button>
+    </div>
+  `;
+
+  document.getElementById('app').innerHTML = `
+    <!-- Search bar -->
+    <div class="search-bar">
+      <div class="search-wrap">
+        <span class="prefix">#</span>
+        <input
+          id="hd-search"
+          class="search-input"
+          type="number"
+          min="1"
+          placeholder="Nhập mã hóa đơn…"
+          value="${hd.ma_hd}"
+          onkeydown="if(event.key==='Enter') loadById(this.value)"
+        />
+      </div>
+      <button class="btn btn-primary" onclick="loadById(document.getElementById('hd-search').value)">Xem</button>
+    </div>
+
+    <!-- Header -->
+    <div class="hd-header">
+      <div>
+        <div class="brand">Hóa đơn</div>
+        <div class="hd-title">#<span>${hd.ma_hd}</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        ${badge(hd.trang_thai, trangThaiLabel, 'tt')}
+        ${badge(hd.trang_thai_thanh_toan || 'chua_thanh_toan', ttThanhToanLabel, 'ttp')}
+      </div>
+    </div>
+
+    <!-- Thông tin khách hàng -->
+    <div class="card">
+      <div class="card-title">Thông tin đặt hàng</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Họ tên</label>
+          <div class="val">${hd.ho_ten || '—'}</div>
+        </div>
+        <div class="info-item">
+          <label>Số điện thoại</label>
+          <div class="val mono">${hd.sdt || '—'}</div>
+        </div>
+        <div class="info-item">
+          <label>Địa chỉ</label>
+          <div class="val">${hd.dia_chi || '—'}</div>
+        </div>
+        <div class="info-item">
+          <label>Ngày đặt</label>
+          <div class="val">${fmtDate(hd.ngay)}</div>
+        </div>
+        ${hd.ghi_chu ? `<div class="info-item" style="grid-column:1/-1">
+          <label>Ghi chú</label>
+          <div class="val">${hd.ghi_chu}</div>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <!-- Chi tiết món -->
+    <div class="card">
+      <div class="card-title">Chi tiết đơn hàng</div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Món</th>
+            <th>SL</th>
+            <th>Đơn giá</th>
+            <th>Thành tiền</th>
+          </tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Không có món nào</td></tr>'}</tbody>
+      </table>
+
+      <div class="summary">
+        <div class="summary-row">
+          <span>Tạm tính</span>
+          <span class="val">${fmt(hd.tam_tinh ?? hd.tong_tien)}</span>
+        </div>
+        ${(hd.tien_giam > 0) ? `
+        <div class="summary-row discount">
+          <span>Giảm giá${hd.giam_gia?.ten ? ` (${hd.giam_gia.ten})` : ''}</span>
+          <span class="val">- ${fmt(hd.tien_giam)}</span>
+        </div>` : ''}
+        <div class="summary-row total">
+          <span>Tổng cộng</span>
+          <span>${fmt(hd.tong_tien)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thanh toán -->
+    <div class="card" id="payment-card">
+      ${qrBlock}
+    </div>
+  `;
+
+  /* Auto poll nếu chưa thanh toán */
+  if (!isPaid) startPolling(hd.ma_hd);
+}
+
+/* ====================================================
+   Kiểm tra thanh toán (manual)
+   ==================================================== */
+async function checkPayment(id) {
+  const btn = document.getElementById('btn-check');
+  const icon = document.getElementById('btn-icon');
+  if (btn) { btn.disabled = true; icon.style.display = 'inline-block'; icon.classList.add('spinning'); }
+
+  try {
+    const hd = await fetchHoaDon(id);
+    if (hd.trang_thai_thanh_toan === 'da_thanh_toan') {
+      showPaidUI(id);
+    } else {
+      if (btn) { btn.disabled = false; }
+      showToast('Chưa nhận được thanh toán. Vui lòng thử lại sau.');
+    }
+  } catch (e) {
+    if (btn) { btn.disabled = false; }
+    showToast('Lỗi kết nối máy chủ.');
+  }
+}
+
+/* ====================================================
+   Auto polling
+   ==================================================== */
+let pollTimer = null;
+
+function startPolling(id) {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    try {
+      const hd = await fetchHoaDon(id);
+      if (hd.trang_thai_thanh_toan === 'da_thanh_toan') {
+        clearInterval(pollTimer);
+        showPaidUI(id);
+      }
+    } catch (_) {}
+  }, CONFIG.POLL_INTERVAL);
+}
+
+/* ====================================================
+   Hiển thị UI đã thanh toán
+   ==================================================== */
+function showPaidUI(id) {
+  const card = document.getElementById('payment-card');
+  if (!card) return;
+  card.innerHTML = `
+    <div class="paid-overlay" style="display:flex;">
+      <div class="paid-icon">✓</div>
+      <div class="paid-title">Đã thanh toán</div>
+      <div class="paid-sub">Hóa đơn #${id} đã được xác nhận thanh toán</div>
+    </div>
+  `;
+  /* Cập nhật badge thanh toán */
+  document.querySelectorAll('.ttp-chua_thanh_toan').forEach(el => {
+    el.className = 'badge ttp-da_thanh_toan';
+    el.innerHTML = `<span class="badge-dot" style="background:var(--success)"></span>Đã thanh toán`;
+  });
+}
+
+/* ====================================================
+   Toast
+   ==================================================== */
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'var(--card)', border:'1px solid var(--border)',
+    color:'var(--text)', padding:'12px 22px', borderRadius:'10px',
+    fontSize:'13px', zIndex:9999, boxShadow:'0 4px 24px rgba(0,0,0,.4)',
+    whiteSpace:'nowrap', animation:'fadeUp .3s ease'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+/* ====================================================
+   Spinner CSS (inline for btn icon)
+   ==================================================== */
+const styleEl = document.createElement('style');
+styleEl.textContent = `
+  .spinning { display:inline-block; animation:spin .7s linear infinite; }
+`;
+document.head.appendChild(styleEl);
+
+/* ====================================================
+   Load by ID (called from search bar)
+   ==================================================== */
+async function loadById(id) {
+  id = String(id).trim();
+  if (!id || isNaN(Number(id))) { showToast('Vui lòng nhập mã hóa đơn hợp lệ.'); return; }
+  clearInterval(pollTimer);
+  /* Cập nhật URL mà không reload */
+  history.pushState({}, '', `?id=${id}`);
+  document.getElementById('app').innerHTML = `
+    <div class="search-bar">
+      <div class="search-wrap">
+        <span class="prefix">#</span>
+        <input id="hd-search" class="search-input" type="number" min="1"
+          placeholder="Nhập mã hóa đơn…" value="${id}"
+          onkeydown="if(event.key==='Enter') loadById(this.value)" />
+      </div>
+      <button class="btn btn-primary" onclick="loadById(document.getElementById('hd-search').value)">Xem</button>
+    </div>
+    <div class="loader"><div class="spinner"></div><div style="color:var(--muted);font-size:14px;">Đang tải hóa đơn…</div></div>
+  `;
+  try {
+    const hd = await fetchHoaDon(id);
+    render(hd);
+  } catch (e) {
+    document.getElementById('app').innerHTML = `
+      <div class="search-bar">
+        <div class="search-wrap">
+          <span class="prefix">#</span>
+          <input id="hd-search" class="search-input" type="number" min="1"
+            placeholder="Nhập mã hóa đơn…" value="${id}"
+            onkeydown="if(event.key==='Enter') loadById(this.value)" />
+        </div>
+        <button class="btn btn-primary" onclick="loadById(document.getElementById('hd-search').value)">Xem</button>
+      </div>
+      <div class="error-box">
+        <div style="font-size:32px;margin-bottom:12px">✕</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px">Không tìm thấy hóa đơn #${id}</div>
+        <div style="font-size:13px;color:var(--muted)">${e.message}</div>
+      </div>`;
+  }
+}
+
+/* ====================================================
+   Bootstrap
+   ==================================================== */
+(async () => {
+  const id = getInvoiceId();
+  if (!id || isNaN(Number(id))) {
+    document.getElementById('app').innerHTML = `
+      <div class="search-bar">
+        <div class="search-wrap">
+          <span class="prefix">#</span>
+          <input id="hd-search" class="search-input" type="number" min="1"
+            placeholder="Nhập mã hóa đơn…"
+            onkeydown="if(event.key==='Enter') loadById(this.value)"
+            autofocus />
+        </div>
+        <button class="btn btn-primary" onclick="loadById(document.getElementById('hd-search').value)">Xem</button>
+      </div>
+      <div class="card" style="text-align:center;padding:40px 24px;color:var(--muted);">
+        <div style="font-size:36px;margin-bottom:12px">🧾</div>
+        <div style="font-size:15px;">Nhập mã hóa đơn để xem chi tiết</div>
+      </div>`;
+    return;
+  }
+  try {
+    const hd = await fetchHoaDon(id);
+    render(hd);
+  } catch (e) {
+    document.getElementById('app').innerHTML = `
+      <div class="search-bar">
+        <div class="search-wrap">
+          <span class="prefix">#</span>
+          <input id="hd-search" class="search-input" type="number" min="1"
+            placeholder="Nhập mã hóa đơn…" value="${id}"
+            onkeydown="if(event.key==='Enter') loadById(this.value)" />
+        </div>
+        <button class="btn btn-primary" onclick="loadById(document.getElementById('hd-search').value)">Xem</button>
+      </div>
+      <div class="error-box">
+        <div style="font-size:32px;margin-bottom:12px">✕</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px">Không tìm thấy hóa đơn</div>
+        <div style="font-size:13px;color:var(--muted)">${e.message}</div>
+      </div>`;
+  }
+})();
+</script>
+</body>
+</html>

@@ -112,7 +112,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		GhiChu:             input.GhiChu,
 		Ngay:               time.Now(),
 		TrangThai:          "cho_xac_nhan",
-		TrangThaiThanhToan: "cho_thanh_toan",
+		TrangThaiThanhToan: "chua_thanh_toan",
 	}
 
 	if err := tx.Create(&hoaDon).Error; err != nil {
@@ -332,6 +332,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 	if err := config.DB.
 		Preload("GiamGia").
 		Preload("ChiTietHoaDons").
+		Preload("ChiTietHoaDons.MonAn").
 		First(&result, "ma_hd = ?", hoaDon.MaHD).Error; err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -471,8 +472,32 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 		return
 	}
 
+	// QR mặc định rỗng
+	qrURL := ""
+
+	// Nếu chưa thanh toán thì tạo QR
+	if hoaDon.TrangThaiThanhToan != "da_thanh_toan" {
+
+		qrURL = utils.GenerateSePayQR(
+			"123456789", // số tài khoản
+			"MB",        // mã ngân hàng
+			int(hoaDon.TongTien),
+			fmt.Sprintf("HD%d", hoaDon.MaHD),
+		)
+	}
+
+	// realtime
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type: "xem_hoa_don_da_dat",
+		Payload: gin.H{
+			"hoa_don": hoaDon,
+			"qr_url":  qrURL,
+		},
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"data": hoaDon,
+		"qr_url": qrURL,
 	})
 }
 
