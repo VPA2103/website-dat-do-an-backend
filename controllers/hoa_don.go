@@ -475,14 +475,15 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
-		First(&hoaDon, "ma_hd = ? AND ma_kh = ?", id, userID).Error; err != nil {
+		First(&hoaDon, "ma_hd = ? AND ma_nguoi_dung = ?", id, userID).Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Bạn không có quyền xem hóa đơn này",
 		})
 		return
 	}
-
+	log.Println("userID:", userID)
+	log.Println("hoaDonID:", id)
 	// QR mặc định rỗng
 	qrURL := ""
 

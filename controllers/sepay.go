@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
@@ -129,8 +130,8 @@ type SepayWebhookPayload struct {
 	Content         string  `json:"content"`
 	TransferType    string  `json:"transferType"`
 	Description     string  `json:"description"`
-	TransferAmount  int64   `json:"transferAmount"`
-	Accumulated     int64   `json:"accumulated"`
+	TransferAmount  float64 `json:"transferAmount"`
+	Accumulated     float64 `json:"accumulated"`
 	ReferenceCode   string  `json:"referenceCode"`
 }
 
@@ -181,6 +182,12 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 
 	var hoaDon models.HoaDon
 
+	var existing models.ThanhToan
+	if err := config.DB.Where("ma_hd = ?", hoaDon.MaHD).First(&existing).Error; err == nil {
+		// đã có thanh toán rồi -> bỏ qua
+		return
+	}
+
 	err = config.DB.First(&hoaDon, "ma_hd = ?", id).Error
 
 	if err != nil {
@@ -202,6 +209,18 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 	config.DB.Model(&hoaDon).Updates(map[string]interface{}{
 		"trang_thai_thanh_toan": "da_thanh_toan",
 	})
+
+	// tạo thanh toán
+	thanhToan := models.ThanhToan{
+		MaHD:              hoaDon.MaHD,
+		SoTien:            payload.TransferAmount,
+		HinhThucThanhToan: "chuyen_khoan",
+		NgayThanhToan:     time.Now(),
+	}
+
+	if err := config.DB.Create(&thanhToan).Error; err != nil {
+		log.Println("create payment error:", err)
+	}
 
 	// realtime
 	ctrl.Hub.Broadcast(
