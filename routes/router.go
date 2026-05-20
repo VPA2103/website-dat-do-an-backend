@@ -15,8 +15,6 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 		c.File("./static/web-page.html")
 	})
 
-	
-
 	// 🔒 Nhóm yêu cầu xác thực
 	auth := r.Group("/api")
 	auth.Use(middleware.AuthMiddleware())
@@ -32,7 +30,7 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	}
 	// 👨‍💼 Nhân viên routes (có thể để ngoài hoặc trong nhóm admin)
 	AuthRoutes(r)
-	
+
 	NguoiDungRoutes(r)
 
 	BanAnRoutes(r)
@@ -60,10 +58,10 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	GioHangRoutes(r)
 
 	Payment(r)
-	
-	SePayPayment(r)
+
+	SePayPayment(r, hub)
 
 	OptionRoutes(r)
 
-	ShipRoutes(r,hub)
+	ShipRoutes(r, hub)
 }

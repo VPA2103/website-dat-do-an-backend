@@ -316,12 +316,14 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		return
 	}
 
+	content := fmt.Sprintf("HD%07d", hoaDon.MaHD)
+
 	// Tạo qr động chuyển khoản từ sepay có webhook gửi về serve
 	qrURL := utils.GenerateSePayQR(
 		"0123456789", // STK
 		"MBBank",
 		int(tongCuoi),
-		fmt.Sprintf("HD%d", hoaDon.MaHD),
+		content,
 	)
 
 	// lấy kết quả cuối

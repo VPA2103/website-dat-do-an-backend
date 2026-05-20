@@ -6,11 +6,16 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/internal/dto"
+	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/utils"
 )
@@ -24,6 +29,16 @@ const (
 	// Endpoint JSON
 	SePayCheckoutAPI = "https://pay.sepay.vn/v1/checkout/init"
 )
+
+type SepayController struct {
+	Hub *websocket.Hub
+}
+
+func NewThanhToanController(hub *websocket.Hub) *SepayController {
+	return &SepayController{
+		Hub: hub,
+	}
+}
 
 type CheckoutRequest struct {
 	Amount        int64  `json:"amount" binding:"required"`
@@ -119,49 +134,84 @@ type SepayWebhookPayload struct {
 	ReferenceCode   string  `json:"referenceCode"`
 }
 
-func SePayWebhook(c *gin.Context) {
+func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 
 	var payload struct {
-		Content string  `json:"content"`
-		Amount  float64 `json:"amount"`
+		Content        string  `json:"content"`
+		TransferAmount float64 `json:"transferAmount"`
 	}
 
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(400, gin.H{"error": "invalid"})
+		c.JSON(400, gin.H{
+			"error": "invalid payload",
+		})
 		return
 	}
 
-	// content: HD25
+	log.Println("SEPAY CONTENT:", payload.Content)
+
+	// webhook test
 	if payload.Content == "SEPAY TEST WEBHOOK" {
 		c.JSON(200, gin.H{
-			"message": "Webhook test received",
+			"message": "Webhook test ok",
+		})
+		return
+	}
+
+	// tìm HD000025
+	re := regexp.MustCompile(`HD\d+`)
+	match := re.FindString(payload.Content)
+
+	if match == "" {
+		c.JSON(400, gin.H{
+			"error": "Không tìm thấy mã hóa đơn",
+		})
+		return
+	}
+
+	orderCode := strings.TrimPrefix(match, "HD")
+
+	id, err := strconv.Atoi(orderCode)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": "Mã hóa đơn không hợp lệ",
 		})
 		return
 	}
 
 	var hoaDon models.HoaDon
 
-	err := config.DB.
-		Where("ma_hd = ?", strings.ReplaceAll(payload.Content, "HD", "")).
-		First(&hoaDon).Error
+	err = config.DB.First(&hoaDon, "ma_hd = ?", id).Error
 
 	if err != nil {
-		c.JSON(404, gin.H{"error": "Không tìm thấy hóa đơn"})
-		return
-	}
-
-	// check đủ tiền
-	if payload.Amount < hoaDon.TongTien {
-
-		c.JSON(400, gin.H{
-			"error": "Thanh toán thiếu tiền",
+		c.JSON(404, gin.H{
+			"error": "Không tìm thấy hóa đơn",
 		})
 		return
 	}
 
+	// check tiền
+	if payload.TransferAmount < hoaDon.TongTien {
+		c.JSON(400, gin.H{
+			"error": "Thanh toán thiếu",
+		})
+		return
+	}
+
+	// update DB
 	config.DB.Model(&hoaDon).Updates(map[string]interface{}{
 		"trang_thai_thanh_toan": "da_thanh_toan",
 	})
+
+	// realtime
+	ctrl.Hub.Broadcast(
+		dto.WSMessage{
+			Type: "payment_success",
+			Payload: gin.H{
+				"hoa_don_id": hoaDon.MaHD,
+			},
+		},
+	)
 
 	c.JSON(200, gin.H{
 		"success": true,
