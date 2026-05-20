@@ -6,11 +6,13 @@ import (
 	"encoding/base64"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/utils"
 )
 
 // Sandbox: "https://pgapi-sandbox.sepay.vn"
@@ -38,35 +40,35 @@ type SePayResponse struct {
 }
 
 func generateSignature(fields map[string]string, secretKey string) string {
-    // Thứ tự fields quan trọng - theo docs SePay
-    order := []string{
-        "order_amount",
-        "merchant",
-        "currency",
-        "operation",
-        "order_description",
-        "order_invoice_number",
-        "success_url",
-        "error_url",
-        "cancel_url",
-    }
+	// Thứ tự fields quan trọng - theo docs SePay
+	order := []string{
+		"order_amount",
+		"merchant",
+		"currency",
+		"operation",
+		"order_description",
+		"order_invoice_number",
+		"success_url",
+		"error_url",
+		"cancel_url",
+	}
 
-    var parts []string
-    for _, key := range order {
-        if val, exists := fields[key]; exists && val != "" {
-            parts = append(parts, key+"="+val)
-        }
-    }
+	var parts []string
+	for _, key := range order {
+		if val, exists := fields[key]; exists && val != "" {
+			parts = append(parts, key+"="+val)
+		}
+	}
 
-    data := strings.Join(parts, ",")
-    fmt.Println("🔍 Data to sign:", data)   // Debug
+	data := strings.Join(parts, ",")
+	fmt.Println("🔍 Data to sign:", data) // Debug
 
-    h := hmac.New(sha256.New, []byte(secretKey))
-    h.Write([]byte(data))
-    sig := base64.StdEncoding.EncodeToString(h.Sum(nil))
+	h := hmac.New(sha256.New, []byte(secretKey))
+	h.Write([]byte(data))
+	sig := base64.StdEncoding.EncodeToString(h.Sum(nil))
 
-    fmt.Println("🔑 Generated signature:", sig)  // Debug
-    return sig
+	fmt.Println("🔑 Generated signature:", sig) // Debug
+	return sig
 }
 
 func CreateSePayPaymentForm(c *gin.Context) {
@@ -101,6 +103,7 @@ func CreateSePayPaymentForm(c *gin.Context) {
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	c.String(http.StatusOK, html)
 }
+
 type SepayWebhookPayload struct {
 	ID              int64   `json:"id"`
 	Gateway         string  `json:"gateway"`
@@ -116,30 +119,65 @@ type SepayWebhookPayload struct {
 	ReferenceCode   string  `json:"referenceCode"`
 }
 
-func SePayWebhookHandler(c *gin.Context) {
-	// Đọc raw body (quan trọng nếu sau này làm HMAC)
-	// bodyBytes, err := c.GetRawData()
+func SePayWebhook(c *gin.Context) {
 
-	// if err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot read body"})
-	// 	return
-	// }
+	var payload struct {
+		Content string  `json:"content"`
+		Amount  float64 `json:"amount"`
+	}
 
-	// Parse JSON
-	var payload SepayWebhookPayload
-	if err := c.ShouldBindJSON(&payload); err != nil { // hoặc json.Unmarshal(bodyBytes, &payload)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(400, gin.H{"error": "invalid"})
 		return
 	}
 
-	// === TODO: Xử lý business logic ===
-	// 1. Kiểm tra HMAC (nếu bạn bật xác thực)
-	// 2. Kiểm tra idempotency với payload.ID
-	// 3. Cập nhật trạng thái đơn hàng, ghi log, etc.
+	// content: HD25
+	if payload.Content == "SEPAY TEST WEBHOOK" {
+		c.JSON(200, gin.H{
+			"message": "Webhook test received",
+		})
+		return
+	}
 
-	log.Printf("[SePay Webhook] Received - ID: %d | Amount: %d VND | Content: %s | Code: %v",
-		payload.ID, payload.TransferAmount, payload.Content, payload.Code)
+	var hoaDon models.HoaDon
 
-	// Phản hồi BẮT BUỘC theo yêu cầu của SePay
-	c.JSON(http.StatusOK, gin.H{"success": true})
+	err := config.DB.
+		Where("ma_hd = ?", strings.ReplaceAll(payload.Content, "HD", "")).
+		First(&hoaDon).Error
+
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Không tìm thấy hóa đơn"})
+		return
+	}
+
+	// check đủ tiền
+	if payload.Amount < hoaDon.TongTien {
+
+		c.JSON(400, gin.H{
+			"error": "Thanh toán thiếu tiền",
+		})
+		return
+	}
+
+	config.DB.Model(&hoaDon).Updates(map[string]interface{}{
+		"trang_thai_thanh_toan": "da_thanh_toan",
+	})
+
+	c.JSON(200, gin.H{
+		"success": true,
+	})
+}
+
+func GetQR(c *gin.Context) {
+
+	qr := utils.GenerateSePayQR(
+		"0123456789",
+		"MBBank",
+		50000,
+		"DON123",
+	)
+
+	c.JSON(200, gin.H{
+		"qr_url": qr,
+	})
 }

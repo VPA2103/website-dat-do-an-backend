@@ -112,6 +112,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		GhiChu:      input.GhiChu,
 		Ngay:        time.Now(),
 		TrangThai:   "cho_xac_nhan",
+		TrangThaiThanhToan: "cho_thanh_toan",
 	}
 
 	if err := tx.Create(&hoaDon).Error; err != nil {
@@ -315,6 +316,14 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		return
 	}
 
+	// Tạo qr động chuyển khoản từ sepay có webhook gửi về serve
+	qrURL := utils.GenerateSePayQR(
+		"0123456789", // STK
+		"MBBank",
+		int(tongCuoi),
+		fmt.Sprintf("HD%d", hoaDon.MaHD),
+	)
+
 	// lấy kết quả cuối
 	var result models.HoaDon
 
@@ -369,6 +378,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Đặt đồ ăn thành công",
 		"data":    result,
+		"qr_url":  qrURL,
 	})
 }
 
