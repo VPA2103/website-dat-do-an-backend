@@ -24,11 +24,10 @@ func HoaDonRoutes(r *gin.Engine, hub *websocket.Hub) {
 		hoaDon.GET("/user", middleware.AuthMiddleware(), ctrl.GetHoaDonByNguoiDung)
 
 		hoaDon.GET("/trang-thai", ctrl.GetHoaDonByTrangThai)
-		
-		hoaDon.GET("/:id", ctrl.GetHoaDonByID)
+
+		hoaDon.GET("/:id", middleware.AuthMiddleware(), ctrl.GetHoaDonByID)
 
 		hoaDon.PUT("/:id/huy", ctrl.HuyHoaDon)
-
 
 		hoaDon.DELETE("/:id", ctrl.XoaHoaDon)
 

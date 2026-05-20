@@ -460,14 +460,25 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 
 	id := c.Param("id")
 
+	// lấy user_id từ token
+	userIDAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Chưa đăng nhập",
+		})
+		return
+	}
+
+	userID := userIDAny.(uint)
+
 	var hoaDon models.HoaDon
 
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
-		First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
+		First(&hoaDon, "ma_hd = ? AND ma_kh = ?", id, userID).Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Không tìm thấy hóa đơn",
+			"error": "Bạn không có quyền xem hóa đơn này",
 		})
 		return
 	}
@@ -496,7 +507,7 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{
-		"data": hoaDon,
+		"data":   hoaDon,
 		"qr_url": qrURL,
 	})
 }
