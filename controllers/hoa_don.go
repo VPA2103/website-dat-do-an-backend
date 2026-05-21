@@ -465,7 +465,7 @@ func (ctrl *HoaDonController) XoaHoaDon(c *gin.Context) {
 	}
 
 	tx := config.DB.Begin()
-
+	tx.Where("ma_hoa_don = ?", id).Delete(&models.ChiTietHoaDonOption{})
 	// xóa chi tiết hóa đơn trước
 	if err := tx.
 		Where("ma_hoa_don = ?", id).
@@ -505,6 +505,7 @@ func (ctrl *HoaDonController) GetHoaDons(c *gin.Context) {
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
 		Preload("ChiTietHoaDons.MonAn").
+		Preload("ChiTietHoaDons.Options").
 		Order("ma_hd DESC").
 		Find(&hoaDons).Error; err != nil {
 
@@ -771,6 +772,7 @@ func (ctrl *HoaDonController) GetHoaDonByTrangThai(c *gin.Context) {
 	if err := config.DB.
 		Where("trang_thai = ?", trangThai).
 		Preload("ChiTietHoaDons").
+		Preload("ChiTietHoaDons.Options").
 		Find(&hoaDons).Error; err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -851,6 +853,8 @@ func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 		Where("ma_nguoi_dung = ?", maNguoiDung).
 		Preload("ChiTietHoaDons").
 		Preload("ChiTietHoaDons.MonAn").
+		Preload("ChiTietHoaDons.Options").
+		Preload("ChiTietHoaDons.Options.OptionItem").
 		Order("ma_hd DESC").
 		Find(&hoaDons).Error; err != nil {
 
