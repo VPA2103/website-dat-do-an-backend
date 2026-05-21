@@ -1,16 +1,15 @@
 package models
 
-import "time"
 
 type GioHang struct {
-	MaGioHang uint `gorm:"primaryKey;autoIncrement" json:"ma_gio_hang"`
+	MaGioHang   uint `gorm:"primaryKey;autoIncrement"`
+	MaNguoiDung uint `gorm:"index"`
+	MaMonAn     uint `gorm:"index"`
 
-	MaNguoiDung uint    `gorm:"uniqueIndex:idx_user_mon" json:"ma_nguoi_dung"`
-	MaMonAn     uint    `gorm:"uniqueIndex:idx_user_mon" json:"ma_mon_an"`
-	MonAn       []MonAn `gorm:"foreignKey:MaMonAn;references:MaMonAn" json:"mon_an"`
-	SoLuong     int     `json:"so_luong"`
-	GiaTien     int     `json:"gia_tien"`
-	CreatedAt   time.Time
+	MonAn MonAn `gorm:"foreignKey:MaMonAn;references:MaMonAn"`
+
+	SoLuong int
+	GiaTien int
 
 	Options []GioHangOption `gorm:"foreignKey:MaGioHang"`
 }
@@ -25,4 +24,5 @@ type GioHangOption struct {
 	TenNhomOption string `json:"ten_nhom_option"`
 	TenOption     string `json:"ten_option"`
 	GiaThem       int    `json:"gia_them"`
+	OptionItem OptionItem `gorm:"foreignKey:MaOptionItem;references:MaOptionItem"`
 }

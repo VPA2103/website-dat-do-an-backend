@@ -66,6 +66,7 @@ func main() {
 		&models.Message{},
 		&models.Room{},
 		&models.Payments{},
+		&models.GioHangOption{},
 	)
 	if err != nil {
 		log.Fatal("❌2 Migrate relations failed:", err)

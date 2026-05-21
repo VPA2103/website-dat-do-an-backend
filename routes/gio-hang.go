@@ -15,7 +15,7 @@ func GioHangRoutes(r *gin.Engine) {
 
 		gioHang.GET("/user/:id", controllers.GetCartByUser)
 
-		gioHang.PUT("/:ma_mon_an", middleware.AuthMiddleware(), controllers.UpdateSoLuongCart)
+		gioHang.PUT("/:ma_gio_hang", middleware.AuthMiddleware(), controllers.UpdateSoLuongCart)
 
 		gioHang.DELETE("/:ma_mon_an", middleware.AuthMiddleware(), controllers.DeleteCart)
 

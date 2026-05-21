@@ -2,16 +2,23 @@ package controllers
 
 import (
 	"strconv"
-
+	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
 )
 
 type GioHangInput struct {
-	MaMonAn uint `json:"ma_mon_an" binding:"required"`
-	SoLuong int  `json:"so_luong" binding:"required"`
+	MaMonAn uint                 `json:"ma_mon_an" binding:"required"`
+	SoLuong int                  `json:"so_luong" binding:"required"`
+	Options []GioHangOptionInput `json:"options"`
 }
+type GioHangOptionInput struct {
+	MaNhomOption uint `json:"ma_nhom_option" binding:"required"`
+	MaOptionItem uint `json:"ma_option_item" binding:"required"`
+}
+
+
 
 type UpdateSoLuongInput struct {
 	SoLuong int `json:"so_luong" binding:"required"`
@@ -20,135 +27,119 @@ type UpdateSoLuongInput struct {
 func AddToCart(c *gin.Context) {
 	var input GioHangInput
 
-	// validate json
+	// =======================
+	// VALIDATE INPUT
+	// =======================
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{
-			"error": "Dữ liệu không hợp lệ",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ"})
 		return
 	}
 
-	// validate số lượng
 	if input.SoLuong <= 0 {
-		c.JSON(400, gin.H{
-			"error": "Số lượng phải lớn hơn 0",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Số lượng phải > 0"})
 		return
 	}
 
-	// lấy user từ token
-	userAny, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(401, gin.H{
-			"error": "Chưa đăng nhập",
-		})
-		return
-	}
-
-	userID, ok := userAny.(uint)
+	// =======================
+	// GET USER
+	// =======================
+	userAny, ok := c.Get("user_id")
 	if !ok {
-		c.JSON(500, gin.H{
-			"error": "Sai kiểu dữ liệu user",
-		})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Chưa đăng nhập"})
 		return
 	}
+	userID := userAny.(uint)
 
-	// kiểm tra món ăn tồn tại
+	// =======================
+	// CHECK MÓN ĂN
+	// =======================
 	var monAn models.MonAn
-
 	if err := config.DB.
-		Preload("AnhMonAn").
 		Where("ma_mon_an = ?", input.MaMonAn).
 		First(&monAn).Error; err != nil {
-
-		c.JSON(404, gin.H{
-			"error": "Không tìm thấy món ăn",
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy món ăn"})
 		return
 	}
 
-	// kiểm tra đã tồn tại trong giỏ chưa
-	var existing models.GioHang
+	tx := config.DB.Begin()
 
-	err := config.DB.
-		Where(
-			"ma_nguoi_dung = ? AND ma_mon_an = ?",
-			userID,
-			input.MaMonAn,
-		).
-		First(&existing).Error
+	// =======================
+	// TÍNH GIÁ OPTION
+	// =======================
+	var giaOption float64
+	var optionItems []models.OptionItem
 
-	// =========================
-	// ĐÃ TỒN TẠI -> UPDATE
-	// =========================
-	if err == nil {
+	for _, opt := range input.Options {
+		var item models.OptionItem
+		if err := tx.
+			Preload("NhomOption").
+			Where("ma_option_item = ?", opt.MaOptionItem).
+			First(&item).Error; err != nil {
 
-		existing.SoLuong += input.SoLuong
-		existing.GiaTien = existing.SoLuong * int(monAn.GiaTien)
-
-		if err := config.DB.Save(&existing).Error; err != nil {
-			c.JSON(500, gin.H{
-				"error": err.Error(),
-			})
+			tx.Rollback()
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Option không hợp lệ"})
 			return
 		}
 
-		// preload lại dữ liệu
-		var result models.GioHang
-
-		if err := config.DB.
-			Preload("MonAn").
-			Preload("MonAn.AnhMonAn").
-			Where("ma_gio_hang = ?", existing.MaGioHang).
-			First(&result).Error; err != nil {
-
-			c.JSON(500, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		c.JSON(200, gin.H{
-			"message": "Đã cập nhật số lượng",
-			"data":    result,
-		})
-
-		return
+		giaOption += item.GiaThem
+		optionItems = append(optionItems, item)
 	}
 
-	// =========================
-	// CHƯA TỒN TẠI -> CREATE
-	// =========================
+	// =======================
+	// TÍNH GIÁ CUỐI
+	// =======================
+	donGia := float64(monAn.GiaTien) + giaOption
+	thanhTien := donGia * float64(input.SoLuong)
+
+	// =======================
+	// CREATE GIO HANG
+	// =======================
 	gioHang := models.GioHang{
 		MaNguoiDung: userID,
-		MaMonAn:     input.MaMonAn,
+		MaMonAn:     monAn.MaMonAn,
 		SoLuong:     input.SoLuong,
-		GiaTien:     int(monAn.GiaTien) * input.SoLuong,
+		GiaTien:     int(thanhTien), // ✅ ÉP KIỂU
 	}
 
-	if err := config.DB.Create(&gioHang).Error; err != nil {
-		c.JSON(500, gin.H{
-			"error": err.Error(),
-		})
+	if err := tx.Create(&gioHang).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// preload lại dữ liệu
+	// =======================
+	// INSERT OPTIONS
+	// =======================
+	for _, item := range optionItems {
+		row := models.GioHangOption{
+			MaGioHang:     gioHang.MaGioHang,
+			MaNhomOption: item.MaNhomOption,
+			MaOptionItem: item.MaOptionItem,
+			TenNhomOption: item.NhomOption.TenNhom, // ✅ ĐÚNG FIELD
+			TenOption:     item.TenOption,
+			GiaThem:       int(item.GiaThem), // ✅ ÉP KIỂU
+		}
+
+		if err := tx.Create(&row).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	tx.Commit()
+
+	// =======================
+	// RESPONSE
+	// =======================
 	var result models.GioHang
-
-	if err := config.DB.
+	config.DB.
 		Preload("MonAn").
-		Preload("MonAn.AnhMonAn").
+		Preload("Options").
 		Where("ma_gio_hang = ?", gioHang.MaGioHang).
-		First(&result).Error; err != nil {
+		First(&result)
 
-		c.JSON(500, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(201, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message": "Thêm vào giỏ hàng thành công",
 		"data":    result,
 	})
@@ -173,10 +164,9 @@ func GetAllCart(c *gin.Context) {
 func GetCartByUser(c *gin.Context) {
 	userID := c.Param("id")
 
-	// validate id
 	if _, err := strconv.Atoi(userID); err != nil {
 		c.JSON(400, gin.H{
-			"error": "User id không hợp lệ",
+			"message": "User id không hợp lệ",
 		})
 		return
 	}
@@ -185,82 +175,72 @@ func GetCartByUser(c *gin.Context) {
 
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", userID).
+		Preload("MonAn").
 		Preload("MonAn.AnhMonAn").
+		Preload("Options").
+		Preload("Options.OptionItem").
+		Preload("Options.OptionItem.NhomOption"). // ✅ ĐÚNG
 		Find(&list).Error; err != nil {
 
 		c.JSON(500, gin.H{
-			"error": err.Error(),
+			"message": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(200, list)
+	c.JSON(200, gin.H{
+		"data": list,
+	})
 }
 
 func UpdateSoLuongCart(c *gin.Context) {
-	monID := c.Param("ma_mon_an")
+	cartID := c.Param("ma_gio_hang") // ✅ FIX HERE
 
 	var input UpdateSoLuongInput
-
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{
-			"error": "Dữ liệu không hợp lệ",
-		})
+		c.JSON(400, gin.H{"error": "Dữ liệu không hợp lệ"})
 		return
 	}
 
 	if input.SoLuong <= 0 {
-		c.JSON(400, gin.H{
-			"error": "Số lượng phải lớn hơn 0",
-		})
+		c.JSON(400, gin.H{"error": "Số lượng phải lớn hơn 0"})
 		return
 	}
 
-	userAny, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(401, gin.H{
-			"error": "Chưa đăng nhập",
-		})
-		return
-	}
-
+	userAny, _ := c.Get("user_id")
 	userID := userAny.(uint)
 
 	var cart models.GioHang
 
 	if err := config.DB.
-		Preload("MonAn").
-		Preload("MonAn.AnhMonAn").
-		Where(
-			"ma_nguoi_dung = ? AND ma_mon_an = ?",
-			userID,
-			monID,
-		).
+		Where("ma_gio_hang = ? AND ma_nguoi_dung = ?", cartID, userID).
 		First(&cart).Error; err != nil {
 
-		c.JSON(404, gin.H{
-			"error": "Không tìm thấy sản phẩm trong giỏ",
-		})
+		c.JSON(404, gin.H{"error": "Không tìm thấy item"})
 		return
 	}
 
 	var monAn models.MonAn
-
-	config.DB.
-		Where("ma_mon_an = ?", monID).
-		First(&monAn)
+	config.DB.Where("ma_mon_an = ?", cart.MaMonAn).First(&monAn)
 
 	cart.SoLuong = input.SoLuong
 	cart.GiaTien = int(monAn.GiaTien) * input.SoLuong
 
-	if err := config.DB.Save(&cart).Error; err != nil {
-		c.JSON(500, gin.H{
-			"error": err.Error(),
-		})
+	if err := config.DB.
+		Model(&cart).
+		Updates(map[string]interface{}{
+			"so_luong": cart.SoLuong,
+			"gia_tien": cart.GiaTien,
+		}).Error; err != nil {
+
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, cart)
+	c.JSON(200, gin.H{
+		"message": "OK",
+		"data": cart,
+	})
 }
 
 func DeleteCart(c *gin.Context) {
