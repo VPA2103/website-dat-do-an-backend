@@ -26,7 +26,7 @@ func NewHoaDonController(hub *websocket.Hub) *HoaDonController {
 }
 
 type OptionDatInput struct {
-	MaOptionItem uint
+	MaOptionItem uint `json:"ma_option_item"`
 }
 
 type MonDatInput struct {
@@ -200,6 +200,34 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 				"error": "Không thể thêm món ăn",
 			})
 			return
+		}
+
+		for _, op := range item.Options {
+
+			var optionItem models.OptionItem
+
+			if err := tx.First(&optionItem, "ma_option_item = ?", op.MaOptionItem).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": "Option không tồn tại",
+				})
+				return
+			}
+
+			ctOption := models.ChiTietHoaDonOption{
+				MaChiTiet:    chiTiet.MaChiTiet,
+				MaOptionItem: optionItem.MaOptionItem,
+				TenOption:    optionItem.TenOption,
+				GiaThem:      optionItem.GiaThem,
+			}
+
+			if err := tx.Create(&ctOption).Error; err != nil {
+				tx.Rollback()
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "Không thể lưu option",
+				})
+				return
+			}
 		}
 	}
 
@@ -510,6 +538,7 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
+		Preload("ChiTietHoaDons.ChiTietHoaDonOptions").
 		First(&hoaDon, "ma_hd = ? AND ma_nguoi_dung = ?", id, userID).Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{
