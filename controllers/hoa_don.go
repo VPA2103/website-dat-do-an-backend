@@ -538,7 +538,7 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
-		Preload("ChiTietHoaDons.ChiTietHoaDonOptions").
+		Preload("ChiTietHoaDons.Options").
 		First(&hoaDon, "ma_hd = ? AND ma_nguoi_dung = ?", id, userID).Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{

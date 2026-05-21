@@ -23,13 +23,7 @@
         --warn: #f0b429;
       }
 
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
       body {
         font-family: "Sora", sans-serif;
@@ -39,11 +33,7 @@
         padding: 32px 16px 64px;
       }
 
-      .page {
-        max-width: 860px;
-        margin: 0 auto;
-        animation: fadeUp 0.5s ease both;
-      }
+      .page { max-width: 860px; margin: 0 auto; animation: fadeUp 0.5s ease both; }
 
       @keyframes fadeUp {
         from { opacity: 0; transform: translateY(24px); }
@@ -51,36 +41,22 @@
       }
 
       .hd-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 16px;
-        margin-bottom: 32px;
-        flex-wrap: wrap;
+        display: flex; justify-content: space-between; align-items: flex-start;
+        gap: 16px; margin-bottom: 32px; flex-wrap: wrap;
       }
 
       .brand {
-        font-family: "Inconsolata", monospace;
-        font-size: 13px;
-        color: var(--muted);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        margin-bottom: 6px;
+        font-family: "Inconsolata", monospace; font-size: 13px; color: var(--muted);
+        letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
       }
 
       .hd-title { font-size: 28px; font-weight: 700; line-height: 1.1; }
       .hd-title span { color: var(--accent); }
 
       .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 5px 14px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 14px; border-radius: 999px; font-size: 12px;
+        font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
         border: 1px solid transparent;
       }
 
@@ -99,36 +75,26 @@
       .ttp-da   { background:#162a22; color:var(--success); border-color:#1e3d2f; }
 
       .card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 24px;
-        margin-bottom: 20px;
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: 16px; padding: 24px; margin-bottom: 20px;
       }
 
       .card-title {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-bottom: 18px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+        text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
+        display: flex; align-items: center; gap: 8px;
       }
-
       .card-title::after { content:""; flex:1; height:1px; background:var(--border); }
 
       .info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
-
       .info-item label {
-        font-size: 11px; color:var(--muted); text-transform:uppercase;
+        font-size:11px; color:var(--muted); text-transform:uppercase;
         letter-spacing:.08em; display:block; margin-bottom:4px;
       }
       .info-item .val { font-size:14px; font-weight:500; color:var(--text); word-break:break-word; }
       .info-item .val.mono { font-family:"Inconsolata",monospace; font-size:15px; }
 
+      /* ── Items Table ── */
       .items-table { width:100%; border-collapse:collapse; }
       .items-table thead th {
         font-size:11px; letter-spacing:.08em; text-transform:uppercase;
@@ -139,10 +105,28 @@
       .items-table tbody tr { border-bottom:1px solid rgba(42,48,72,.6); transition:background .15s; }
       .items-table tbody tr:last-child { border-bottom:none; }
       .items-table tbody tr:hover { background:rgba(255,255,255,.025); }
-      .items-table tbody td { padding:14px 12px; font-size:14px; vertical-align:middle; }
+      .items-table tbody td { padding:14px 12px; font-size:14px; vertical-align:top; }
       .items-table tbody td:last-child { text-align:right; }
-      .item-name { font-weight:500; }
-      .item-note { font-size:12px; color:var(--muted); margin-top:2px; }
+
+      .item-name { font-weight:600; margin-bottom:4px; }
+      .item-code { font-family:"Inconsolata",monospace; font-size:11px; color:var(--muted); margin-bottom:6px; }
+
+      /* Options / toppings list */
+      .options-list { display:flex; flex-direction:column; gap:3px; margin-top:4px; }
+      .option-tag {
+        display:inline-flex; align-items:center; gap:5px;
+        font-size:11px; color:#a0aabf; line-height:1.4;
+      }
+      .option-tag .opt-price {
+        font-family:"Inconsolata",monospace; font-size:11px;
+        color:var(--accent); opacity:.8;
+      }
+      .option-tag::before { content:"＋"; font-size:10px; color:var(--muted); }
+
+      .item-base-price { font-size:12px; color:var(--muted); margin-top:2px; }
+
+      /* Thành tiền vs don_gia diff indicator */
+      .thanh-tien-val { font-family:"Inconsolata",monospace; font-size:14px; font-weight:600; }
 
       .summary { border-top:1px solid var(--border); padding-top:18px; margin-top:4px; }
       .summary-row {
@@ -226,15 +210,23 @@
       .search-input::-webkit-inner-spin-button { -webkit-appearance:none; }
       .search-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(240,180,41,.12); }
       .search-input::placeholder { color:var(--muted); }
-
-      /* token input không có prefix icon nên reset padding-left */
       #token-input { padding-left:14px; }
+
+      /* items count chip */
+      .items-count {
+        font-family:"Inconsolata",monospace; font-size:11px;
+        background:rgba(240,180,41,.12); color:var(--accent);
+        border:1px solid rgba(240,180,41,.25); border-radius:999px;
+        padding:2px 9px; margin-left:6px;
+      }
 
       @media(max-width:540px){
         .hd-header{flex-direction:column;}
         .items-table thead th:nth-child(3),
         .items-table tbody td:nth-child(3){display:none;}
         .qr-bank-info{grid-template-columns:1fr;}
+        .search-bar{flex-wrap:wrap;}
+        #token-input{max-width:100%!important;}
       }
     </style>
   </head>
@@ -263,11 +255,6 @@
       function getToken() {
         return localStorage.getItem("token") || "";
       }
-
-      /**
-       * Sau mỗi lần render lại innerHTML, gọi hàm này để
-       * điền lại token đã lưu vào ô input — tránh bị mất khi bấm "Xem".
-       */
       function fillTokenInput() {
         const ti = document.getElementById("token-input");
         if (ti) ti.value = getToken();
@@ -283,7 +270,7 @@
 
       /* ── Formatters ── */
       const fmt = (n) =>
-        new Intl.NumberFormat("vi-VN", { style:"currency", currency:"VND" }).format(n);
+        new Intl.NumberFormat("vi-VN", { style:"currency", currency:"VND" }).format(n ?? 0);
 
       const fmtDate = (iso) => {
         if (!iso) return "—";
@@ -317,7 +304,7 @@
         return `https://qr.sepay.vn/img?acc=${CONFIG.SEPAY_ACC}&bank=${CONFIG.SEPAY_BANK}&amount=${amount}&des=${encodeURIComponent(content)}`;
       }
 
-      /* ── Search bar HTML (tái sử dụng nhiều chỗ) ── */
+      /* ── Search bar HTML ── */
       function searchBarHTML(currentId = "") {
         return `
         <div class="search-bar">
@@ -335,6 +322,30 @@
           <button class="btn btn-primary"
             onclick="loadById(document.getElementById('hd-search').value)">Xem</button>
         </div>`;
+      }
+
+      /* ── Render item options ── */
+      function renderOptions(options) {
+        if (!options || options.length === 0) return "";
+        const tags = options.map(opt => {
+          const name  = opt.ten_option || opt.option_item?.ten_option || "—";
+          const price = opt.gia_them ?? opt.option_item?.gia_them ?? 0;
+          return `<span class="option-tag">
+            ${name.trim()}
+            ${price > 0 ? `<span class="opt-price">+${fmt(price)}</span>` : ""}
+          </span>`;
+        }).join("");
+        return `<div class="options-list">${tags}</div>`;
+      }
+
+      /* ── Render item name: dùng ten_mon_an nếu có, fallback ma_mon_an ── */
+      function itemName(ct) {
+        // ten_mon_an từ nested mon_an object
+        if (ct.mon_an?.ten_mon_an) return ct.mon_an.ten_mon_an;
+        // ten_mon từ flat field (nếu API trả về)
+        if (ct.ten_mon) return ct.ten_mon;
+        // fallback: mã món
+        return `<span style="color:var(--muted);font-family:'Inconsolata',monospace">Món #${ct.ma_mon_an ?? ct.ma_mon ?? "?"}</span>`;
       }
 
       /* ── Fetch ── */
@@ -356,17 +367,37 @@
         const isPaid    = hd.trang_thai_thanh_toan === "da_thanh_toan";
         const qrContent = `HD${hd.ma_hd}`;
         const qrURL     = sePayQR(Math.round(hd.tong_tien), qrContent);
+        const details   = hd.chi_tiet_hoa_dons || [];
 
-        const rows = (hd.chi_tiet_hoa_dons || []).map((ct) => `
+        /* Tính tổng options để cross-check */
+        const rows = details.map((ct) => {
+          const options     = ct.options || [];
+          const basePrice   = ct.don_gia ?? 0;
+          const qty         = ct.so_luong ?? 1;
+          // Ưu tiên thanh_tien từ server, fallback tính lại
+          const thanhTien   = ct.thanh_tien ?? (qty * basePrice);
+          const hasOptions  = options.length > 0;
+
+          // Tổng giá option để hiển thị ghi chú
+          const totalOptPrice = options.reduce((s, o) => s + (o.gia_them ?? 0), 0);
+
+          return `
           <tr>
             <td>
-              <div class="item-name">${ct.ten_mon || ct.ma_mon || "—"}</div>
-              ${ct.ghi_chu ? `<div class="item-note">${ct.ghi_chu}</div>` : ""}
+              <div class="item-name">${itemName(ct)}</div>
+              <div class="item-code">Mã SP: #${ct.ma_mon_an ?? "—"} · Chi tiết: #${ct.ma_chi_tiet ?? "—"}</div>
+              ${hasOptions ? renderOptions(options) : ""}
             </td>
-            <td>${ct.so_luong ?? 1}</td>
-            <td>${fmt(ct.don_gia ?? 0)}</td>
-            <td>${fmt((ct.so_luong ?? 1) * (ct.don_gia ?? 0))}</td>
-          </tr>`).join("");
+            <td style="white-space:nowrap">${qty}</td>
+            <td>
+              <div style="font-family:'Inconsolata',monospace">${fmt(basePrice)}</div>
+              ${hasOptions ? `<div class="item-base-price">+option: ${fmt(totalOptPrice)}</div>` : ""}
+            </td>
+            <td>
+              <div class="thanh-tien-val">${fmt(thanhTien)}</div>
+            </td>
+          </tr>`;
+        }).join("");
 
         const qrBlock = isPaid
           ? `<div class="paid-overlay" style="display:flex;">
@@ -395,6 +426,33 @@
               </button>
             </div>`;
 
+        /* Thông tin giảm giá */
+        const giamGia = hd.giam_gia;
+        const hasDiscount = hd.tien_giam > 0;
+        const discountBlock = hasDiscount ? `
+          <div class="summary-row discount">
+            <span>Giảm giá${giamGia?.ten_chuong_trinh ? ` (${giamGia.ten_chuong_trinh})` : ""}${giamGia?.code ? ` · <span style="font-family:'Inconsolata',monospace;font-size:12px">${giamGia.code}</span>` : ""}</span>
+            <span class="val">− ${fmt(hd.tien_giam)}</span>
+          </div>` : "";
+
+        /* Thông tin thanh toán (thanh_toans) */
+        const payments = hd.thanh_toans || [];
+        const paymentBlock = payments.length > 0 ? `
+          <div class="card">
+            <div class="card-title">Lịch sử thanh toán</div>
+            <table class="items-table">
+              <thead><tr><th>Thời gian</th><th>Phương thức</th><th>Nội dung</th><th>Số tiền</th></tr></thead>
+              <tbody>
+                ${payments.map(p => `<tr>
+                  <td>${fmtDate(p.ngay_thanh_toan || p.created_at)}</td>
+                  <td>${p.phuong_thuc || "—"}</td>
+                  <td style="font-family:'Inconsolata',monospace;font-size:12px">${p.noi_dung || "—"}</td>
+                  <td style="text-align:right;font-family:'Inconsolata',monospace">${fmt(p.so_tien)}</td>
+                </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>` : "";
+
         document.getElementById("app").innerHTML = `
           ${searchBarHTML(hd.ma_hd)}
 
@@ -402,6 +460,9 @@
             <div>
               <div class="brand">Hóa đơn</div>
               <div class="hd-title">#<span>${hd.ma_hd}</span></div>
+              <div style="margin-top:8px;font-size:12px;color:var(--muted)">
+                Khách hàng #${hd.ma_nguoi_dung ?? "—"} · ${fmtDate(hd.ngay)}
+              </div>
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
               ${badge(hd.trang_thai, trangThaiLabel, "tt")}
@@ -417,35 +478,45 @@
               <div class="info-item"><label>Địa chỉ</label><div class="val">${hd.dia_chi || "—"}</div></div>
               <div class="info-item"><label>Ngày đặt</label><div class="val">${fmtDate(hd.ngay)}</div></div>
               ${hd.ghi_chu ? `<div class="info-item" style="grid-column:1/-1"><label>Ghi chú</label><div class="val">${hd.ghi_chu}</div></div>` : ""}
+              ${hd.giam_gia_id ? `<div class="info-item"><label>Mã giảm giá</label><div class="val mono">${giamGia?.code || hd.giam_gia_id}</div></div>` : ""}
             </div>
           </div>
 
           <div class="card">
-            <div class="card-title">Chi tiết đơn hàng</div>
+            <div class="card-title">
+              Chi tiết đơn hàng
+              <span class="items-count">${details.length} món</span>
+            </div>
             <table class="items-table">
-              <thead><tr><th>Món</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
-              <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Không có món nào</td></tr>'}</tbody>
+              <thead>
+                <tr>
+                  <th>Món / Options</th>
+                  <th>SL</th>
+                  <th>Đơn giá</th>
+                  <th>Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Không có món nào</td></tr>'}
+              </tbody>
             </table>
             <div class="summary">
               <div class="summary-row">
-                <span>Tạm tính</span><span class="val">${fmt(hd.tam_tinh ?? hd.tong_tien)}</span>
+                <span>Tạm tính</span>
+                <span class="val" style="color:var(--text)">${fmt(hd.tam_tinh ?? hd.tong_tien)}</span>
               </div>
-              ${hd.tien_giam > 0 ? `
-              <div class="summary-row discount">
-                <span>Giảm giá${hd.giam_gia?.ten ? ` (${hd.giam_gia.ten})` : ""}</span>
-                <span class="val">- ${fmt(hd.tien_giam)}</span>
-              </div>` : ""}
+              ${discountBlock}
               <div class="summary-row total">
                 <span>Tổng cộng</span><span>${fmt(hd.tong_tien)}</span>
               </div>
             </div>
           </div>
 
+          ${paymentBlock}
+
           <div class="card" id="payment-card">${qrBlock}</div>`;
 
-        /* ✅ Điền lại token sau khi render */
         fillTokenInput();
-
         if (!isPaid) startPolling(hd.ma_hd);
       }
 
@@ -470,7 +541,6 @@
 
       /* ── Polling ── */
       let pollTimer = null;
-
       function startPolling(id) {
         clearInterval(pollTimer);
         pollTimer = setInterval(async () => {
@@ -529,18 +599,16 @@
         }
         clearInterval(pollTimer);
         history.pushState({}, "", `?id=${id}`);
-
         document.getElementById("app").innerHTML = `
           ${searchBarHTML(id)}
           <div class="loader">
             <div class="spinner"></div>
             <div style="color:var(--muted);font-size:14px;">Đang tải hóa đơn…</div>
           </div>`;
-        fillTokenInput(); /* ✅ giữ token khi đang loading */
-
+        fillTokenInput();
         try {
           const hd = await fetchHoaDon(id);
-          render(hd); /* fillTokenInput() đã được gọi bên trong render() */
+          render(hd);
         } catch (e) {
           document.getElementById("app").innerHTML = `
             ${searchBarHTML(id)}
@@ -549,7 +617,7 @@
               <div style="font-size:16px;font-weight:600;margin-bottom:6px">Không tìm thấy hóa đơn #${id}</div>
               <div style="font-size:13px;color:var(--muted)">${e.message}</div>
             </div>`;
-          fillTokenInput(); /* ✅ giữ token khi lỗi */
+          fillTokenInput();
         }
       }
 
@@ -563,7 +631,7 @@
               <div style="font-size:36px;margin-bottom:12px">🧾</div>
               <div style="font-size:15px;">Nhập mã hóa đơn để xem chi tiết</div>
             </div>`;
-          fillTokenInput(); /* ✅ điền token khi vào trang lần đầu */
+          fillTokenInput();
           return;
         }
         try {
@@ -577,7 +645,7 @@
               <div style="font-size:16px;font-weight:600;margin-bottom:6px">Không tìm thấy hóa đơn</div>
               <div style="font-size:13px;color:var(--muted)">${e.message}</div>
             </div>`;
-          fillTokenInput(); /* ✅ giữ token khi lỗi lúc bootstrap */
+          fillTokenInput();
         }
       })();
     </script>
