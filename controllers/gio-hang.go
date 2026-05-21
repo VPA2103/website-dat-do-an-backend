@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"strconv"
-	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
+	"net/http"
+	"strconv"
 )
 
 type GioHangInput struct {
@@ -17,8 +17,6 @@ type GioHangOptionInput struct {
 	MaNhomOption uint `json:"ma_nhom_option" binding:"required"`
 	MaOptionItem uint `json:"ma_option_item" binding:"required"`
 }
-
-
 
 type UpdateSoLuongInput struct {
 	SoLuong int `json:"so_luong" binding:"required"`
@@ -113,8 +111,8 @@ func AddToCart(c *gin.Context) {
 	for _, item := range optionItems {
 		row := models.GioHangOption{
 			MaGioHang:     gioHang.MaGioHang,
-			MaNhomOption: item.MaNhomOption,
-			MaOptionItem: item.MaOptionItem,
+			MaNhomOption:  item.MaNhomOption,
+			MaOptionItem:  item.MaOptionItem,
 			TenNhomOption: item.NhomOption.TenNhom, // ✅ ĐÚNG FIELD
 			TenOption:     item.TenOption,
 			GiaThem:       int(item.GiaThem), // ✅ ÉP KIỂU
@@ -273,6 +271,10 @@ func DeleteCart(c *gin.Context) {
 	}
 
 	userID := userAny.(uint)
+	
+	config.DB.
+		Where("ma_gio_hang = ?", gio_hang_id).
+		Delete(&models.GioHangOption{})
 
 	result := config.DB.
 		Where(
