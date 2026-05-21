@@ -194,7 +194,7 @@ func GetCartByUser(c *gin.Context) {
 }
 
 func UpdateSoLuongCart(c *gin.Context) {
-	cartID := c.Param("ma_gio_hang") // ✅ FIX HERE
+	cartID := c.Param("ma_gio_hang")
 
 	var input UpdateSoLuongInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -213,6 +213,7 @@ func UpdateSoLuongCart(c *gin.Context) {
 	var cart models.GioHang
 
 	if err := config.DB.
+		Preload("Options").
 		Where("ma_gio_hang = ? AND ma_nguoi_dung = ?", cartID, userID).
 		First(&cart).Error; err != nil {
 
@@ -221,10 +222,27 @@ func UpdateSoLuongCart(c *gin.Context) {
 	}
 
 	var monAn models.MonAn
-	config.DB.Where("ma_mon_an = ?", cart.MaMonAn).First(&monAn)
+	if err := config.DB.
+		Where("ma_mon_an = ?", cart.MaMonAn).
+		First(&monAn).Error; err != nil {
 
+		c.JSON(404, gin.H{"error": "Không tìm thấy món ăn"})
+		return
+	}
+
+	// tính tổng giá option
+	totalOptionPrice := 0
+
+	for _, op := range cart.Options {
+		totalOptionPrice += op.GiaThem
+	}
+
+	// giá 1 phần ăn
+	pricePerItem := int(monAn.GiaTien) + totalOptionPrice
+
+	// cập nhật
 	cart.SoLuong = input.SoLuong
-	cart.GiaTien = int(monAn.GiaTien) * input.SoLuong
+	cart.GiaTien = pricePerItem * input.SoLuong
 
 	if err := config.DB.
 		Model(&cart).
@@ -239,7 +257,7 @@ func UpdateSoLuongCart(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "OK",
-		"data": cart,
+		"data":    cart,
 	})
 }
 
