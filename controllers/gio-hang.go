@@ -262,7 +262,7 @@ func UpdateSoLuongCart(c *gin.Context) {
 }
 
 func DeleteCart(c *gin.Context) {
-	monID := c.Param("ma_mon_an")
+	gio_hang_id := c.Param("ma_gio_hang")
 
 	userAny, exists := c.Get("user_id")
 	if !exists {
@@ -276,9 +276,9 @@ func DeleteCart(c *gin.Context) {
 
 	result := config.DB.
 		Where(
-			"ma_nguoi_dung = ? AND ma_mon_an = ?",
+			"ma_nguoi_dung = ? AND ma_gio_hang = ?",
 			userID,
-			monID,
+			gio_hang_id,
 		).
 		Delete(&models.GioHang{})
 

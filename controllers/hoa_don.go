@@ -25,19 +25,26 @@ func NewHoaDonController(hub *websocket.Hub) *HoaDonController {
 	}
 }
 
+type OptionDatInput struct {
+	MaOptionItem uint
+}
+
 type MonDatInput struct {
 	MaMonAn uint   `json:"ma_mon_an"`
 	SoLuong int    `json:"so_luong"`
 	GhiChu  string `json:"ghi_chu"`
+
+	Options []OptionDatInput `json:"options"`
 }
 
 type DatDoAnInput struct {
-	HoTen       string        `json:"ho_ten"`
-	SDT         string        `json:"sdt"`
-	DiaChi      string        `json:"dia_chi"`
-	GhiChu      string        `json:"ghi_chu"`
-	CodeGiamGia string        `json:"code_giam_gia"`
-	MonAns      []MonDatInput `json:"mon_ans"`
+	HoTen       string `json:"ho_ten"`
+	SDT         string `json:"sdt"`
+	DiaChi      string `json:"dia_chi"`
+	GhiChu      string `json:"ghi_chu"`
+	CodeGiamGia string `json:"code_giam_gia"`
+
+	MonAns []MonDatInput `json:"mon_ans"`
 }
 
 func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
@@ -145,7 +152,35 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 			return
 		}
 
-		thanhTien := monAn.GiaTien * float64(item.SoLuong)
+		// thanhTien := monAn.GiaTien * float64(item.SoLuong)
+
+		optionTotal := 0.0
+		log.Println("OPTIONS:", item.Options)
+
+		for _, op := range item.Options {
+
+			var optionItem models.OptionItem
+
+			if err := tx.
+				First(&optionItem, "ma_option_item = ?", op.MaOptionItem).
+				Error; err != nil {
+
+				tx.Rollback()
+
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": "Option không tồn tại",
+				})
+				return
+			}
+
+			optionTotal += optionItem.GiaThem
+		}
+
+		// giá 1 phần
+		donGiaSauOption := monAn.GiaTien + optionTotal
+
+		// thành tiền
+		thanhTien := donGiaSauOption * float64(item.SoLuong)
 
 		tongTienServer += thanhTien
 
