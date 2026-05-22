@@ -792,6 +792,13 @@ func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 		return
 	}
 
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type: "xem_tat_ca_hoa_don_da_dat",
+		Payload: gin.H{
+			"hoa_don": hoaDons,
+		},
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"data": hoaDons,
 	})
