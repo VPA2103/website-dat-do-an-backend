@@ -506,6 +506,8 @@ func (ctrl *HoaDonController) GetHoaDons(c *gin.Context) {
 		Preload("ChiTietHoaDons").
 		Preload("ChiTietHoaDons.MonAn").
 		Preload("ChiTietHoaDons.Options").
+		Preload("ChiTietHoaDons.Options.OptionItem").
+		Preload("ChiTietHoaDons.Options.OptionItem.NhomOption").
 		Order("ma_hd DESC").
 		Find(&hoaDons).Error; err != nil {
 
