@@ -40,3 +40,30 @@ func SetupCORS(r *gin.Engine) {
 		MaxAge:           12 * time.Hour,
 	}))
 }
+
+// func ConnectDB() {
+// 	host := os.Getenv("POSTGRES_HOST")
+// 	port := os.Getenv("POSTGRES_PORT")
+// 	user := os.Getenv("POSTGRES_USER")
+// 	password := os.Getenv("POSTGRES_PASSWORD")
+// 	dbname := os.Getenv("POSTGRES_DBNAME")
+// 	sslmode := os.Getenv("POSTGRES_SSLMODE")
+
+// 	// kiểm tra thiếu env
+// 	if host == "" || port == "" || user == "" || password == "" || dbname == "" {
+// 		panic("❌ Thiếu biến môi trường Postgres")
+// 	}
+
+// 	dsn := fmt.Sprintf(
+// 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s TimeZone=Asia/Ho_Chi_Minh",
+// 		host, port, user, password, dbname, sslmode,
+// 	)
+
+// 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+// 	if err != nil {
+// 		panic(fmt.Sprintf("❌ Failed to connect to database: %v", err))
+// 	}
+
+// 	DB = db
+// 	fmt.Println("🚀 Database connected successfully")
+// }

@@ -6,15 +6,16 @@ import (
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 )
 
-func DanhGiaRoutes(r *gin.Engine,hub *websocket.Hub) {
+func DanhGiaRoutes(r *gin.Engine, hub *websocket.Hub) {
 	ctrl := controllers.NewDanhGiaController(hub)
 
 	danhGia := r.Group("/danh-gia")
 	{
 		danhGia.POST("", ctrl.CreateDanhGia)
-		danhGia.GET("", ctrl.GetDanhSachDanhGia)
-		danhGia.GET("/:id", ctrl.GetDanhGiaByID)
+		danhGia.GET("/mon", controllers.GetRatingByMon)
+		danhGia.GET("/mon/:id", controllers.GetDanhGiaByMonAn)
 		danhGia.PUT("/:id", ctrl.UpdateDanhGia)
 		danhGia.DELETE("/:id", ctrl.DeleteDanhGia)
+		danhGia.GET("/check", controllers.CheckDanhGia)
 	}
 }
