@@ -1,16 +1,13 @@
 package models
 
-import "time"
-
 type DanhGia struct {
 	ID uint `gorm:"primaryKey;autoIncrement"`
 
-	MaNguoiDung uint `gorm:"uniqueIndex:idx_user_mon"`
-	MaMonAn     uint `gorm:"uniqueIndex:idx_user_mon"`
+	MaHoaDon    uint `gorm:"column:ma_hoa_don"`
+	MaNguoiDung uint `gorm:"column:ma_nguoi_dung"`
+	MaMonAn     uint `gorm:"column:ma_mon_an"`
 
-	SoSao   int `gorm:"check:so_sao >= 1 AND so_sao <= 5"`
-	NoiDung string
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	SoSao     int       `json:"so_sao"`
+	NoiDung   string    `json:"noi_dung"`
+	NguoiDung NguoiDung `gorm:"foreignKey:MaNguoiDung;references:MaNguoiDung" json:"nguoi_dung"`
 }

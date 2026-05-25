@@ -21,6 +21,17 @@ type GioHangOptionInput struct {
 type UpdateSoLuongInput struct {
 	SoLuong int `json:"so_luong" binding:"required"`
 }
+type UpdateCartInput struct {
+	SoLuong int                  `json:"so_luong" binding:"required"`
+	Options []GioHangOptionInput `json:"options"`
+}
+type UpdateCartItemInput struct {
+	SoLuong int `json:"so_luong" binding:"required"`
+	Options []struct {
+		MaNhomOption uint `json:"ma_nhom_option"`
+		MaOptionItem uint `json:"ma_option_item"`
+	} `json:"options"`
+}
 
 func AddToCart(c *gin.Context) {
 	var input GioHangInput
@@ -271,7 +282,7 @@ func DeleteCart(c *gin.Context) {
 	}
 
 	userID := userAny.(uint)
-	
+
 	config.DB.
 		Where("ma_gio_hang = ?", gio_hang_id).
 		Delete(&models.GioHangOption{})
@@ -322,4 +333,119 @@ func XoaGioHangNguoiDung(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "Đã xóa giỏ hàng"})
+}
+func UpdateCartItem(c *gin.Context) {
+	cartID := c.Param("ma_gio_hang")
+	userID := c.MustGet("user_id").(uint)
+
+	var input UpdateCartItemInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(400, gin.H{"error": "Dữ liệu không hợp lệ"})
+		return
+	}
+
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 1️⃣ Lấy giỏ hàng
+	var cart models.GioHang
+	if err := tx.Where(
+		"ma_gio_hang = ? AND ma_nguoi_dung = ?",
+		cartID, userID,
+	).First(&cart).Error; err != nil {
+		tx.Rollback()
+		c.JSON(404, gin.H{"error": "Không tìm thấy giỏ hàng"})
+		return
+	}
+
+	// 2️⃣ Lấy món ăn
+	var monAn models.MonAn
+	if err := tx.Where(
+		"ma_mon_an = ?", cart.MaMonAn,
+	).First(&monAn).Error; err != nil {
+		tx.Rollback()
+		c.JSON(404, gin.H{"error": "Không tìm thấy món ăn"})
+		return
+	}
+
+	// 3️⃣ XOÁ TOÀN BỘ OPTION CŨ
+	if err := tx.Where(
+		"ma_gio_hang = ?", cart.MaGioHang,
+	).Delete(&models.GioHangOption{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 4️⃣ XỬ LÝ OPTION MỚI
+	usedGroup := make(map[uint]bool)
+	totalOptionPrice := 0
+
+	for _, opt := range input.Options {
+
+		var item models.OptionItem
+		if err := tx.
+			Preload("NhomOption").
+			Where("ma_option_item = ?", opt.MaOptionItem).
+			First(&item).Error; err != nil {
+
+			tx.Rollback()
+			c.JSON(400, gin.H{"error": "Option không hợp lệ"})
+			return
+		}
+
+		// 🚫 RADIO: chỉ được chọn 1
+		if !item.NhomOption.ChonNhieu {
+			if usedGroup[item.MaNhomOption] {
+				tx.Rollback()
+				c.JSON(400, gin.H{
+					"error": "Nhóm option chỉ được chọn 1",
+				})
+				return
+			}
+			usedGroup[item.MaNhomOption] = true
+		}
+
+		row := models.GioHangOption{
+			MaGioHang:     cart.MaGioHang,
+			MaNhomOption:  item.MaNhomOption,
+			MaOptionItem:  item.MaOptionItem,
+			TenNhomOption: item.NhomOption.TenNhom,
+			TenOption:     item.TenOption,
+			GiaThem:       int(item.GiaThem),
+		}
+
+		if err := tx.Create(&row).Error; err != nil {
+			tx.Rollback()
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		totalOptionPrice += int(item.GiaThem)
+	}
+
+	// 5️⃣ TÍNH GIÁ MỚI
+	pricePerItem := int(monAn.GiaTien) + totalOptionPrice
+	totalPrice := pricePerItem * input.SoLuong
+
+	// 6️⃣ UPDATE GIỎ HÀNG
+	if err := tx.Model(&cart).Updates(map[string]interface{}{
+		"so_luong": input.SoLuong,
+		"gia_tien": totalPrice,
+	}).Error; err != nil {
+
+		tx.Rollback()
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	tx.Commit()
+
+	c.JSON(200, gin.H{
+		"message": "Cập nhật giỏ hàng thành công",
+	})
 }

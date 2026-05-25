@@ -595,23 +595,7 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 		return
 	}
 
-	// Lấy role từ middleware JWT
-	roleAny, exists := c.Get("role")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Không tìm thấy role trong token",
-		})
-		return
-	}
-
-	role, ok := roleAny.(string)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Role không hợp lệ",
-		})
-		return
-	}
-
+	// tìm hóa đơn
 	var hoaDon models.HoaDon
 
 	if err := config.DB.First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
@@ -621,74 +605,10 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 		return
 	}
 
-	// ===== Validate theo role =====
-	duocPhep := false
-
-	switch role {
-
-	case "admin":
-		// Admin chỉ xác nhận hoặc hủy
-		if input.TrangThai == "da_xac_nhan" ||
-			input.TrangThai == "da_huy" {
-			duocPhep = true
-		}
-
-	case "shipper":
-		// Shipper chỉ giao hàng
-		if input.TrangThai == "dang_giao" ||
-			input.TrangThai == "da_giao" {
-			duocPhep = true
-		}
-
-	default:
-		duocPhep = false
-	}
-
-	if !duocPhep {
-		c.JSON(http.StatusForbidden, gin.H{
-			"error": "Bạn không có quyền cập nhật trạng thái này",
-		})
-		return
-	}
-
-	// ===== Validate luồng trạng thái =====
-
-	current := hoaDon.TrangThai
-	next := input.TrangThai
-
-	validFlow := false
-
-	switch current {
-
-	case "cho_xac_nhan":
-		if next == "da_xac_nhan" || next == "da_huy" {
-			validFlow = true
-		}
-
-	case "da_xac_nhan":
-		if next == "dang_giao" {
-			validFlow = true
-		}
-
-	case "dang_giao":
-		if next == "da_giao" {
-			validFlow = true
-		}
-	}
-
-	if !validFlow {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Không thể chuyển trạng thái",
-			"from":  current,
-			"to":    next,
-		})
-		return
-	}
-
-	// ===== Update =====
-
-	if err := config.DB.Model(&hoaDon).
-		Update("trang_thai", next).Error; err != nil {
+	// update thẳng trạng thái (KHÔNG validate gì hết)
+	if err := config.DB.
+		Model(&hoaDon).
+		Update("trang_thai", input.TrangThai).Error; err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Không thể cập nhật trạng thái",
@@ -696,18 +616,22 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 		return
 	}
 
-	// Reload
+	// reload lại data mới
 	config.DB.First(&hoaDon, "ma_hd = ?", id)
 
-	// WebSocket
+	// broadcast realtime admin
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "update_trang_thai_hoa_don",
 		Payload: hoaDon,
 	})
 
+	// broadcast realtime user
 	ctrl.Hub.Broadcast(dto.WSMessage{
-		Type:    "update_trang_thai_hoa_don_user",
-		Payload: hoaDon,
+		Type: "update_trang_thai_hoa_don_user",
+		Payload: gin.H{
+			"ma_hd":      hoaDon.MaHD,
+			"trang_thai": hoaDon.TrangThai,
+		},
 	})
 
 	c.JSON(http.StatusOK, gin.H{
@@ -756,8 +680,10 @@ func (ctrl *HoaDonController) HuyHoaDon(c *gin.Context) {
 	})
 
 	ctrl.Hub.Broadcast(dto.WSMessage{
-		Type:    "cancel_hoa_don_user",
-		Payload: hoaDon,
+		Type: "cancel_hoa_don_user",
+		Payload: gin.H{
+			"ma_hd": hoaDon.MaHD,
+		},
 	})
 
 	c.JSON(http.StatusOK, gin.H{
@@ -865,6 +791,13 @@ func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 		})
 		return
 	}
+
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type: "xem_tat_ca_hoa_don_da_dat",
+		Payload: gin.H{
+			"hoa_don": hoaDons,
+		},
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": hoaDons,

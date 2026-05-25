@@ -1,9 +1,10 @@
 package controllers
 
 import (
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/internal/dto"
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
 )
@@ -17,34 +18,24 @@ func NewDanhGiaController(hub *websocket.Hub) *DanhGiaController {
 }
 
 type DanhGiaInput struct {
-	MaNguoiDung uint   `json:"ma_nguoi_dung" binding:"required"`
-	MaMonAn     uint   `json:"ma_mon_an" binding:"required"`
-	SoSao       int    `json:"so_sao" binding:"required,min=1,max=5"`
+	MaHoaDon    uint   `json:"ma_hoa_don"`
+	MaNguoiDung uint   `json:"ma_nguoi_dung"`
+	MaMonAn     uint   `json:"ma_mon_an"`
+	SoSao       int    `json:"so_sao"`
 	NoiDung     string `json:"noi_dung"`
 }
-
-// func CreateDanhGia(c *gin.Context) {
-// 	var input DanhGiaInput
-
-// 	if err := c.ShouldBindJSON(&input); err != nil {
-// 		c.JSON(400, gin.H{"error": err.Error()})
-// 		return
-// 	}
-
-// 	dg := models.DanhGia{
-// 		MaNguoiDung: input.MaNguoiDung,
-// 		MaMonAn:     input.MaMonAn,
-// 		SoSao:       input.SoSao,
-// 		NoiDung:     input.NoiDung,
-// 	}
-
-// 	if err := config.DB.Create(&dg).Error; err != nil {
-// 		c.JSON(500, gin.H{"error": err.Error()})
-// 		return
-// 	}
-
-// 	c.JSON(200, dg)
-// }
+type NguoiDungMini struct {
+	MaNguoiDung uint   `json:"ma_nguoi_dung"`
+	HoTen       string `json:"ho_ten"`
+	Anh         string `json:"anh"`
+}
+type DanhGiaResponse struct {
+	ID        uint          `json:"id"`
+	MaMonAn   uint          `json:"ma_mon_an"`
+	SoSao     int           `json:"so_sao"`
+	NoiDung   string        `json:"noi_dung"`
+	NguoiDung NguoiDungMini `json:"nguoi_dung"`
+}
 
 func (ctrl *DanhGiaController) CreateDanhGia(c *gin.Context) {
 	var input DanhGiaInput
@@ -54,63 +45,87 @@ func (ctrl *DanhGiaController) CreateDanhGia(c *gin.Context) {
 	}
 
 	dg := models.DanhGia{
+		MaHoaDon:    input.MaHoaDon,
 		MaNguoiDung: input.MaNguoiDung,
 		MaMonAn:     input.MaMonAn,
 		SoSao:       input.SoSao,
 		NoiDung:     input.NoiDung,
 	}
 
-	if err := config.DB.Create(&dg).Error; err != nil {
+	config.DB.Create(&dg)
+
+	c.JSON(200, dg)
+}
+
+func GetRatingByMon(c *gin.Context) {
+	rows, err := config.DB.Raw(`
+		SELECT 
+			ma_mon_an,
+			AVG(CAST(so_sao AS FLOAT)) AS avg_sao,
+			COUNT(*) AS tong_danh_gia
+		FROM danh_gia
+		GROUP BY ma_mon_an
+	`).Rows()
+
+	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	defer rows.Close()
 
-	// ✅ Load relation trước khi broadcast
-	config.DB.Preload("NguoiDung").Preload("MonAn").First(&dg, dg.ID)
+	type Result struct {
+		MaMonAn     uint    `json:"ma_mon_an"`
+		AvgSao      float64 `json:"avg_sao"`
+		TongDanhGia int     `json:"tong_danh_gia"`
+	}
 
-	// ✅ Broadcast realtime cho tất cả client
-	ctrl.Hub.Broadcast(dto.WSMessage{
-		Type:    "new_danh_gia",
-		Payload: dg,
+	var result []Result
+
+	for rows.Next() {
+		var item Result
+		rows.Scan(&item.MaMonAn, &item.AvgSao, &item.TongDanhGia)
+		result = append(result, item)
+	}
+
+	c.JSON(200, result)
+}
+
+func GetDanhGiaByMonAn(c *gin.Context) {
+	maMon := c.Param("id")
+
+	var data []models.DanhGia
+
+	config.DB.
+		Preload("NguoiDung").
+		Preload("NguoiDung.AnhNhanVien").
+		Where("ma_mon_an = ?", maMon).
+		Find(&data)
+
+	var res []DanhGiaResponse
+
+	for _, d := range data {
+
+		anh := ""
+		if len(d.NguoiDung.AnhNhanVien) > 0 {
+			anh = d.NguoiDung.AnhNhanVien[0].Url
+		}
+
+		res = append(res, DanhGiaResponse{
+			ID:      d.ID,
+			MaMonAn: d.MaMonAn,
+			SoSao:   d.SoSao,
+			NoiDung: d.NoiDung,
+			NguoiDung: NguoiDungMini{
+				MaNguoiDung: d.NguoiDung.MaNguoiDung,
+				HoTen:       d.NguoiDung.HoTen,
+				Anh:         anh,
+			},
+		})
+	}
+
+	c.JSON(200, gin.H{
+		"data": res,
 	})
-
-	c.JSON(200, dg)
-}
-
-// Các hàm còn lại convert sang method tương tự
-// func (ctrl *DanhGiaController) GetDanhSachDanhGia(c *gin.Context) { ... }
-// func (ctrl *DanhGiaController) GetDanhGiaByID(c *gin.Context)     { ... }
-// func (ctrl *DanhGiaController) UpdateDanhGia(c *gin.Context)      { ... }
-// func (ctrl *DanhGiaController) DeleteDanhGia(c *gin.Context)      { ... }
-
-func (ctrl *DanhGiaController) GetDanhSachDanhGia(c *gin.Context) {
-	var list []models.DanhGia
-
-	if err := config.DB.
-		Preload("NguoiDung").
-		Preload("MonAn").
-		Find(&list).Error; err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(200, list)
-}
-
-func (ctrl *DanhGiaController) GetDanhGiaByID(c *gin.Context) {
-	id := c.Param("id")
-
-	var dg models.DanhGia
-
-	if err := config.DB.
-		Preload("NguoiDung").
-		Preload("MonAn").
-		First(&dg, id).Error; err != nil {
-		c.JSON(404, gin.H{"error": "Không tìm thấy đánh giá"})
-		return
-	}
-
-	c.JSON(200, dg)
 }
 
 func (ctrl *DanhGiaController) UpdateDanhGia(c *gin.Context) {
@@ -148,4 +163,21 @@ func (ctrl *DanhGiaController) DeleteDanhGia(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "Đã xoá đánh giá"})
+}
+
+func CheckDanhGia(c *gin.Context) {
+	maHD, _ := strconv.Atoi(c.Query("ma_hd"))
+	maUser, _ := strconv.Atoi(c.Query("ma_nguoi_dung"))
+	maMon, _ := strconv.Atoi(c.Query("ma_mon_an"))
+
+	var count int64
+
+	config.DB.Model(&models.DanhGia{}).
+		Where("ma_hoa_don = ? AND ma_nguoi_dung = ? AND ma_mon_an = ?",
+			maHD, maUser, maMon).
+		Count(&count)
+
+	c.JSON(200, gin.H{
+		"da_danh_gia": count > 0,
+	})
 }

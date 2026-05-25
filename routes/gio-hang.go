@@ -20,5 +20,6 @@ func GioHangRoutes(r *gin.Engine) {
 		gioHang.DELETE("/:ma_gio_hang", middleware.AuthMiddleware(), controllers.DeleteCart)
 
 		gioHang.DELETE("/clear", middleware.AuthMiddleware(), controllers.XoaGioHangNguoiDung)
+		gioHang.PUT("/cart/:ma_gio_hang",middleware.AuthMiddleware(), controllers.UpdateCartItem)
 	}
 }

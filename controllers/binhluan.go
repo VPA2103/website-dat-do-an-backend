@@ -28,6 +28,22 @@ type UpdateBinhLuanInput struct {
 	NoiDung string `json:"noi_dung"`
 }
 
+type NguoiDungMinii struct {
+	MaNguoiDung uint   `json:"ma_nguoi_dung"`
+	HoTen       string `json:"ho_ten"`
+	Anh         string `json:"anh"`
+}
+
+type BinhLuanResponse struct {
+	ID        uint   `json:"id"`
+	MaMonAn   uint   `json:"ma_mon_an"`
+	NoiDung   string `json:"noi_dung"`
+	CreatedAt string `json:"created_at"`
+
+	NguoiDung NguoiDungMinii `json:"nguoi_dung"`
+	Replies   []BinhLuanResponse `json:"replies"`
+}
+
 func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
 	var input CreateBinhLuanInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -100,23 +116,63 @@ func (ctrl *BinhLuanController) GetBinhLuanByMonAn(c *gin.Context) {
 
 	var binhLuans []models.BinhLuan
 
-	err := config.DB.
+	config.DB.
 		Where("ma_mon_an = ? AND parent_id IS NULL", maMon).
 		Preload("NguoiDung").
+		Preload("NguoiDung.AnhNhanVien").
 		Preload("Replies").
 		Preload("Replies.NguoiDung").
+		Preload("Replies.NguoiDung.AnhNhanVien").
 		Order("created_at desc").
-		Find(&binhLuans).Error
+		Find(&binhLuans)
 
-	if err != nil {
-		c.JSON(500, gin.H{
-			"error": err.Error(),
+	var res []BinhLuanResponse
+
+	for _, cmt := range binhLuans {
+
+		anh := ""
+		if len(cmt.NguoiDung.AnhNhanVien) > 0 {
+			anh = cmt.NguoiDung.AnhNhanVien[0].Url
+		}
+
+		// map replies
+		var replies []BinhLuanResponse
+		for _, r := range cmt.Replies {
+
+			rAnh := ""
+			if len(r.NguoiDung.AnhNhanVien) > 0 {
+				rAnh = r.NguoiDung.AnhNhanVien[0].Url
+			}
+
+			replies = append(replies, BinhLuanResponse{
+				ID:        r.ID,
+				MaMonAn:   r.MaMonAn,
+				NoiDung:   r.NoiDung,
+				CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
+				NguoiDung: NguoiDungMinii{
+					MaNguoiDung: r.NguoiDung.MaNguoiDung,
+					HoTen:       r.NguoiDung.HoTen,
+					Anh:         rAnh,
+				},
+			})
+		}
+
+		res = append(res, BinhLuanResponse{
+			ID:        cmt.ID,
+			MaMonAn:   cmt.MaMonAn,
+			NoiDung:   cmt.NoiDung,
+			CreatedAt: cmt.CreatedAt.Format("2006-01-02 15:04:05"),
+			NguoiDung: NguoiDungMinii{
+				MaNguoiDung: cmt.NguoiDung.MaNguoiDung,
+				HoTen:       cmt.NguoiDung.HoTen,
+				Anh:         anh,
+			},
+			Replies: replies,
 		})
-		return
 	}
 
 	c.JSON(200, gin.H{
-		"data": binhLuans,
+		"data": res,
 	})
 }
 
