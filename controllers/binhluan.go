@@ -179,15 +179,38 @@ func (ctrl *BinhLuanController) GetBinhLuanByMonAn(c *gin.Context) {
 func (ctrl *BinhLuanController) UpdateBinhLuan(c *gin.Context) {
 	id := c.Param("id")
 
-	var binhLuan models.BinhLuan
+	maNguoiDungAny, _ := c.Get("user_id")
+	maNguoiDung := maNguoiDungAny.(uint)
 
-	if err := config.DB.
-		Preload("BinhLuans").
-		Preload("NguoiDung").
-		First(&binhLuan, id).Error; err != nil {
+	var binhLuan models.BinhLuan
+	if err := config.DB.First(&binhLuan, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy bình luận"})
 		return
 	}
+
+	if binhLuan.MaNguoiDung != maNguoiDung {
+		c.JSON(403, gin.H{"error": "Không có quyền sửa"})
+		return
+	}
+
+	var input UpdateBinhLuanInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(400, gin.H{"error": "Dữ liệu không hợp lệ"})
+		return
+	}
+
+	if err := config.DB.Model(&binhLuan).
+		Update("noi_dung", input.NoiDung).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Không thể cập nhật"})
+		return
+	}
+
+	config.DB.Preload("NguoiDung").First(&binhLuan, id)
+
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type:    "update_binh_luan",
+		Payload: binhLuan,
+	})
 
 	c.JSON(200, gin.H{"data": binhLuan})
 }
