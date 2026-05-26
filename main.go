@@ -12,6 +12,8 @@ import (
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/routes"
+
+	aibot "github.com/vpa/quanlynhahang-backend/ai"
 )
 
 func main() {
@@ -78,6 +80,8 @@ func main() {
 
 	// 🚏 Đăng ký route
 	routes.UploadRoutes(r)
+
+	aibot.RegisterRoutes(r)
 
 	//realtime
 	hub := websocket.NewHub()
