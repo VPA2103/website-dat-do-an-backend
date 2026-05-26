@@ -64,4 +64,6 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	OptionRoutes(r)
 
 	ShipRoutes(r, hub)
+
+	NhaHangRoutes(r)
 }

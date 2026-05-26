@@ -18,6 +18,8 @@ import (
 
 func main() {
 
+	
+
 	if err := godotenv.Load(); err != nil {
 		log.Println("⚠Không tìm thấy file .env, dùng SECRET_KEY mặc định")
 	}
@@ -69,6 +71,7 @@ func main() {
 		&models.Room{},
 		&models.Payments{},
 		&models.GioHangOption{},
+		&models.NhaHang{},
 	)
 	if err != nil {
 		log.Fatal("❌2 Migrate relations failed:", err)
@@ -120,4 +123,7 @@ func main() {
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("❌ Không thể khởi chạy server: %v", err)
 	}
+
+
+
 }

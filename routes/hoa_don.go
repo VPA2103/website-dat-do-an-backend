@@ -15,7 +15,7 @@ func HoaDonRoutes(r *gin.Engine, hub *websocket.Hub) {
 	{
 		hoaDon.POST("", middleware.AuthMiddleware(), ctrl.DatDoAn)
 
-		hoaDon.GET("", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin" , "shipper" ), ctrl.GetHoaDons)  
+		hoaDon.GET("", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin","shipper"), ctrl.GetHoaDons)
 
 		hoaDon.PUT("/:id", ctrl.UpdateHoaDon)
 
