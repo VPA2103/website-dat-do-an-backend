@@ -10,4 +10,8 @@ type MonAn struct {
 
 	AnhMonAn    []HinhAnh    `gorm:"polymorphic:Owner;polymorphicValue:mon_an" json:"anh_mon_an,omitempty"`
 	NhomOptions []NhomOption `gorm:"foreignKey:MaMonAn" json:"nhom_options"`
+	Document string `gorm:"type:text" json:"document,omitempty"`
+	SearchText string `gorm:"type:text;index" json:"search_text,omitempty"`
+	Tags string `gorm:"type:text" json:"tags,omitempty"`
+	HasEmbedding bool `gorm:"default:false" json:"has_embedding"`
 }

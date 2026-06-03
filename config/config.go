@@ -12,6 +12,35 @@ import (
 )
 
 var DB *gorm.DB
+type GeminiConfig struct {
+	APIKey         string
+	Model          string
+	EmbeddingModel string
+}
+type VectorConfig struct {
+	// Metric controls the distance function used for vector search.
+	// Supported: "cosine" (default), "l2", "ip".
+	Metric string
+	// Index controls which pgvector index to create.
+	// Supported: "none" (default), "hnsw", "ivfflat".
+	Index string
+	// IVFFlatLists controls the ivfflat index lists parameter (only used when Index=ivfflat).
+	IVFFlatLists int
+}
+type Config struct {
+	Vector       VectorConfig
+	Gemini       GeminiConfig
+}
+type PostgresConfig struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	DBName   string
+	SSLMode  string
+}
+
+
 
 // func ConnectDB() {
 // 	dsn := os.Getenv("DB_URL")
@@ -67,3 +96,11 @@ func ConnectDB() {
 	DB = db
 	fmt.Println("🚀 Database connected successfully")
 }
+func LoadGeminiConfig() GeminiConfig {
+	return GeminiConfig{
+		APIKey:         os.Getenv("GEMINI_API_KEY"),
+		Model:          os.Getenv("GEMINI_MODEL"),
+		EmbeddingModel: os.Getenv("GEMINI_EMBEDDING_MODEL"),
+	}
+}
+
