@@ -31,6 +31,14 @@ func HoaDonRoutes(r *gin.Engine, hub *websocket.Hub) {
 
 		hoaDon.DELETE("/:id", ctrl.XoaHoaDon)
 
+		hoaDon.PUT(":id/huy_thanh_toan", middleware.AuthMiddleware(), ctrl.HuyHoaDonNguoiDung)
+
+
+		//thongke
+		hoaDon.GET("/doanh-thu-ngay",middleware.AuthMiddleware(), ctrl.GetDoanhThuTheoNgay)
+		hoaDon.GET("/doanh-thu-thang",middleware.AuthMiddleware(), ctrl.GetDoanhThuTheoThang)
+		hoaDon.GET("/doanh-thu-nam", middleware.AuthMiddleware(), ctrl.GetDoanhThuTheoNam)
+
 		// hoaDon.POST("/:ma_hd/thanh-toan", controllers.ThanhToanHoaDon)
 	}
 }

@@ -4,14 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/vpa/quanlynhahang-backend/models/AIChatBot"
+	//"fmt"
+	"strings"
+	//"time"
 
+	//"github.com/vpa/quanlynhahang-backend/models/AIChatBot"
+
+	//"github.com/google/uuid"
+	//"github.com/jackc/pgx/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	core "github.com/vpa/quanlynhahang-backend/models/AIChatBot"
 )
 
 type PostgresStore struct {
@@ -38,42 +44,50 @@ func (s *PostgresStore) ensureRestaurant(ctx context.Context, restaurantID strin
 	_, _ = s.pool.Exec(ctx, ensureRestaurantSQL, restaurantID)
 }
 
-func (s *PostgresStore) EnsureThread(restaurantID, threadID string) (string, error) {
-	restaurantID, err := normalizeRestaurantID(restaurantID)
-	if err != nil {
-		return "", err
-	}
+func (s *PostgresStore) EnsureThread(threadID string) (string, error) {
 	threadID = strings.TrimSpace(threadID)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	s.ensureRestaurant(ctx, restaurantID)
-
+	// Nếu threadID truyền vào và tồn tại thì dùng lại
 	if threadID != "" {
 		var ok bool
-		err := s.pool.QueryRow(ctx, `SELECT true FROM threads WHERE id = $1 AND restaurant_id = $2`, threadID, restaurantID).Scan(&ok)
+		err := s.pool.QueryRow(ctx, `
+			SELECT true 
+			FROM threads 
+			WHERE id = $1
+		`, threadID).Scan(&ok)
+
 		if err == nil && ok {
 			return threadID, nil
 		}
+
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return "", err
 		}
 	}
 
+	// tạo thread mới
 	id := uuid.NewString()
-	_, err = s.pool.Exec(ctx, `INSERT INTO threads (id, restaurant_id, created_at) VALUES ($1, $2, now())`, id, restaurantID)
+
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO threads (id, created_at)
+		VALUES ($1, now())
+	`, id)
+
 	if err != nil {
 		return "", err
 	}
+
 	return id, nil
 }
 
-func (s *PostgresStore) AppendThreadMessage(restaurantID, threadID, role, content string) error {
-	restaurantID, err := normalizeRestaurantID(restaurantID)
-	if err != nil {
-		return err
-	}
+func (s *PostgresStore) AppendThreadMessage(threadID, role, content string) error {
+	//restaurantID, err := normalizeRestaurantID(restaurantID)
+	// if err != nil {
+	// 	return err
+	// }
 	threadID = strings.TrimSpace(threadID)
 	role = strings.TrimSpace(role)
 	content = strings.TrimSpace(content)
@@ -91,10 +105,10 @@ func (s *PostgresStore) AppendThreadMessage(restaurantID, threadID, role, conten
 	defer cancel()
 
 	cmd, err := s.pool.Exec(ctx, `
-INSERT INTO thread_messages (thread_id, restaurant_id, role, content, created_at)
-SELECT $1, $2, $3, $4, now()
-WHERE EXISTS (SELECT 1 FROM threads WHERE id = $1 AND restaurant_id = $2)
-`, threadID, restaurantID, role, content)
+INSERT INTO thread_messages (thread_id, role, content, created_at)
+SELECT $1, $2, $3, now()
+WHERE EXISTS (SELECT 1 FROM threads WHERE id = $1 )
+`, threadID, role, content)
 	if err != nil {
 		return err
 	}
@@ -104,12 +118,9 @@ WHERE EXISTS (SELECT 1 FROM threads WHERE id = $1 AND restaurant_id = $2)
 	return nil
 }
 
-func (s *PostgresStore) GetThreadMessages(restaurantID, threadID string) ([]core.Message, error) {
-	restaurantID, err := normalizeRestaurantID(restaurantID)
-	if err != nil {
-		return nil, err
-	}
+func (s *PostgresStore) GetThreadMessages(threadID string) ([]core.Message, error) {
 	threadID = strings.TrimSpace(threadID)
+
 	if threadID == "" {
 		return []core.Message{}, nil
 	}
@@ -118,11 +129,12 @@ func (s *PostgresStore) GetThreadMessages(restaurantID, threadID string) ([]core
 	defer cancel()
 
 	rows, err := s.pool.Query(ctx, `
-SELECT role, content
-FROM thread_messages
-WHERE thread_id = $1 AND restaurant_id = $2
-ORDER BY id ASC
-`, threadID, restaurantID)
+		SELECT role, content
+		FROM thread_messages
+		WHERE thread_id = $1
+		ORDER BY id ASC
+	`, threadID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -134,11 +146,14 @@ ORDER BY id ASC
 		if err := rows.Scan(&role, &content); err != nil {
 			return nil, err
 		}
-		out = append(out, core.Message{Role: role, Content: content})
+		out = append(out, core.Message{
+			Role:    role,
+			Content: content,
+		})
 	}
+
 	return out, rows.Err()
 }
-
 
 // func (s *PostgresStore) UpsertMenuItem(restaurantID string, item core.MenuItem) (core.MenuItem, error) {
 // 	restaurantID, err := normalizeRestaurantID(restaurantID)
@@ -227,22 +242,22 @@ ORDER BY id ASC
 // 	return items, total, rows.Err()
 // }
 
-func (s *PostgresStore) DeleteMenuItem(restaurantID, id string) (bool, error) {
-	// NOTE(single-restaurant mode): ignore restaurantID and delete by id only.
-	id = strings.TrimSpace(id)
-	if id == "" {
-		return false, nil
-	}
+// func (s *PostgresStore) DeleteMenuItem(id string) (bool, error) {
+// 	// NOTE(single-restaurant mode): ignore restaurantID and delete by id only.
+// 	id = strings.TrimSpace(id)
+// 	if id == "" {
+// 		return false, nil
+// 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
-	defer cancel()
+// 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+// 	defer cancel()
 
-	cmd, err := s.pool.Exec(ctx, `DELETE FROM menu_items WHERE id = $1`, id)
-	if err != nil {
-		return false, err
-	}
-	return cmd.RowsAffected() > 0, nil
-}
+// 	cmd, err := s.pool.Exec(ctx, `DELETE FROM menu_items WHERE id = $1`, id)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	return cmd.RowsAffected() > 0, nil
+// }
 
 // func (s *PostgresStore) SetRestaurant(restaurantID string, info core.RestaurantInfo) (core.RestaurantInfo, error) {
 // 	restaurantID, err := normalizeRestaurantID(restaurantID)

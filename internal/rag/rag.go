@@ -1,6 +1,9 @@
 package rag
 
 import (
+	"context"
+	"strings"
+
 	core "github.com/vpa/quanlynhahang-backend/models/AIChatBot"
 )
 
@@ -68,5 +71,40 @@ func New(llm core.Gemini, vector core.VectorStore, fs core.FileStore) *Service {
 
 // 	return strings.TrimSpace(strings.Join(lines, "\n")), nil
 // }
+
+func (s *Service) RetrieveContext(
+	ctx context.Context,
+	query string,
+	nResults int,
+) (string, error) {
+
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return "", nil
+	}
+
+	emb, err := s.llm.Embed(ctx, query)
+	if err != nil {
+		return "", nil
+	}
+
+	results, err := s.vector.QueryMenu(ctx, emb, nResults)
+	if err != nil {
+		return "", nil
+	}
+
+	if len(results) == 0 {
+		return "", nil
+	}
+
+	var lines []string
+	lines = append(lines, "MENU LIÊN QUAN:")
+
+	for _, r := range results {
+		lines = append(lines, "- "+r.Document)
+	}
+
+	return strings.Join(lines, "\n"), nil
+}
 
 

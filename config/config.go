@@ -12,6 +12,7 @@ import (
 )
 
 var DB *gorm.DB
+
 type GeminiConfig struct {
 	APIKey         string
 	Model          string

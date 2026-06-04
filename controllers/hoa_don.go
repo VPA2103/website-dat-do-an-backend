@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,6 +28,14 @@ func NewHoaDonController(hub *websocket.Hub) *HoaDonController {
 
 type OptionDatInput struct {
 	MaOptionItem uint `json:"ma_option_item"`
+}
+
+type DoanhThuDTO struct {
+	Ngay     string `json:"ngay,omitempty"`
+	Thang    int    `json:"thang,omitempty"`
+	Nam      int    `json:"nam,omitempty"`
+	DoanhThu float64 `json:"doanh_thu"`
+	SoDon    int64  `json:"so_don"`
 }
 
 type MonDatInput struct {
@@ -780,6 +789,7 @@ func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", maNguoiDung).
 		Preload("ChiTietHoaDons").
+		Preload("ChiTietHoaDons.Options.OptionItem.NhomOption").
 		Preload("ChiTietHoaDons.MonAn").
 		Preload("ChiTietHoaDons.Options").
 		Preload("ChiTietHoaDons.Options.OptionItem").
@@ -802,4 +812,179 @@ func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": hoaDons,
 	})
+}
+
+func (ctrl *HoaDonController) HuyHoaDonNguoiDung(c *gin.Context) {
+
+	id := c.Param("id")
+
+	// lấy user_id từ token
+	userIDAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Chưa đăng nhập",
+		})
+		return
+	}
+	userID := userIDAny.(uint)
+
+	var hoaDon models.HoaDon
+
+	// 🔒 chỉ chủ hóa đơn mới hủy được
+	if err := config.DB.
+		First(&hoaDon, "ma_hd = ? AND ma_nguoi_dung = ?", id, userID).
+		Error; err != nil {
+
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Không tìm thấy hóa đơn",
+		})
+		return
+	}
+
+	// ❌ đã giao thì cấm hủy
+	if hoaDon.TrangThai == "da_giao" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Hóa đơn đã giao, không thể hủy",
+		})
+		return
+	}
+
+	// ❌ đã thanh toán thì chặn (chưa làm hoàn tiền)
+	if hoaDon.TrangThaiThanhToan == "da_thanh_toan" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Hóa đơn đã thanh toán, vui lòng liên hệ hỗ trợ",
+		})
+		return
+	}
+
+	// ✅ cập nhật trạng thái
+	if err := config.DB.Model(&hoaDon).Updates(map[string]interface{}{
+		"trang_thai":            "da_huy",
+		"trang_thai_thanh_toan": "da_huy",
+	}).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể hủy hóa đơn",
+		})
+		return
+	}
+
+	// reload
+	config.DB.First(&hoaDon, hoaDon.MaHD)
+
+	// 🔥 realtime admin
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type:    "hoa_don_bi_huy",
+		Payload: hoaDon,
+	})
+
+	// 🔥 realtime user
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type: "hoa_don_bi_huy_user",
+		Payload: gin.H{
+			"ma_hd":                 hoaDon.MaHD,
+			"trang_thai":            "da_huy",
+			"trang_thai_thanh_toan": "da_huy",
+		},
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Hủy hóa đơn thành công",
+	})
+}
+
+func (ctrl *HoaDonController) GetDoanhThuTheoNgay(c *gin.Context) {
+
+	// yyyy-mm-dd (VD: 2026-06-04)
+	ngay := c.Query("ngay")
+	if ngay == "" {
+		ngay = time.Now().Format("2006-01-02")
+	}
+
+	var result DoanhThuDTO
+
+	err := config.DB.
+		Model(&models.HoaDon{}).
+		Select(`
+			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
+			COUNT(ma_hd) AS so_don
+		`).
+		Where(`
+			CAST(ngay AS DATE) = ?
+			AND trang_thai = ?
+			AND trang_thai_thanh_toan = ?
+		`, ngay, "da_giao", "da_thanh_toan").
+		Scan(&result).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể tính doanh thu",
+		})
+		return
+	}
+
+	// gán ngày thủ công
+	result.Ngay = ngay
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": result,
+	})
+}
+func (ctrl *HoaDonController) GetDoanhThuTheoThang(c *gin.Context) {
+
+	thang, _ := strconv.Atoi(c.DefaultQuery("thang", fmt.Sprint(int(time.Now().Month()))))
+	nam, _ := strconv.Atoi(c.DefaultQuery("nam", fmt.Sprint(time.Now().Year())))
+
+	var result DoanhThuDTO
+
+	err := config.DB.
+		Model(&models.HoaDon{}).
+		Select(`
+			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
+			COUNT(ma_hd) AS so_don
+		`).
+		Where(`
+			EXTRACT(MONTH FROM ngay) = ?
+			AND EXTRACT(YEAR FROM ngay) = ?
+			AND trang_thai = 'da_giao'
+			AND trang_thai_thanh_toan = 'da_thanh_toan'
+		`, thang, nam).
+		Scan(&result).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Không thể tính doanh thu tháng"})
+		return
+	}
+
+	result.Thang = thang
+	result.Nam = nam
+
+	c.JSON(200, gin.H{"data": result})
+}
+func (ctrl *HoaDonController) GetDoanhThuTheoNam(c *gin.Context) {
+
+	nam, _ := strconv.Atoi(c.DefaultQuery("nam", fmt.Sprint(time.Now().Year())))
+
+	var result DoanhThuDTO
+
+	err := config.DB.
+		Model(&models.HoaDon{}).
+		Select(`
+			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
+			COUNT(ma_hd) AS so_don
+		`).
+		Where(`
+			EXTRACT(YEAR FROM ngay) = ?
+			AND trang_thai = 'da_giao'
+			AND trang_thai_thanh_toan = 'da_thanh_toan'
+		`, nam).
+		Scan(&result).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Không thể tính doanh thu năm"})
+		return
+	}
+
+	result.Nam = nam
+	c.JSON(200, gin.H{"data": result})
 }

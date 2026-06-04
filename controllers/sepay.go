@@ -143,9 +143,7 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(400, gin.H{
-			"error": "invalid payload",
-		})
+		c.JSON(400, gin.H{"error": "invalid payload"})
 		return
 	}
 
@@ -153,67 +151,74 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 
 	// webhook test
 	if payload.Content == "SEPAY TEST WEBHOOK" {
-		c.JSON(200, gin.H{
-			"message": "Webhook test ok",
-		})
+		c.JSON(200, gin.H{"message": "Webhook test ok"})
 		return
 	}
 
-	// tìm HD000025
+	// lấy mã HDxxxx
 	re := regexp.MustCompile(`HD\d+`)
 	match := re.FindString(payload.Content)
-
 	if match == "" {
-		c.JSON(400, gin.H{
-			"error": "Không tìm thấy mã hóa đơn",
-		})
+		c.JSON(400, gin.H{"error": "Không tìm thấy mã hóa đơn"})
 		return
 	}
 
 	orderCode := strings.TrimPrefix(match, "HD")
-
 	id, err := strconv.Atoi(orderCode)
 	if err != nil {
-		c.JSON(400, gin.H{
-			"error": "Mã hóa đơn không hợp lệ",
-		})
+		c.JSON(400, gin.H{"error": "Mã hóa đơn không hợp lệ"})
 		return
 	}
 
+	// ✅ LOAD HÓA ĐƠN TRƯỚC
 	var hoaDon models.HoaDon
+	if err := config.DB.First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
+		c.JSON(404, gin.H{"error": "Không tìm thấy hóa đơn"})
+		return
+	}
 
+	// ✅ CHECK ĐÃ THANH TOÁN CHƯA (chống webhook gửi lại)
 	var existing models.ThanhToan
-	if err := config.DB.Where("ma_hd = ?", hoaDon.MaHD).First(&existing).Error; err == nil {
-		// đã có thanh toán rồi -> bỏ qua
+	if err := config.DB.
+		Where("ma_hd = ?", hoaDon.MaHD).
+		First(&existing).Error; err == nil {
+
+		c.JSON(200, gin.H{"message": "Đã xử lý trước đó"})
 		return
 	}
 
-	err = config.DB.First(&hoaDon, "ma_hd = ?", id).Error
+	// ✅ SO TIỀN BẰNG INT (TRÁNH LỖI FLOAT)
+	paid := int(payload.TransferAmount)
+	need := int(hoaDon.TongTien)
 
-	if err != nil {
-		c.JSON(404, gin.H{
-			"error": "Không tìm thấy hóa đơn",
-		})
-		return
-	}
-
-	// check tiền
-	if payload.TransferAmount < hoaDon.TongTien {
+	if paid < need {
 		c.JSON(400, gin.H{
-			"error": "Thanh toán thiếu",
+			"error": fmt.Sprintf(
+				"Thanh toán thiếu: nhận %d, cần %d",
+				paid, need,
+			),
 		})
 		return
 	}
 
-	// update DB
+	// ✅ UPDATE TRẠNG THÁI THANH TOÁN
 	config.DB.Model(&hoaDon).Updates(map[string]interface{}{
 		"trang_thai_thanh_toan": "da_thanh_toan",
 	})
 
-	// tạo thanh toán
+	// realtime update trạng thái
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type: "update_trang_thai_thanh_toan",
+		Payload: gin.H{
+			"ma_hd":                 hoaDon.MaHD,
+			"trang_thai_thanh_toan": "da_thanh_toan",
+		},
+	})
+
+	// ✅ TẠO BẢN GHI THANH TOÁN
 	thanhToan := models.ThanhToan{
 		MaHD:              hoaDon.MaHD,
-		SoTien:            payload.TransferAmount,
+		SoTien:            float64(paid),
 		HinhThucThanhToan: "chuyen_khoan",
 		NgayThanhToan:     time.Now(),
 	}
@@ -222,19 +227,15 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 		log.Println("create payment error:", err)
 	}
 
-	// realtime
-	ctrl.Hub.Broadcast(
-		dto.WSMessage{
-			Type: "payment_success",
-			Payload: gin.H{
-				"hoa_don_id": hoaDon.MaHD,
-			},
+	// realtime success
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type: "payment_success",
+		Payload: gin.H{
+			"hoa_don_id": hoaDon.MaHD,
 		},
-	)
-
-	c.JSON(200, gin.H{
-		"success": true,
 	})
+
+	c.JSON(200, gin.H{"success": true})
 }
 
 func GetQR(c *gin.Context) {

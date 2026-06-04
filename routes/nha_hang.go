@@ -6,10 +6,10 @@ import (
 	"github.com/vpa/quanlynhahang-backend/middleware"
 )
 
-func NhaHangRoutes(r *gin.Engine) {
+func NhaHangRoutes(r *gin.Engine,h*controllers.ChatHandler) {
 	nhahang := r.Group("/nha-hang")
 	{
-		nhahang.POST("/create",middleware.AuthMiddleware(), controllers.CreateNhaHang)
+		nhahang.POST("/create",middleware.AuthMiddleware(), h.CreateNhaHang)
 
 		nhahang.GET("/all", controllers.GetAllNhaHang)
 

@@ -41,14 +41,13 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 	if req.ThreadID != nil {
 		threadID = *req.ThreadID
 	}
-	rid := RestaurantID(c) // todo
-	id, err := h.fs.EnsureThread(rid, threadID)
+	id, err := h.fs.EnsureThread(threadID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "Failed to create thread"})
 		return
 	}
 
-	if err := h.fs.AppendThreadMessage(rid, id, "user", req.Message); err != nil {
+	if err := h.fs.AppendThreadMessage(id, "user", req.Message); err != nil {
 		log.Println("❌ Append user message failed:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"detail": err.Error(),
@@ -56,15 +55,19 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 		return
 	}
 
-	// ctxText, err := h.rag.RetrieveContext(c.Request.Context(), rid, req.Message, 6)
-	ctxText := "" // 👈 tạm thời không dùng RAG
+	ctxText, err := h.rag.RetrieveContext(
+		c.Request.Context(),
+		req.Message,
+		6,
+	)
+	//ctxText := "" // 👈 tạm thời không dùng RAG
 	if err != nil {
 		// RAG context is best-effort; keep chat available even if vector search or embeddings fail.
 		log.Printf("rag RetrieveContext failed: %v", err)
 		ctxText = ""
 	}
 
-	history, err := h.fs.GetThreadMessages(rid, id)
+	history, err := h.fs.GetThreadMessages(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "Failed to load thread history"})
 		return
@@ -92,7 +95,7 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 		return
 	}
 
-	if err := h.fs.AppendThreadMessage(rid, id, "assistant", assistant); err != nil {
+	if err := h.fs.AppendThreadMessage(id, "assistant", assistant); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"detail": "Failed to persist message"})
 		return
 	}

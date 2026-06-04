@@ -8,8 +8,8 @@ import (
 	"github.com/vpa/quanlynhahang-backend/middleware"
 )
 
-func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
-	notiUC *usecase.NotificationUseCase, hub *websocket.Hub) {
+func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase, 
+	notiUC *usecase.NotificationUseCase, hub *websocket.Hub,chatHandler *controllers.ChatHandler,) {
 	// 🌐 Route gốc
 	r.GET("/", func(c *gin.Context) {
 		c.File("./static/web-page.html")
@@ -37,7 +37,7 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 
 	LoaiMonAnRoutes(r)
 
-	MonAnRoutes(r)
+	MonAnRoutes(r, chatHandler)
 
 	LienHeRoutes(r, contactHandler)
 
@@ -65,5 +65,5 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 
 	ShipRoutes(r, hub)
 
-	NhaHangRoutes(r)
+	NhaHangRoutes(r,chatHandler)
 }

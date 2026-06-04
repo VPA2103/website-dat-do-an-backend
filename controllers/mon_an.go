@@ -2,7 +2,12 @@ package controllers
 
 import (
 	//"fmt"
+	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
+	"strings"
+
 	//"strings"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
@@ -13,75 +18,16 @@ import (
 )
 
 //======================= CREATE =======================
-func CreateMonAn(c *gin.Context) {
-	var monan models.MonAn
-
-	// Bind dữ liệu form
-	if err := c.ShouldBind(&monan); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ: " + err.Error()})
-		return
-	}
-
-	// Validate
-	if monan.TenMonAn == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Tên món ăn không được để trống"})
-		return
-	}
-
-	if monan.MoTa == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Mô tả món ăn không được để trống"})
-		return
-	}
-
-	// Tạo trước để lấy ID
-	if err := config.DB.Create(&monan).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo món ăn: " + err.Error()})
-		return
-	}
-
-	// Upload ảnh món ăn nếu có
-	file, err := c.FormFile("image")
-	if err == nil && file != nil {
-		src, err := file.Open()
-		if err == nil {
-			defer src.Close()
-
-			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-				Folder: "monan",
-			})
-
-			if err == nil {
-				img := models.HinhAnh{
-					OwnerID:   monan.MaMonAn,
-					OwnerType: "mon_an",
-					Url:       uploadResult.SecureURL,
-				}
-				config.DB.Create(&img)
-			}
-		}
-	}
-
-	// Lấy món ăn kèm ảnh trả về client
-	config.DB.Preload("AnhMonAn").First(&monan, monan.MaMonAn)
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Tạo món ăn thành công",
-		"data":    monan,
-	})
-}
-
 // func CreateMonAn(c *gin.Context) {
 // 	var monan models.MonAn
 
-// 	// 1. Bind
+// 	// Bind dữ liệu form
 // 	if err := c.ShouldBind(&monan); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{
-// 			"error": "Dữ liệu không hợp lệ: " + err.Error(),
-// 		})
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ: " + err.Error()})
 // 		return
 // 	}
 
-// 	// 2. Validate
+// 	// Validate
 // 	if monan.TenMonAn == "" {
 // 		c.JSON(http.StatusBadRequest, gin.H{"error": "Tên món ăn không được để trống"})
 // 		return
@@ -92,37 +38,13 @@ func CreateMonAn(c *gin.Context) {
 // 		return
 // 	}
 
-// 	if monan.GiaTien <= 0 {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Giá tiền phải > 0"})
-// 		return
-// 	}
-
-// 	// 3. Build AI fields
-// 	monan.Document = fmt.Sprintf(
-// 		"Tên món: %s. Mô tả: %s. Giá: %.0f. Loại: %d",
-// 		monan.TenMonAn,
-// 		monan.MoTa,
-// 		monan.GiaTien,
-// 		monan.MaLoaiMonAn,
-// 	)
-
-// 	monan.SearchText = strings.ToLower(
-// 		monan.TenMonAn + " " + monan.MoTa,
-// 	)
-
-// 	monan.Tags = strings.ToLower(monan.TenMonAn)
-
-// 	monan.HasEmbedding = false
-
-// 	// 4. Save DB
+// 	// Tạo trước để lấy ID
 // 	if err := config.DB.Create(&monan).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{
-// 			"error": "Không thể tạo món ăn: " + err.Error(),
-// 		})
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo món ăn: " + err.Error()})
 // 		return
 // 	}
 
-// 	// 5. Upload image
+// 	// Upload ảnh món ăn nếu có
 // 	file, err := c.FormFile("image")
 // 	if err == nil && file != nil {
 // 		src, err := file.Open()
@@ -144,45 +66,131 @@ func CreateMonAn(c *gin.Context) {
 // 		}
 // 	}
 
-// 	// 6. Embedding + Vector Upsert (GLOBAL)
-// 	ctx := c.Request.Context()
-
-// 	emb, err := config.LLM.Embed(ctx, monan.Document)
-// 	if err == nil && len(emb) > 0 {
-// 		_ = config.Vector.UpsertMenuItem(
-// 			ctx,
-// 			emb,
-// 			monan.Document,
-// 			map[string]any{
-// 				"id":       monan.MaMonAn,
-// 				"name":     monan.TenMonAn,
-// 				"price":    monan.GiaTien,
-// 				"tags":     monan.Tags,
-// 				"category": monan.MaLoaiMonAn,
-// 			},
-// 		)
-
-// 		_ = config.DB.Model(&monan).Update("has_embedding", true).Error
-// 	}
-
-// 	// 7. Load relation
+// 	// Lấy món ăn kèm ảnh trả về client
 // 	config.DB.Preload("AnhMonAn").First(&monan, monan.MaMonAn)
 
-// 	// 8. Response
 // 	c.JSON(http.StatusCreated, gin.H{
 // 		"message": "Tạo món ăn thành công",
-// 		"data": gin.H{
-// 			"id":       monan.MaMonAn,
-// 			"document": monan.Document,
-// 			"metadata": gin.H{
-// 				"name":     monan.TenMonAn,
-// 				"price":    monan.GiaTien,
-// 				"tags":     monan.Tags,
-// 				"category": monan.MaLoaiMonAn,
-// 			},
-// 		},
+// 		"data":    monan,
 // 	})
 // }
+
+func (h *ChatHandler) CreateMonAn(c *gin.Context) {
+	var monan models.MonAn
+
+	// 1. bind
+	if err := c.ShouldBind(&monan); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 2. validate
+	if monan.TenMonAn == "" || monan.MoTa == "" {
+		c.JSON(400, gin.H{"error": "Thiếu dữ liệu"})
+		return
+	}
+
+	// 3. save món ăn
+	if err := config.DB.Create(&monan).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	// =========================
+	// 🧠 BUILD DOCUMENT
+	// =========================
+	document := fmt.Sprintf(
+		"Món: %s\nMô tả: %s\nGiá: %.0f\nLoại: %d",
+		monan.TenMonAn,
+		monan.MoTa,
+		monan.GiaTien,
+		monan.MaLoaiMonAn,
+	)
+
+	// monan.Document = document
+	// monan.SearchText = monan.TenMonAn + " " + monan.MoTa
+	// monan.HasEmbedding = false
+	config.DB.Save(&monan)
+
+	// =========================
+	// 🔥 EMBEDDING
+	// =========================
+	embedding, err := h.llm.Embed(c.Request.Context(), document)
+	if err != nil {
+		log.Println("embed error:", err)
+	}
+
+	// =========================
+	// 📦 METADATA → JSON
+	// =========================
+	metaJSON, _ := json.Marshal(map[string]any{
+		"id":    monan.MaMonAn,
+		"name":  monan.TenMonAn,
+		"price": monan.GiaTien,
+	})
+
+	// =========================
+	// 📦 VECTOR STRING FORMAT
+	// =========================
+	vectorStr := vectorToString(embedding)
+
+	// =========================
+	// INSERT VECTOR DB
+	// =========================
+
+	if len(embedding) > 0 {
+
+		embeddingID := fmt.Sprintf("mon_an_%d", monan.MaMonAn)
+
+		result := config.DB.Exec(`
+		INSERT INTO menu_embeddings (id, document, metadata, embedding)
+		VALUES ($1, $2, $3, $4)
+	`,
+			embeddingID, // 👈 FIX Ở ĐÂY
+			document,
+			string(metaJSON),
+			vectorStr,
+		)
+
+		if result.Error != nil {
+			log.Println("vector insert error:", result.Error)
+		}
+	}
+
+	// =========================
+	// 🖼️ UPLOAD IMAGE
+	// =========================
+	file, err := c.FormFile("image")
+	if err == nil && file != nil {
+		src, err := file.Open()
+		if err == nil {
+			defer src.Close()
+
+			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
+				Folder: "monan",
+			})
+
+			if err == nil {
+				img := models.HinhAnh{
+					OwnerID:   monan.MaMonAn,
+					OwnerType: "mon_an",
+					Url:       uploadResult.SecureURL,
+				}
+				config.DB.Create(&img)
+			}
+		}
+	}
+
+	// =========================
+	// RESPONSE
+	// =========================
+	config.DB.Preload("AnhMonAn").First(&monan, monan.MaMonAn)
+
+	c.JSON(201, gin.H{
+		"message": "Tạo món ăn + embedding thành công",
+		"data":    monan,
+	})
+}
 
 // ======================= GET ALL =======================
 func GetAllMonAn(c *gin.Context) {
@@ -208,28 +216,30 @@ func GetMonAnByID(c *gin.Context) {
 }
 
 // ======================= UPDATE =======================
-func UpdateMonAn(c *gin.Context) {
+func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 	id := c.Param("id")
 	var monan models.MonAn
 
+	// 1️⃣ Find
 	if err := config.DB.First(&monan, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy món ăn"})
+		c.JSON(404, gin.H{"error": "Không tìm thấy món ăn"})
 		return
 	}
 
+	// 2️⃣ Bind
 	var input models.MonAn
 	if err := c.ShouldBind(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
 	if input.MoTa == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Mô tả món ăn không được để trống"})
+		c.JSON(400, gin.H{"error": "Mô tả món ăn không được để trống"})
 		return
 	}
 
-	// 🔥 UPDATE AN TOÀN
-	config.DB.Model(&monan).Updates(map[string]interface{}{
+	// 3️⃣ Update DOMAIN
+	config.DB.Model(&monan).Updates(map[string]any{
 		"ten_mon_an":     input.TenMonAn,
 		"mo_ta":          input.MoTa,
 		"gia_tien":       input.GiaTien,
@@ -237,9 +247,70 @@ func UpdateMonAn(c *gin.Context) {
 		"trang_thai":     input.TrangThai,
 	})
 
-	// upload ảnh (giữ nguyên code cũ)
+	// =========================
+	// 🧠 BUILD DOCUMENT (RAG)
+	// =========================
+	document := fmt.Sprintf(
+		"Món: %s\nMô tả: %s\nGiá: %.0f\nLoại: %d",
+		input.TenMonAn,
+		input.MoTa,
+		input.GiaTien,
+		input.MaLoaiMonAn,
+	)
+
+	// =========================
+	// 🔥 EMBEDDING
+	// =========================
+	embedding, err := h.llm.Embed(c.Request.Context(), document)
+	if err != nil {
+		log.Println("embed error:", err)
+	}
+
+	// =========================
+	// 📦 METADATA
+	// =========================
+	metaJSON, _ := json.Marshal(map[string]any{
+		"type":  "mon_an",
+		"id":    monan.MaMonAn,
+		"name":  input.TenMonAn,
+		"price": input.GiaTien,
+	})
+
+	// =========================
+	// 📦 VECTOR STRING
+	// =========================
+	vectorStr := vectorToString(embedding)
+
+	// =========================
+	// UPDATE VECTOR DB
+	// =========================
+	if len(embedding) > 0 {
+
+		embeddingID := fmt.Sprintf("mon_an_%d", monan.MaMonAn)
+
+		result := config.DB.Exec(`
+		UPDATE menu_embeddings
+		SET document = $1,
+		    metadata = $2,
+		    embedding = $3
+		WHERE id = $4
+	`,
+			document,
+			string(metaJSON),
+			vectorStr,
+			embeddingID, // 👈 FIX Ở ĐÂY
+		)
+
+		if result.Error != nil {
+			log.Println("vector update error:", result.Error)
+		}
+	}
+
+	// =========================
+	// 🖼️ UPLOAD IMAGE
+	// =========================
 	file, err := c.FormFile("image")
-	if err == nil {
+	if err == nil && file != nil {
 		src, _ := file.Open()
 		defer src.Close()
 
@@ -260,10 +331,13 @@ func UpdateMonAn(c *gin.Context) {
 		})
 	}
 
-	config.DB.Preload("AnhMonAn").First(&monan, id)
+	// =========================
+	// RESPONSE
+	// =========================
+	config.DB.Preload("AnhMonAn").First(&monan, monan.MaMonAn)
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Cập nhật món ăn thành công",
+	c.JSON(200, gin.H{
+		"message": "Cập nhật món ăn + embedding thành công",
 		"data":    monan,
 	})
 }
@@ -273,18 +347,41 @@ func DeleteMonAn(c *gin.Context) {
 	id := c.Param("id")
 	var monan models.MonAn
 
+	// 1️⃣ Find món ăn
 	if err := config.DB.First(&monan, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy món ăn"})
 		return
 	}
 
-	// Xóa ảnh thuộc món ăn
-	config.DB.Where("owner_id = ? AND owner_type = ?", id, "mon_an").Delete(&models.HinhAnh{})
+	// =========================
+	// 🗑️ DELETE EMBEDDING (RAG)
+	// =========================
+	embeddingID := fmt.Sprintf("mon_an_%d", monan.MaMonAn)
 
-	// Xóa món ăn
+	if err := config.DB.Exec(
+		`DELETE FROM menu_embeddings WHERE id = $1`,
+		embeddingID,
+	).Error; err != nil {
+		log.Println("delete embedding error:", err)
+	}
+
+	// =========================
+	// 🗑️ DELETE IMAGE
+	// =========================
+	config.DB.Where(
+		"owner_id = ? AND owner_type = ?",
+		monan.MaMonAn,
+		"mon_an",
+	).Delete(&models.HinhAnh{})
+
+	// =========================
+	// 🗑️ DELETE DOMAIN
+	// =========================
 	config.DB.Delete(&monan)
 
-	c.JSON(http.StatusOK, gin.H{"message": "Xóa món ăn thành công"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Xóa món ăn + embedding thành công",
+	})
 }
 
 func GetMonAnDetail(c *gin.Context) {
@@ -309,4 +406,23 @@ func GetMonAnDetail(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"data": monan,
 	})
+}
+
+func vectorToString(vec []float32) string {
+	if len(vec) == 0 {
+		return "[]"
+	}
+
+	var b strings.Builder
+	b.WriteString("[")
+
+	for i, v := range vec {
+		b.WriteString(fmt.Sprintf("%f", v))
+		if i < len(vec)-1 {
+			b.WriteString(",")
+		}
+	}
+
+	b.WriteString("]")
+	return b.String()
 }
