@@ -8,6 +8,15 @@ import (
 
 // API tạo nhóm option
 
+
+type UpdateNhomOptionRequest struct {
+	TenNhom        string `json:"ten_nhom"`
+	BatBuoc        bool   `json:"bat_buoc"`
+	ChonNhieu      bool   `json:"chon_nhieu"`
+	SoLuongToiDa   int    `json:"so_luong_toi_da"`
+	SoLuongToiThieu int   `json:"so_luong_toi_thieu"`
+}
+
 func CreateNhomOption(c *gin.Context) {
 	var input models.NhomOption
 
@@ -100,24 +109,17 @@ func GetNhomOptionByID(c *gin.Context) {
 }
 
 func UpdateNhomOption(c *gin.Context) {
-
 	id := c.Param("id")
 
 	var nhom models.NhomOption
-
 	if err := config.DB.First(&nhom, id).Error; err != nil {
-		c.JSON(404, gin.H{
-			"error": "Không tìm thấy nhóm option",
-		})
+		c.JSON(404, gin.H{"error": "Không tìm thấy nhóm option"})
 		return
 	}
 
-	var input models.NhomOption
-
+	var input UpdateNhomOptionRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{
-			"error": err.Error(),
-		})
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -128,9 +130,7 @@ func UpdateNhomOption(c *gin.Context) {
 	nhom.SoLuongToiThieu = input.SoLuongToiThieu
 
 	if err := config.DB.Save(&nhom).Error; err != nil {
-		c.JSON(500, gin.H{
-			"error": "Cập nhật thất bại",
-		})
+		c.JSON(500, gin.H{"error": "Cập nhật thất bại"})
 		return
 	}
 
@@ -141,24 +141,27 @@ func UpdateNhomOption(c *gin.Context) {
 }
 
 func DeleteNhomOption(c *gin.Context) {
-
 	id := c.Param("id")
 
 	var nhom models.NhomOption
 
 	if err := config.DB.First(&nhom, id).Error; err != nil {
-		c.JSON(404, gin.H{
-			"error": "Không tìm thấy nhóm option",
-		})
+		c.JSON(404, gin.H{"error": "Không tìm thấy nhóm option"})
 		return
 	}
 
-	// xóa option items trước
-	config.DB.Where("ma_nhom_option = ?", id).
-		Delete(&models.OptionItem{})
+	// 1. xóa option items trước
+	if err := config.DB.Where("ma_nhom_option = ?", id).
+		Delete(&models.OptionItem{}).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Không thể xóa option items"})
+		return
+	}
 
-	// xóa nhóm
-	config.DB.Delete(&nhom)
+	// 2. xóa nhóm
+	if err := config.DB.Delete(&nhom).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Không thể xóa nhóm option"})
+		return
+	}
 
 	c.JSON(200, gin.H{
 		"message": "Xóa nhóm option thành công",

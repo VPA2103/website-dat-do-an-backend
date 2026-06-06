@@ -31,11 +31,11 @@ type OptionDatInput struct {
 }
 
 type DoanhThuDTO struct {
-	Ngay     string `json:"ngay,omitempty"`
-	Thang    int    `json:"thang,omitempty"`
-	Nam      int    `json:"nam,omitempty"`
+	Ngay     string  `json:"ngay,omitempty"`
+	Thang    int     `json:"thang,omitempty"`
+	Nam      int     `json:"nam,omitempty"`
 	DoanhThu float64 `json:"doanh_thu"`
-	SoDon    int64  `json:"so_don"`
+	SoDon    int64   `json:"so_don"`
 }
 
 type MonDatInput struct {
@@ -319,13 +319,10 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 			tienGiam =
 				tongTienServer *
 					giamGia.GiaTriGiam / 100
+			log.Println("TONG:", tongTienServer)
+			log.Println("GIAM %:", giamGia.GiaTriGiam)
+			log.Println("TIEN GIAM:", tienGiam)
 
-			// giới hạn giảm tối đa
-			if giamGia.GiamToiDa > 0 &&
-				tienGiam > giamGia.GiamToiDa {
-
-				tienGiam = giamGia.GiamToiDa
-			}
 
 		case "fixed":
 
@@ -359,11 +356,10 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 	// tổng cuối
 	tongCuoi := tongTienServer - tienGiam
 
-	// update hóa đơn
 	updateData := map[string]interface{}{
-		"tong_tien":   tongCuoi,
 		"tam_tinh":    tongTienServer,
 		"tien_giam":   tienGiam,
+		"tong_tien":   tongCuoi,
 		"giam_gia_id": hoaDon.GiamGiaID,
 	}
 
@@ -892,6 +888,8 @@ func (ctrl *HoaDonController) HuyHoaDonNguoiDung(c *gin.Context) {
 		"message": "Hủy hóa đơn thành công",
 	})
 }
+
+
 
 func (ctrl *HoaDonController) GetDoanhThuTheoNgay(c *gin.Context) {
 

@@ -426,3 +426,30 @@ func vectorToString(vec []float32) string {
 	b.WriteString("]")
 	return b.String()
 }
+
+func SearchMonAn(c *gin.Context) {
+	keyword := c.Query("q")
+
+	var list []models.MonAn
+
+	query := config.DB.
+		Preload("AnhMonAn").
+		Where("trang_thai = ?", 1)
+
+	if keyword != "" {
+		query = query.Where(
+			"LOWER(ten_mon_an) LIKE LOWER(?) OR LOWER(mo_ta) LIKE LOWER(?)",
+			"%"+keyword+"%",
+			"%"+keyword+"%",
+		)
+	}
+
+	if err := query.Find(&list).Error; err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": list,
+	})
+}

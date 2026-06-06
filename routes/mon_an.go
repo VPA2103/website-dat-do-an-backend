@@ -14,5 +14,6 @@ func MonAnRoutes(r *gin.Engine,h *controllers.ChatHandler) {
 		mon_an.GET("/:id/detail", controllers.GetMonAnDetail)
 		mon_an.PATCH("/update/:id", h.UpdateMonAn)
 		mon_an.DELETE("/delete/:id", controllers.DeleteMonAn)
+		mon_an.GET("/search", controllers.SearchMonAn)
 	}
 }

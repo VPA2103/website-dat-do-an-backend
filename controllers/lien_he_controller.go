@@ -58,7 +58,7 @@ func AdminGetAllLienHe(c *gin.Context) {
 	var danhSachLienHe []models.LienHe
 
 	if err := config.DB.
-		Order("created_at DESC").
+		Order("ngay_tao DESC").
 		Find(&danhSachLienHe).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Không thể lấy danh sách liên hệ",
