@@ -271,47 +271,49 @@ func UpdateSoLuongCart(c *gin.Context) {
 }
 
 func DeleteCart(c *gin.Context) {
-	gio_hang_id := c.Param("ma_gio_hang")
+
+	gioHangID := c.Param("ma_gio_hang")
 
 	userAny, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(401, gin.H{
-			"error": "Chưa đăng nhập",
-		})
+		c.JSON(401, gin.H{"error": "Chưa đăng nhập"})
 		return
 	}
 
 	userID := userAny.(uint)
 
-	config.DB.
-		Where("ma_gio_hang = ?", gio_hang_id).
-		Delete(&models.GioHangOption{})
+	tx := config.DB.Begin()
 
-	result := config.DB.
-		Where(
-			"ma_nguoi_dung = ? AND ma_gio_hang = ?",
-			userID,
-			gio_hang_id,
-		).
+	// 1. XÓA OPTIONS TRƯỚC (QUAN TRỌNG)
+	if err := tx.
+		Where("ma_gio_hang = ?", gioHangID).
+		Delete(&models.GioHangOption{}).Error; err != nil {
+
+		tx.Rollback()
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 2. XÓA GIỎ HÀNG
+	result := tx.
+		Where("ma_nguoi_dung = ? AND ma_gio_hang = ?", userID, gioHangID).
 		Delete(&models.GioHang{})
 
 	if result.Error != nil {
-		c.JSON(500, gin.H{
-			"error": result.Error.Error(),
-		})
+		tx.Rollback()
+		c.JSON(500, gin.H{"error": result.Error.Error()})
 		return
 	}
 
 	if result.RowsAffected == 0 {
-		c.JSON(404, gin.H{
-			"error": "Không tìm thấy sản phẩm trong giỏ",
-		})
+		tx.Rollback()
+		c.JSON(404, gin.H{"error": "Không tìm thấy sản phẩm"})
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"message": "Đã xoá khỏi giỏ hàng",
-	})
+	tx.Commit()
+
+	c.JSON(200, gin.H{"message": "Đã xoá khỏi giỏ hàng"})
 }
 
 func XoaGioHangNguoiDung(c *gin.Context) {
@@ -324,15 +326,36 @@ func XoaGioHangNguoiDung(c *gin.Context) {
 
 	maNguoiDung := maNguoiDungAny.(uint)
 
-	if err := config.DB.
-		Where("ma_nguoi_dung = ?", maNguoiDung).
-		Delete(&models.GioHang{}).Error; err != nil {
+	tx := config.DB.Begin()
 
+	// 1. XÓA OPTIONS TRƯỚC
+	if err := tx.
+		Table("gio_hang_options").
+		Where("ma_gio_hang IN (?)",
+			tx.Table("gio_hangs").
+				Select("ma_gio_hang").
+				Where("ma_nguoi_dung = ?", maNguoiDung),
+		).
+		Delete(nil).Error; err != nil {
+
+		tx.Rollback()
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Đã xóa giỏ hàng"})
+	// 2. XÓA GIỎ HÀNG
+	if err := tx.
+		Where("ma_nguoi_dung = ?", maNguoiDung).
+		Delete(&models.GioHang{}).Error; err != nil {
+
+		tx.Rollback()
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	tx.Commit()
+
+	c.JSON(200, gin.H{"message": "Đã xóa giỏ hàng + options"})
 }
 func UpdateCartItem(c *gin.Context) {
 	cartID := c.Param("ma_gio_hang")

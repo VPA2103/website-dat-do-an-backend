@@ -17,5 +17,6 @@ func DanhGiaRoutes(r *gin.Engine, hub *websocket.Hub) {
 		danhGia.PUT("/:id", ctrl.UpdateDanhGia)
 		danhGia.DELETE("/:id", ctrl.DeleteDanhGia)
 		danhGia.GET("/check", controllers.CheckDanhGia)
+		danhGia.GET("/so_luong_danh_gia", ctrl.GetSoLuongDanhGiaHomNay)
 	}
 }

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
@@ -11,6 +12,11 @@ import (
 
 type DanhGiaController struct {
 	Hub *websocket.Hub
+}
+
+type ThongKeDanhGiaNgayDTO struct {
+	Ngay        string `json:"ngay"`
+	SoDanhGia   int64  `json:"so_danh_gia"`
 }
 
 func NewDanhGiaController(hub *websocket.Hub) *DanhGiaController {
@@ -179,5 +185,31 @@ func CheckDanhGia(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"da_danh_gia": count > 0,
+	})
+}
+
+func (ctrl *DanhGiaController) GetSoLuongDanhGiaHomNay(c *gin.Context) {
+
+	ngay := time.Now().Format("2006-01-02")
+
+	var soDanhGia int64
+
+	err := config.DB.
+		Model(&models.DanhGia{}).
+		Where(`
+			CAST(ngay_danh_gia AS DATE) = ?
+		`, ngay).
+		Count(&soDanhGia).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Không thể thống kê đánh giá hôm nay"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": ThongKeDanhGiaNgayDTO{
+			Ngay:      ngay,
+			SoDanhGia: soDanhGia,
+		},
 	})
 }

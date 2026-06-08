@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
@@ -18,69 +21,94 @@ type UpdateNhaHangDTO struct {
 
 }
 
-func CreateNhaHang(c *gin.Context) {
+func (h *ChatHandler) CreateNhaHang(c *gin.Context) {
 	var nhahang models.NhaHang
 
-	// ======================
-	// BIND FORM DATA
-	// ======================
+	// 1️⃣ Bind
 	if err := c.ShouldBind(&nhahang); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Dữ liệu không hợp lệ: " + err.Error(),
-		})
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	if nhahang.TenNhaHang == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Tên nhà hàng không được để trống",
-		})
+	// 2️⃣ Validate
+	if nhahang.TenNhaHang == "" || nhahang.DiaChi == "" {
+		c.JSON(400, gin.H{"error": "Thiếu dữ liệu"})
 		return
 	}
-	if nhahang.DiaChi == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Địa chỉ nhà hàng không được để trống",
-		})
-		return
-	}
-	if nhahang.SoTaiKhoan == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Số tài khoản không được để trống",
-		})
-		return
-	}
-	if nhahang.NganHang == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Ngân hàng không được để trống",
-		})
+	if nhahang.SoTaiKhoan == 0 || nhahang.NganHang == "" {
+		c.JSON(400, gin.H{"error": "Thiếu thông tin ngân hàng"})
 		return
 	}
 
-	// ======================
-	// GET USER FROM TOKEN
-	// ======================
+	// 3️⃣ Lấy user
 	userAny, ok := c.Get("user_id")
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Chưa đăng nhập",
-		})
+		c.JSON(401, gin.H{"error": "Chưa đăng nhập"})
 		return
 	}
 	nhahang.MaNguoiDung = userAny.(uint)
 
-	// ======================
-	// CREATE NHÀ HÀNG (LẤY ID)
-	// ======================
+	// 4️⃣ Save domain
 	if err := config.DB.Create(&nhahang).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Không thể tạo nhà hàng: " + err.Error(),
-		})
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	// ======================
-	// UPLOAD ẢNH (GIỐNG BanAn)
-	// ======================
+	// =========================
+	// 🧠 BUILD DOCUMENT
+	// =========================
+	document := fmt.Sprintf(
+		"Nhà hàng: %s\nĐịa chỉ: %s\nNgân hàng: %s\nSố tài khoản: %d",
+		nhahang.TenNhaHang,
+		nhahang.DiaChi,
+		nhahang.NganHang,
+		nhahang.SoTaiKhoan,
+	)
+
+	// =========================
+	// 🔥 EMBEDDING
+	// =========================
+	embedding, err := h.llm.Embed(c.Request.Context(), document)
+	if err != nil {
+		log.Println("embed error:", err)
+	}
+
+	// =========================
+	// 📦 METADATA
+	// =========================
+	metaJSON, _ := json.Marshal(map[string]any{
+		"type": "nha_hang",
+		"id":   nhahang.MaNhaHang,
+		"name": nhahang.TenNhaHang,
+	})
+
+	// =========================
+	// 📦 VECTOR STRING
+	// =========================
+	vectorStr := vectorToString(embedding)
+
+	// =========================
+	// INSERT VECTOR DB (RAW SQL)
+	// =========================
+	if len(embedding) > 0 {
+		result := config.DB.Exec(`
+			INSERT INTO menu_embeddings (id, document, metadata, embedding)
+			VALUES ($1, $2, $3, $4)
+		`,
+			fmt.Sprintf("nha_hang_%d", nhahang.MaNhaHang),
+			document,
+			string(metaJSON),
+			vectorStr,
+		)
+
+		if result.Error != nil {
+			log.Println("vector insert error:", result.Error)
+		}
+	}
+
+	// =========================
+	// 🖼️ UPLOAD IMAGE
+	// =========================
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
 		src, err := file.Open()
@@ -90,24 +118,24 @@ func CreateNhaHang(c *gin.Context) {
 			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
 				Folder: "nhahang",
 			})
+
 			if err == nil {
-				img := models.HinhAnh{
+				config.DB.Create(&models.HinhAnh{
 					OwnerID:   nhahang.MaNhaHang,
 					OwnerType: "nha_hang",
 					Url:       uploadResult.SecureURL,
-				}
-				config.DB.Create(&img)
+				})
 			}
 		}
 	}
 
-	// ======================
-	// PRELOAD ẢNH TRẢ VỀ
-	// ======================
+	// =========================
+	// RESPONSE
+	// =========================
 	config.DB.Preload("AnhNhaHang").First(&nhahang, nhahang.MaNhaHang)
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Tạo nhà hàng thành công",
+	c.JSON(201, gin.H{
+		"message": "Tạo nhà hàng + embedding thành công",
 		"data":    nhahang,
 	})
 }

@@ -1,14 +1,21 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/controllers"
+	"github.com/vpa/quanlynhahang-backend/internal/llm"
+	"github.com/vpa/quanlynhahang-backend/internal/rag"
 	"github.com/vpa/quanlynhahang-backend/internal/repository"
+	"github.com/vpa/quanlynhahang-backend/internal/store"
 	"github.com/vpa/quanlynhahang-backend/internal/usecase"
+	"github.com/vpa/quanlynhahang-backend/internal/vector/pgvector"
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/routes"
@@ -69,11 +76,62 @@ func main() {
 		&models.Room{},
 		&models.GioHangOption{},
 		&models.NhaHang{},
+		&models.Thread{},
+		&models.ThreadMessage{},
+		&models.MenuEmbedding{},
 	)
 	if err != nil {
 		log.Fatal("❌2 Migrate relations failed:", err)
 	}
 	log.Println("✅ Database migrated")
+
+	geminiCfg := config.LoadGeminiConfig()
+
+	// 2️⃣ Init Gemini LLM
+
+	geminiLLM, err := llm.NewGemini(geminiCfg)
+	if err != nil {
+		log.Fatal("❌ Gemini init failed:", err)
+	}
+
+	// 3️⃣ PGX pool (dùng cho thread + message)
+	pgxURL := os.Getenv("PGX_DATABASE_URL")
+	if pgxURL == "" {
+		log.Fatal("❌ Missing PGX_DATABASE_URL")
+	}
+
+	pgxPool, err := pgxpool.New(context.Background(), pgxURL)
+	if err != nil {
+		log.Fatal("❌ PGX pool init failed:", err)
+	}
+
+	// 4️⃣ FileStore
+	fileStore := store.NewPostgresStore(pgxPool)
+
+	vectorStore := pgvector.NewStoreWithConfig(
+		pgxPool,
+		1536,
+		config.VectorConfig{
+			Metric: "cosine",
+			Index:  "hnsw",
+		},
+	)
+
+	ragService := rag.New(
+		geminiLLM,
+		vectorStore,
+		fileStore,
+	)
+
+	// ✅ gắn RAG vào chat
+	chatHandler := controllers.NewChatHandler(
+		fileStore,
+		ragService,
+		geminiLLM,
+	)
+
+	// 8️⃣ Register chatbot route
+	routes.RegisterRoutes(r, chatHandler)
 
 	// 🚏 Đăng ký route
 	routes.UploadRoutes(r)
@@ -96,7 +154,7 @@ func main() {
 		Repo: notiRepo,
 	}
 
-	routes.SetupRoutes(r, chatUC, notiUC, hub)
+	routes.SetupRoutes(r, chatUC, notiUC, hub, chatHandler)
 
 	handler := &websocket.Handler{
 		ChatUC: chatUC,
