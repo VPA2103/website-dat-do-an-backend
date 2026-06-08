@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -30,12 +31,19 @@ type OptionDatInput struct {
 	MaOptionItem uint `json:"ma_option_item"`
 }
 
+type MonAnBanChayDTO struct {
+	MaMonAn  uint   `json:"ma_mon_an"`
+	TenMonAn string `json:"ten_mon_an"`
+	SoLuong  int64  `json:"so_luong"`
+}
+
 type DoanhThuDTO struct {
-	Ngay     string  `json:"ngay,omitempty"`
-	Thang    int     `json:"thang,omitempty"`
-	Nam      int     `json:"nam,omitempty"`
-	DoanhThu float64 `json:"doanh_thu"`
-	SoDon    int64   `json:"so_don"`
+	Ngay              string  `json:"ngay,omitempty"`
+	Thang             int     `json:"thang,omitempty"`
+	Nam               int     `json:"nam,omitempty"`
+	DoanhThu          float64 `json:"doanh_thu"`
+	SoDon             int64   `json:"so_don"`
+	DoanhThuTrungBinh float64 `json:"doanh_thu_trung_binh"`
 }
 
 type MonDatInput struct {
@@ -322,7 +330,6 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 			log.Println("TONG:", tongTienServer)
 			log.Println("GIAM %:", giamGia.GiaTriGiam)
 			log.Println("TIEN GIAM:", tienGiam)
-
 
 		case "fixed":
 
@@ -889,7 +896,38 @@ func (ctrl *HoaDonController) HuyHoaDonNguoiDung(c *gin.Context) {
 	})
 }
 
+func (ctrl *HoaDonController) GetHoaDonChoThanhToan(c *gin.Context) {
 
+	// 🔐 lấy user từ middleware (GIỐNG CÁC HÀM KHÁC)
+	userIDAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Chưa đăng nhập",
+		})
+		return
+	}
+
+	userID := userIDAny.(uint)
+
+	var hoaDons []models.HoaDon
+
+	err := config.DB.
+		Where("ma_nguoi_dung = ? AND trang_thai_thanh_toan = ?", userID, "chua_thanh_toan").
+		Order("ma_hd DESC").
+		Find(&hoaDons).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không lấy được hóa đơn chờ thanh toán",
+		})
+		return
+	}
+
+	// ✅ QUAN TRỌNG: đồng bộ format với FE
+	c.JSON(http.StatusOK, gin.H{
+		"data": hoaDons,
+	})
+}
 
 func (ctrl *HoaDonController) GetDoanhThuTheoNgay(c *gin.Context) {
 
@@ -985,4 +1023,65 @@ func (ctrl *HoaDonController) GetDoanhThuTheoNam(c *gin.Context) {
 
 	result.Nam = nam
 	c.JSON(200, gin.H{"data": result})
+}
+
+func (ctrl *HoaDonController) GetTopMonAnBanChay(c *gin.Context) {
+
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "5"))
+
+	var result []MonAnBanChayDTO
+
+	err := config.DB.Raw(`
+	SELECT 
+		ma.ma_mon_an,
+		ma.ten_mon_an,
+		SUM(cthd.so_luong) AS so_luong
+	FROM chi_tiet_hoa_dons cthd
+	JOIN hoa_dons hd ON hd.ma_hd = cthd.ma_hoa_don
+	JOIN mon_ans ma ON ma.ma_mon_an = cthd.ma_mon_an
+	WHERE hd.trang_thai = 'da_giao'
+	  AND hd.trang_thai_thanh_toan = 'da_thanh_toan'
+	GROUP BY ma.ma_mon_an, ma.ten_mon_an
+	ORDER BY so_luong DESC
+	LIMIT ?
+`, limit).Scan(&result).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Không thể lấy top món ăn"})
+		return
+	}
+
+	c.JSON(200, gin.H{"data": result})
+}
+
+func (ctrl *HoaDonController) GetTiLeHoanThanhHomNay(c *gin.Context) {
+	today := time.Now().Format("2006-01-02")
+
+	var tongDon int64
+	var donHoanThanh int64
+
+	config.DB.Model(&models.HoaDon{}).
+		Where("CAST(ngay AS DATE) = ?", today).
+		Count(&tongDon)
+
+	config.DB.Model(&models.HoaDon{}).
+		Where(`
+			CAST(ngay AS DATE) = ?
+			AND trang_thai = 'da_giao'
+			AND trang_thai_thanh_toan = 'da_thanh_toan'
+		`, today).
+		Count(&donHoanThanh)
+
+	tiLe := 0.0
+	if tongDon > 0 {
+		tiLe = float64(donHoanThanh) / float64(tongDon) * 100
+	}
+
+	c.JSON(200, gin.H{
+		"data": gin.H{
+			"tong_don": tongDon,
+			"hoan_thanh": donHoanThanh,
+			"ti_le": math.Round(tiLe),
+		},
+	})
 }

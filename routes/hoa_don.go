@@ -33,13 +33,13 @@ func HoaDonRoutes(r *gin.Engine, hub *websocket.Hub) {
 
 		hoaDon.PUT(":id/huy_thanh_toan", middleware.AuthMiddleware(), ctrl.HuyHoaDonNguoiDung)
 
-		
-
-
+		hoaDon.GET("/cho-thanh-toan", middleware.AuthMiddleware(),ctrl.GetHoaDonChoThanhToan)
 		//thongke
 		hoaDon.GET("/doanh-thu-ngay",middleware.AuthMiddleware(), ctrl.GetDoanhThuTheoNgay)
 		hoaDon.GET("/doanh-thu-thang",middleware.AuthMiddleware(), ctrl.GetDoanhThuTheoThang)
 		hoaDon.GET("/doanh-thu-nam", middleware.AuthMiddleware(), ctrl.GetDoanhThuTheoNam)
+		hoaDon.GET("/mon-an-ban-chay", middleware.AuthMiddleware(), ctrl.GetTopMonAnBanChay)
+		hoaDon.GET("/ti-le-hoan-thanh-hom-nay", middleware.AuthMiddleware(), ctrl.GetTiLeHoanThanhHomNay)
 
 		// hoaDon.POST("/:ma_hd/thanh-toan", controllers.ThanhToanHoaDon)
 	}
