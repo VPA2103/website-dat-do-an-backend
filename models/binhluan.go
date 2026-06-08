@@ -16,7 +16,7 @@ type BinhLuan struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	NguoiDung NguoiDung `gorm:"foreignKey:MaNguoiDung;references:MaNguoiDung" json:"nguoi_dung"`
+	NguoiDung NguoiDung `gorm:"foreignKey:MaNguoiDung;" json:"nguoi_dung"`
 
 	// 👇 Reply con
 	Replies []BinhLuan `gorm:"foreignKey:ParentID" json:"replies"`

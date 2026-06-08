@@ -5,7 +5,7 @@ type ChiTietHoaDon struct {
 
 	MaHoaDon uint `json:"ma_hoa_don"`
 
-	MonAn   MonAn `gorm:"foreignKey:MaMonAn;references:MaMonAn" json:"mon_an"`
+	MonAn   MonAn `gorm:"foreignKey:MaMonAn;" json:"mon_an"`
 	MaMonAn uint  `json:"ma_mon_an"`
 
 	SoLuong   int     `json:"so_luong"`

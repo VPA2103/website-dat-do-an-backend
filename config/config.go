@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -29,8 +30,8 @@ type VectorConfig struct {
 	IVFFlatLists int
 }
 type Config struct {
-	Vector       VectorConfig
-	Gemini       GeminiConfig
+	Vector VectorConfig
+	Gemini GeminiConfig
 }
 type PostgresConfig struct {
 	Host     string
@@ -40,8 +41,6 @@ type PostgresConfig struct {
 	DBName   string
 	SSLMode  string
 }
-
-
 
 // func ConnectDB() {
 // 	dsn := os.Getenv("DB_URL")
@@ -66,7 +65,7 @@ func SetupCORS(r *gin.Engine) {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: false,
-		AllowWebSockets: true,
+		AllowWebSockets:  true,
 		MaxAge:           12 * time.Hour,
 	}))
 }
@@ -89,7 +88,11 @@ func ConnectDB() {
 		host, port, user, password, dbname, sslmode,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	
 	if err != nil {
 		panic(fmt.Sprintf("❌ Failed to connect to database: %v", err))
 	}
@@ -97,6 +100,7 @@ func ConnectDB() {
 	DB = db
 	fmt.Println("🚀 Database connected successfully")
 }
+
 func LoadGeminiConfig() GeminiConfig {
 	return GeminiConfig{
 		APIKey:         os.Getenv("GEMINI_API_KEY"),
@@ -104,4 +108,3 @@ func LoadGeminiConfig() GeminiConfig {
 		EmbeddingModel: os.Getenv("GEMINI_EMBEDDING_MODEL"),
 	}
 }
-

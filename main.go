@@ -17,6 +17,7 @@ import (
 	"github.com/vpa/quanlynhahang-backend/internal/usecase"
 	"github.com/vpa/quanlynhahang-backend/internal/vector/pgvector"
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
+	"github.com/vpa/quanlynhahang-backend/migrations"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/routes"
 )
@@ -38,21 +39,23 @@ func main() {
 	// 💾 Kết nối DB
 	config.ConnectDB()
 
-	config.DB.DisableForeignKeyConstraintWhenMigrating = true
 	// Bước 1: Migrate bảng cha riêng, kiểm tra lỗi
-	err := config.DB.AutoMigrate(
+	modelsToMigrate := []interface{}{
 		&models.NguoiDung{},
 		&models.LoaiMonAn{},
 		&models.MonAn{},
 		&models.NhomOption{},
 		&models.OptionItem{},
-	)
-	if err != nil {
-		log.Fatal("❌1 Migrate core failed:", err)
+	}
+
+	for _, model := range modelsToMigrate {
+		if err := config.DB.AutoMigrate(model); err != nil {
+			log.Fatalf("Migrate failed for %T: %v", model, err)
+		}
 	}
 
 	// Bước 2: Migrate bảng con sau khi chắc chắn bảng cha đã tồn tại
-	err = config.DB.AutoMigrate(
+	config.DB.AutoMigrate(
 		&models.BanAn{},
 		&models.GiamGia{},
 		&models.DiaChi{},
@@ -78,9 +81,9 @@ func main() {
 		&models.ThreadMessage{},
 		&models.MenuEmbedding{},
 	)
-	if err != nil {
-		log.Fatal("❌2 Migrate relations failed:", err)
-	}
+
+	migrations.CreateConstraints(config.DB)
+	
 	log.Println("✅ Database migrated")
 
 	geminiCfg := config.LoadGeminiConfig()

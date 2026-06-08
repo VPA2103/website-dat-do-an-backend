@@ -7,7 +7,7 @@ type ThanhToan struct {
 
 	MaHD uint `gorm:"not null" json:"ma_hd"`
 
-	HoaDon HoaDon `gorm:"foreignKey:MaHD;references:MaHD" json:"hoa_don"`
+	HoaDon HoaDon `gorm:"foreignKey:MaHD;" json:"hoa_don"`
 
 	SoTien float64 `gorm:"not null" json:"so_tien"`
 
