@@ -7,7 +7,7 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/dto"
 )
 
 func UploadHandler(c *gin.Context) {
@@ -40,7 +40,7 @@ func UploadHandler(c *gin.Context) {
 }
 
 func GetImage(c *gin.Context) {
-	var images []models.HinhAnh
+	var images []dto.HinhAnh
 	if err := config.DB.Find(&images).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get product images"})
 		return

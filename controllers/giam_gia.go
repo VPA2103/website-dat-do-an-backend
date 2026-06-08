@@ -7,7 +7,7 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/dto"
 )
 
 type GiamGiaInput struct {
@@ -62,7 +62,7 @@ func CreateGiamGia(c *gin.Context) {
 		return
 	}
 
-	giamGia := models.GiamGia{
+	giamGia := dto.GiamGia{
 		Code:           input.Code,
 		TenChuongTrinh: input.TenChuongTrinh,
 		LoaiGiamGia:    input.LoaiGiamGia,
@@ -110,7 +110,7 @@ func CreateGiamGia(c *gin.Context) {
 				continue
 			}
 
-			image := models.HinhAnh{
+			image := dto.HinhAnh{
 				Url:       uploadResult.SecureURL,
 				OwnerID:   giamGia.ID,
 				OwnerType: "giam_gia",
@@ -130,7 +130,7 @@ func CreateGiamGia(c *gin.Context) {
 }
 
 func GetAllGiamGia(c *gin.Context) {
-	var giamGia []models.GiamGia
+	var giamGia []dto.GiamGia
 
 	if err := config.DB.Find(&giamGia).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -147,7 +147,7 @@ func GetAllGiamGia(c *gin.Context) {
 func GetGiamGiaById(c *gin.Context) {
 	id := c.Param("id")
 
-	var giamGia models.GiamGia
+	var giamGia dto.GiamGia
 
 	if err := config.DB.First(&giamGia, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -164,7 +164,7 @@ func GetGiamGiaById(c *gin.Context) {
 func UpdateGiamGia(c *gin.Context) {
 	id := c.Param("id")
 
-	var giamGia models.GiamGia
+	var giamGia dto.GiamGia
 
 	if err := config.DB.Preload("AnhGiamGia").
 		First(&giamGia, id).Error; err != nil {
@@ -233,7 +233,7 @@ func UpdateGiamGia(c *gin.Context) {
 				continue
 			}
 
-			image := models.HinhAnh{
+			image := dto.HinhAnh{
 				Url:       uploadResult.SecureURL,
 				OwnerID:   giamGia.ID,
 				OwnerType: "giam_gia",
@@ -255,7 +255,7 @@ func UpdateGiamGia(c *gin.Context) {
 func DeleteGiamGia(c *gin.Context) {
 	id := c.Param("id")
 
-	var giamGia models.GiamGia
+	var giamGia dto.GiamGia
 
 	if err := config.DB.First(&giamGia, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{

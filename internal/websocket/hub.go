@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/vpa/quanlynhahang-backend/internal/dto"
+	"github.com/vpa/quanlynhahang-backend/dto"
 )
 
 type Hub struct {

@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/gorilla/websocket"
-	"github.com/vpa/quanlynhahang-backend/internal/dto"
+	"github.com/vpa/quanlynhahang-backend/dto"
 	"github.com/vpa/quanlynhahang-backend/internal/usecase"
 	"github.com/vpa/quanlynhahang-backend/utils"
 

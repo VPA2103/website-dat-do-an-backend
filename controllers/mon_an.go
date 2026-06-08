@@ -13,70 +13,14 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/models"
-	//"github.com/vpa/quanlynhahang-backend/internal/llm"
+	"github.com/vpa/quanlynhahang-backend/dto"
+	
 )
 
-//======================= CREATE =======================
-// func CreateMonAn(c *gin.Context) {
-// 	var monan models.MonAn
 
-// 	// Bind dữ liệu form
-// 	if err := c.ShouldBind(&monan); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ: " + err.Error()})
-// 		return
-// 	}
-
-// 	// Validate
-// 	if monan.TenMonAn == "" {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Tên món ăn không được để trống"})
-// 		return
-// 	}
-
-// 	if monan.MoTa == "" {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Mô tả món ăn không được để trống"})
-// 		return
-// 	}
-
-// 	// Tạo trước để lấy ID
-// 	if err := config.DB.Create(&monan).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo món ăn: " + err.Error()})
-// 		return
-// 	}
-
-// 	// Upload ảnh món ăn nếu có
-// 	file, err := c.FormFile("image")
-// 	if err == nil && file != nil {
-// 		src, err := file.Open()
-// 		if err == nil {
-// 			defer src.Close()
-
-// 			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-// 				Folder: "monan",
-// 			})
-
-// 			if err == nil {
-// 				img := models.HinhAnh{
-// 					OwnerID:   monan.MaMonAn,
-// 					OwnerType: "mon_an",
-// 					Url:       uploadResult.SecureURL,
-// 				}
-// 				config.DB.Create(&img)
-// 			}
-// 		}
-// 	}
-
-// 	// Lấy món ăn kèm ảnh trả về client
-// 	config.DB.Preload("AnhMonAn").First(&monan, monan.MaMonAn)
-
-// 	c.JSON(http.StatusCreated, gin.H{
-// 		"message": "Tạo món ăn thành công",
-// 		"data":    monan,
-// 	})
-// }
 
 func (h *ChatHandler) CreateMonAn(c *gin.Context) {
-	var monan models.MonAn
+	var monan dto.MonAn
 
 	// 1. bind
 	if err := c.ShouldBind(&monan); err != nil {
@@ -171,7 +115,7 @@ func (h *ChatHandler) CreateMonAn(c *gin.Context) {
 			})
 
 			if err == nil {
-				img := models.HinhAnh{
+				img := dto.HinhAnh{
 					OwnerID:   monan.MaMonAn,
 					OwnerType: "mon_an",
 					Url:       uploadResult.SecureURL,
@@ -194,7 +138,7 @@ func (h *ChatHandler) CreateMonAn(c *gin.Context) {
 
 // ======================= GET ALL =======================
 func GetAllMonAn(c *gin.Context) {
-	var list []models.MonAn
+	var list []dto.MonAn
 	config.DB.Preload("AnhMonAn").Find(&list)
 
 	c.JSON(http.StatusOK, gin.H{"data": list})
@@ -202,7 +146,7 @@ func GetAllMonAn(c *gin.Context) {
 
 func GetMonAnByID(c *gin.Context) {
 	id := c.Param("id")
-	var monan models.MonAn
+	var monan dto.MonAn
 
 	if err := config.DB.
 		Preload("AnhMonAn").
@@ -218,7 +162,7 @@ func GetMonAnByID(c *gin.Context) {
 // ======================= UPDATE =======================
 func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 	id := c.Param("id")
-	var monan models.MonAn
+	var monan dto.MonAn
 
 	// 1️⃣ Find
 	if err := config.DB.First(&monan, id).Error; err != nil {
@@ -227,7 +171,7 @@ func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 	}
 
 	// 2️⃣ Bind
-	var input models.MonAn
+	var input dto.MonAn
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
@@ -322,9 +266,9 @@ func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 			"owner_id = ? AND owner_type = ?",
 			monan.MaMonAn,
 			"mon_an",
-		).Delete(&models.HinhAnh{})
+		).Delete(&dto.HinhAnh{})
 
-		config.DB.Create(&models.HinhAnh{
+		config.DB.Create(&dto.HinhAnh{
 			Url:       upload.SecureURL,
 			OwnerID:   monan.MaMonAn,
 			OwnerType: "mon_an",
@@ -345,7 +289,7 @@ func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 // ======================= DELETE =======================
 func DeleteMonAn(c *gin.Context) {
 	id := c.Param("id")
-	var monan models.MonAn
+	var monan dto.MonAn
 
 	// 1️⃣ Find món ăn
 	if err := config.DB.First(&monan, id).Error; err != nil {
@@ -372,7 +316,7 @@ func DeleteMonAn(c *gin.Context) {
 		"owner_id = ? AND owner_type = ?",
 		monan.MaMonAn,
 		"mon_an",
-	).Delete(&models.HinhAnh{})
+	).Delete(&dto.HinhAnh{})
 
 	// =========================
 	// 🗑️ DELETE DOMAIN
@@ -388,7 +332,7 @@ func GetMonAnDetail(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var monan models.MonAn
+	var monan dto.MonAn
 
 	err := config.DB.
 		Preload("AnhMonAn").
@@ -430,7 +374,7 @@ func vectorToString(vec []float32) string {
 func SearchMonAn(c *gin.Context) {
 	keyword := c.Query("q")
 
-	var list []models.MonAn
+	var list []dto.MonAn
 
 	query := config.DB.
 		Preload("AnhMonAn").

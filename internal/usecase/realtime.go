@@ -1,6 +1,6 @@
 package usecase
 
-import "github.com/vpa/quanlynhahang-backend/internal/dto"
+import "github.com/vpa/quanlynhahang-backend/dto"
 
 type RealtimeSender interface {
 	Broadcast( msg dto.WSMessage)

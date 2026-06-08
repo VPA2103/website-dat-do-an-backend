@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"github.com/vpa/quanlynhahang-backend/internal/dto"
+	"github.com/vpa/quanlynhahang-backend/dto"
 	"github.com/vpa/quanlynhahang-backend/internal/repository"
 )
 

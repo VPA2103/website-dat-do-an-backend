@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/dto"
 )
 
 type YeuThichInput struct {
@@ -27,7 +27,7 @@ func AddMonAnYeuThich(c *gin.Context) {
 	maNguoiDung := maNguoiDungAny.(uint)
 
 	// 🔥 CHECK TRÙNG TRƯỚC KHI INSERT
-	var existing models.YeuThich
+	var existing dto.YeuThich
 	err := config.DB.Where(
 		"ma_nguoi_dung = ? AND ma_mon_an = ?",
 		maNguoiDung,
@@ -40,7 +40,7 @@ func AddMonAnYeuThich(c *gin.Context) {
 		return
 	}
 
-	yt := models.YeuThich{
+	yt := dto.YeuThich{
 		MaNguoiDung: maNguoiDung,
 		MaMonAn:     input.MaMonAn,
 	}
@@ -54,7 +54,7 @@ func AddMonAnYeuThich(c *gin.Context) {
 }
 
 func GetAllYeuThich(c *gin.Context) {
-	var list []models.YeuThich
+	var list []dto.YeuThich
 
 	if err := config.DB.
 		Preload("NguoiDung").
@@ -70,7 +70,7 @@ func GetAllYeuThich(c *gin.Context) {
 func GetYeuThichByUser(c *gin.Context) {
 	userID := c.Param("id")
 
-	var list []models.YeuThich
+	var list []dto.YeuThich
 
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", userID).
@@ -102,7 +102,7 @@ func DeleteYeuThich(c *gin.Context) {
 	// chỉ xoá món của chính user đó
 	if err := config.DB.
 		Where("ma_nguoi_dung = ? AND ma_mon_an = ?", maNguoiDung, monID).
-		Delete(&models.YeuThich{}).Error; err != nil {
+		Delete(&dto.YeuThich{}).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}

@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/dto"
 )
 
 // API tạo nhóm option
@@ -18,7 +18,7 @@ type UpdateNhomOptionRequest struct {
 }
 
 func CreateNhomOption(c *gin.Context) {
-	var input models.NhomOption
+	var input dto.NhomOption
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{
@@ -43,7 +43,7 @@ func CreateNhomOption(c *gin.Context) {
 	}
 
 	// kiểm tra món ăn tồn tại
-	var monan models.MonAn
+	var monan dto.MonAn
 	if err := config.DB.First(&monan, input.MaMonAn).Error; err != nil {
 		c.JSON(404, gin.H{
 			"error": "Món ăn không tồn tại",
@@ -68,7 +68,7 @@ func CreateNhomOption(c *gin.Context) {
 
 func GetAllNhomOption(c *gin.Context) {
 
-	var nhoms []models.NhomOption
+	var nhoms []dto.NhomOption
 
 	err := config.DB.
 		Preload("OptionItems").
@@ -90,7 +90,7 @@ func GetNhomOptionByID(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var nhom models.NhomOption
+	var nhom dto.NhomOption
 
 	err := config.DB.
 		Preload("OptionItems").
@@ -111,7 +111,7 @@ func GetNhomOptionByID(c *gin.Context) {
 func UpdateNhomOption(c *gin.Context) {
 	id := c.Param("id")
 
-	var nhom models.NhomOption
+	var nhom dto.NhomOption
 	if err := config.DB.First(&nhom, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy nhóm option"})
 		return
@@ -143,7 +143,7 @@ func UpdateNhomOption(c *gin.Context) {
 func DeleteNhomOption(c *gin.Context) {
 	id := c.Param("id")
 
-	var nhom models.NhomOption
+	var nhom dto.NhomOption
 
 	if err := config.DB.First(&nhom, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy nhóm option"})
@@ -152,7 +152,7 @@ func DeleteNhomOption(c *gin.Context) {
 
 	// 1. xóa option items trước
 	if err := config.DB.Where("ma_nhom_option = ?", id).
-		Delete(&models.OptionItem{}).Error; err != nil {
+		Delete(&dto.OptionItem{}).Error; err != nil {
 		c.JSON(500, gin.H{"error": "Không thể xóa option items"})
 		return
 	}
@@ -170,7 +170,7 @@ func DeleteNhomOption(c *gin.Context) {
 // API tạo option item
 
 func CreateOptionItem(c *gin.Context) {
-	var input models.OptionItem
+	var input dto.OptionItem
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{
@@ -194,7 +194,7 @@ func CreateOptionItem(c *gin.Context) {
 	}
 
 	// kiểm tra nhóm option tồn tại
-	var nhom models.NhomOption
+	var nhom dto.NhomOption
 	if err := config.DB.First(&nhom, input.MaNhomOption).Error; err != nil {
 		c.JSON(404, gin.H{
 			"error": "Nhóm option không tồn tại",
@@ -219,7 +219,7 @@ func CreateOptionItem(c *gin.Context) {
 
 func GetAllOptionItem(c *gin.Context) {
 
-	var items []models.OptionItem
+	var items []dto.OptionItem
 
 	if err := config.DB.Find(&items).Error; err != nil {
 		c.JSON(500, gin.H{
@@ -237,7 +237,7 @@ func GetOptionItemByID(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var item models.OptionItem
+	var item dto.OptionItem
 
 	if err := config.DB.First(&item, id).Error; err != nil {
 		c.JSON(404, gin.H{
@@ -255,7 +255,7 @@ func UpdateOptionItem(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var item models.OptionItem
+	var item dto.OptionItem
 
 	if err := config.DB.First(&item, id).Error; err != nil {
 		c.JSON(404, gin.H{
@@ -264,7 +264,7 @@ func UpdateOptionItem(c *gin.Context) {
 		return
 	}
 
-	var input models.OptionItem
+	var input dto.OptionItem
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{
@@ -293,7 +293,7 @@ func DeleteOptionItem(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var item models.OptionItem
+	var item dto.OptionItem
 
 	if err := config.DB.First(&item, id).Error; err != nil {
 		c.JSON(404, gin.H{

@@ -6,11 +6,11 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/dto"
 )
 
 func CreateLoaiMonAn(c *gin.Context) {
-	var loaimonan models.LoaiMonAn
+	var loaimonan dto.LoaiMonAn
 
 	// Lấy dữ liệu form-data
 	if err := c.ShouldBind(&loaimonan); err != nil {
@@ -70,7 +70,7 @@ func CreateLoaiMonAn(c *gin.Context) {
 }
 
 func GetAllLoaiMonAn(c *gin.Context) {
-	var list []models.LoaiMonAn
+	var list []dto.LoaiMonAn
 
 	if err := config.DB.Find(&list).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -86,7 +86,7 @@ func GetAllLoaiMonAn(c *gin.Context) {
 
 func GetLoaiMonAnByID(c *gin.Context) {
 	id := c.Param("id")
-	var loaimonan models.LoaiMonAn
+	var loaimonan dto.LoaiMonAn
 
 	if err := config.DB.First(&loaimonan, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -102,7 +102,7 @@ func GetLoaiMonAnByID(c *gin.Context) {
 
 func UpdateLoaiMonAn(c *gin.Context) {
 	id := c.Param("id")
-	var loaimonan models.LoaiMonAn
+	var loaimonan dto.LoaiMonAn
 
 	// Kiểm tra tồn tại
 	if err := config.DB.First(&loaimonan, id).Error; err != nil {
@@ -161,7 +161,7 @@ func UpdateLoaiMonAn(c *gin.Context) {
 
 func DeleteLoaiMonAn(c *gin.Context) {
 	id := c.Param("id")
-	var loaimonan models.LoaiMonAn
+	var loaimonan dto.LoaiMonAn
 
 	// Kiểm tra tồn tại
 	if err := config.DB.First(&loaimonan, id).Error; err != nil {

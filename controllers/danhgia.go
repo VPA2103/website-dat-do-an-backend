@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
-	"github.com/vpa/quanlynhahang-backend/models"
+	"github.com/vpa/quanlynhahang-backend/dto"
 )
 
 type DanhGiaController struct {
@@ -50,7 +50,7 @@ func (ctrl *DanhGiaController) CreateDanhGia(c *gin.Context) {
 		return
 	}
 
-	dg := models.DanhGia{
+	dg := dto.DanhGia{
 		MaHoaDon:    input.MaHoaDon,
 		MaNguoiDung: input.MaNguoiDung,
 		MaMonAn:     input.MaMonAn,
@@ -99,7 +99,7 @@ func GetRatingByMon(c *gin.Context) {
 func GetDanhGiaByMonAn(c *gin.Context) {
 	maMon := c.Param("id")
 
-	var data []models.DanhGia
+	var data []dto.DanhGia
 
 	config.DB.
 		Preload("NguoiDung").
@@ -137,7 +137,7 @@ func GetDanhGiaByMonAn(c *gin.Context) {
 func (ctrl *DanhGiaController) UpdateDanhGia(c *gin.Context) {
 	id := c.Param("id")
 
-	var dg models.DanhGia
+	var dg dto.DanhGia
 	if err := config.DB.First(&dg, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy"})
 		return
@@ -163,7 +163,7 @@ func (ctrl *DanhGiaController) UpdateDanhGia(c *gin.Context) {
 func (ctrl *DanhGiaController) DeleteDanhGia(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := config.DB.Delete(&models.DanhGia{}, id).Error; err != nil {
+	if err := config.DB.Delete(&dto.DanhGia{}, id).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
@@ -178,7 +178,7 @@ func CheckDanhGia(c *gin.Context) {
 
 	var count int64
 
-	config.DB.Model(&models.DanhGia{}).
+	config.DB.Model(&dto.DanhGia{}).
 		Where("ma_hoa_don = ? AND ma_nguoi_dung = ? AND ma_mon_an = ?",
 			maHD, maUser, maMon).
 		Count(&count)
@@ -195,7 +195,7 @@ func (ctrl *DanhGiaController) GetSoLuongDanhGiaHomNay(c *gin.Context) {
 	var soDanhGia int64
 
 	err := config.DB.
-		Model(&models.DanhGia{}).
+		Model(&dto.DanhGia{}).
 		Where(`
 			CAST(ngay_danh_gia AS DATE) = ?
 		`, ngay).
