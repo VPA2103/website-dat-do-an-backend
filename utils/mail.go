@@ -50,7 +50,7 @@ func SendMailSauKhiDatDoAn(email string, info DatDoAnMailInfo) error {
 				<!DOCTYPE html>
 				<html lang="vi">
 				<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-				<body style="margin:0;padding:20px;background:#f4ede0;font-family:Georgia,'Times New Roman',serif;">
+				 <body style="margin:0;padding:20px;background:#f4ede0;font-family:'Be Vietnam Pro',Arial,sans-serif;">
 				<div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;">
 
 					<!-- Header -->
