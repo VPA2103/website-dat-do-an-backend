@@ -12,6 +12,7 @@ import (
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/dto"
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
+	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/utils"
 	"gorm.io/gorm"
 )
@@ -127,7 +128,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 	var tongTienServer float64
 
 	// tạo hóa đơn
-	hoaDon := dto.HoaDon{
+	hoaDon := models.HoaDon{
 		MaNguoiDung:        maNguoiDung,
 		HoTen:              input.HoTen,
 		SDT:                input.SDT,
@@ -157,7 +158,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 			continue
 		}
 
-		var monAn dto.MonAn
+		var monAn models.MonAn
 
 		if err := tx.
 			First(&monAn, "ma_mon_an = ?", item.MaMonAn).Error; err != nil {
@@ -177,7 +178,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 
 		for _, op := range item.Options {
 
-			var optionItem dto.OptionItem
+			var optionItem models.OptionItem
 
 			if err := tx.
 				First(&optionItem, "ma_option_item = ?", op.MaOptionItem).
@@ -202,7 +203,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 
 		tongTienServer += thanhTien
 
-		chiTiet := dto.ChiTietHoaDon{
+		chiTiet := models.ChiTietHoaDon{
 			MaHoaDon:  hoaDon.MaHoaDon,
 			MaMonAn:   item.MaMonAn,
 			SoLuong:   item.SoLuong,
@@ -222,7 +223,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 
 		for _, op := range item.Options {
 
-			var optionItem dto.OptionItem
+			var optionItem models.OptionItem
 
 			if err := tx.First(&optionItem, "ma_option_item = ?", op.MaOptionItem).Error; err != nil {
 				tx.Rollback()
@@ -232,7 +233,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 				return
 			}
 
-			ctOption := dto.ChiTietHoaDonOption{
+			ctOption := models.ChiTietHoaDonOption{
 				MaChiTiet:    chiTiet.MaChiTiet,
 				MaOptionItem: optionItem.MaOptionItem,
 				TenOption:    optionItem.TenOption,
@@ -254,7 +255,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 	// =========================
 
 	var tienGiam float64
-	var giamGia dto.GiamGia
+	var giamGia models.GiamGia
 
 	if input.CodeGiamGia != "" {
 
@@ -403,7 +404,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 	)
 
 	// lấy kết quả cuối
-	var result dto.HoaDon
+	var result models.HoaDon
 
 	if err := config.DB.
 		Preload("GiamGia").
@@ -420,7 +421,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 	// ✉️ gửi mail xác nhận — chạy nền, không block response
 	go func() {
 		// lấy email từ DB theo maNguoiDung
-		var nguoiDung dto.NguoiDung
+		var nguoiDung models.NguoiDung
 		if err := config.DB.First(&nguoiDung, maNguoiDung).Error; err != nil {
 			log.Printf("SendMail: không lấy được email user %d: %v", maNguoiDung, err)
 			return
@@ -465,7 +466,7 @@ func (ctrl *HoaDonController) XoaHoaDon(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var hoaDon dto.HoaDon
+	var hoaDon models.HoaDon
 
 	// kiểm tra hóa đơn tồn tại
 	if err := config.DB.
@@ -478,11 +479,11 @@ func (ctrl *HoaDonController) XoaHoaDon(c *gin.Context) {
 	}
 
 	tx := config.DB.Begin()
-	tx.Where("ma_hoa_don = ?", id).Delete(&dto.ChiTietHoaDonOption{})
+	tx.Where("ma_hoa_don = ?", id).Delete(&models.ChiTietHoaDonOption{})
 	// xóa chi tiết hóa đơn trước
 	if err := tx.
 		Where("ma_hoa_don = ?", id).
-		Delete(&dto.ChiTietHoaDon{}).Error; err != nil {
+		Delete(&models.ChiTietHoaDon{}).Error; err != nil {
 
 		tx.Rollback()
 
@@ -513,7 +514,7 @@ func (ctrl *HoaDonController) XoaHoaDon(c *gin.Context) {
 
 func (ctrl *HoaDonController) GetHoaDons(c *gin.Context) {
 
-	var hoaDons []dto.HoaDon
+	var hoaDons []models.HoaDon
 
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
@@ -550,7 +551,7 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 
 	userID := userIDAny.(uint)
 
-	var hoaDon dto.HoaDon
+	var hoaDon models.HoaDon
 
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
@@ -609,7 +610,7 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 	}
 
 	// tìm hóa đơn
-	var hoaDon dto.HoaDon
+	var hoaDon models.HoaDon
 
 	if err := config.DB.First(&hoaDon, "ma_hoa_don = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -657,7 +658,7 @@ func (ctrl *HoaDonController) HuyHoaDon(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var hoaDon dto.HoaDon
+	var hoaDon models.HoaDon
 
 	if err := config.DB.
 		First(&hoaDon, "ma_hoa_don = ?", id).Error; err != nil {
@@ -708,7 +709,7 @@ func (ctrl *HoaDonController) GetHoaDonByTrangThai(c *gin.Context) {
 
 	trangThai := c.Query("trang_thai")
 
-	var hoaDons []dto.HoaDon
+	var hoaDons []models.HoaDon
 
 	if err := config.DB.
 		Where("trang_thai = ?", trangThai).
@@ -746,7 +747,7 @@ func (ctrl *HoaDonController) UpdateHoaDon(c *gin.Context) {
 		return
 	}
 
-	var hoaDon dto.HoaDon
+	var hoaDon models.HoaDon
 
 	if err := config.DB.
 		First(&hoaDon, "ma_hoa_don = ?", id).Error; err != nil {
@@ -757,7 +758,7 @@ func (ctrl *HoaDonController) UpdateHoaDon(c *gin.Context) {
 		return
 	}
 
-	if err := config.DB.Model(&hoaDon).Updates(dto.HoaDon{
+	if err := config.DB.Model(&hoaDon).Updates(models.HoaDon{
 		HoTen:  input.HoTen,
 		SDT:    input.SDT,
 		DiaChi: input.DiaChi,
@@ -788,7 +789,7 @@ func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 
 	maNguoiDung := maNguoiDungAny.(uint)
 
-	var hoaDons []dto.HoaDon
+	var hoaDons []models.HoaDon
 
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", maNguoiDung).
@@ -832,7 +833,7 @@ func (ctrl *HoaDonController) HuyHoaDonNguoiDung(c *gin.Context) {
 	}
 	userID := userIDAny.(uint)
 
-	var hoaDon dto.HoaDon
+	var hoaDon models.HoaDon
 
 	// 🔒 chỉ chủ hóa đơn mới hủy được
 	if err := config.DB.
@@ -910,7 +911,7 @@ func (ctrl *HoaDonController) GetHoaDonChoThanhToan(c *gin.Context) {
 
 	userID := userIDAny.(uint)
 
-	var hoaDons []dto.HoaDon
+	var hoaDons []models.HoaDon
 
 	err := config.DB.
 		Where("ma_nguoi_dung = ? AND trang_thai_thanh_toan = ?", userID, "chua_thanh_toan").
@@ -941,7 +942,7 @@ func (ctrl *HoaDonController) GetDoanhThuTheoNgay(c *gin.Context) {
 	var result DoanhThuDTO
 
 	err := config.DB.
-		Model(&dto.HoaDon{}).
+		Model(&models.HoaDon{}).
 		Select(`
 			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
 			COUNT(ma_hoa_don) AS so_don
@@ -975,7 +976,7 @@ func (ctrl *HoaDonController) GetDoanhThuTheoThang(c *gin.Context) {
 	var result DoanhThuDTO
 
 	err := config.DB.
-		Model(&dto.HoaDon{}).
+		Model(&models.HoaDon{}).
 		Select(`
 			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
 			COUNT(ma_hoa_don) AS so_don
@@ -1005,7 +1006,7 @@ func (ctrl *HoaDonController) GetDoanhThuTheoNam(c *gin.Context) {
 	var result DoanhThuDTO
 
 	err := config.DB.
-		Model(&dto.HoaDon{}).
+		Model(&models.HoaDon{}).
 		Select(`
 			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
 			COUNT(ma_hoa_don) AS so_don
@@ -1061,11 +1062,11 @@ func (ctrl *HoaDonController) GetTiLeHoanThanhHomNay(c *gin.Context) {
 	var tongDon int64
 	var donHoanThanh int64
 
-	config.DB.Model(&dto.HoaDon{}).
+	config.DB.Model(&models.HoaDon{}).
 		Where("CAST(ngay AS DATE) = ?", today).
 		Count(&tongDon)
 
-	config.DB.Model(&dto.HoaDon{}).
+	config.DB.Model(&models.HoaDon{}).
 		Where(`
 			CAST(ngay AS DATE) = ?
 			AND trang_thai = 'da_giao'

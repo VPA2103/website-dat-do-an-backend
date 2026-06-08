@@ -16,7 +16,7 @@ type DiaChi struct {
 	MacDinh bool `gorm:"default:false" json:"mac_dinh"`
 
 	MaNguoiDung uint      `json:"ma_nguoi_dung"`
-	NguoiDung *NguoiDung `gorm:"foreignKey:MaNguoiDung" json:"-"`
+	// NguoiDung *NguoiDung `gorm:"references:MaNguoiDung" json:"-"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

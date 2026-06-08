@@ -7,14 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/internal/websocket"
-	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 )
 
 type DanhGiaController struct {
 	Hub *websocket.Hub
 }
 
-type ThongKeDanhGiaNgayDTO struct {
+type ThongKeDanhGiaNgaymodels struct {
 	Ngay        string `json:"ngay"`
 	SoDanhGia   int64  `json:"so_danh_gia"`
 }
@@ -50,7 +50,7 @@ func (ctrl *DanhGiaController) CreateDanhGia(c *gin.Context) {
 		return
 	}
 
-	dg := dto.DanhGia{
+	dg := models.DanhGia{
 		MaHoaDon:    input.MaHoaDon,
 		MaNguoiDung: input.MaNguoiDung,
 		MaMonAn:     input.MaMonAn,
@@ -99,7 +99,7 @@ func GetRatingByMon(c *gin.Context) {
 func GetDanhGiaByMonAn(c *gin.Context) {
 	maMon := c.Param("id")
 
-	var data []dto.DanhGia
+	var data []models.DanhGia
 
 	config.DB.
 		Preload("NguoiDung").
@@ -137,7 +137,7 @@ func GetDanhGiaByMonAn(c *gin.Context) {
 func (ctrl *DanhGiaController) UpdateDanhGia(c *gin.Context) {
 	id := c.Param("id")
 
-	var dg dto.DanhGia
+	var dg models.DanhGia
 	if err := config.DB.First(&dg, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy"})
 		return
@@ -163,7 +163,7 @@ func (ctrl *DanhGiaController) UpdateDanhGia(c *gin.Context) {
 func (ctrl *DanhGiaController) DeleteDanhGia(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := config.DB.Delete(&dto.DanhGia{}, id).Error; err != nil {
+	if err := config.DB.Delete(&models.DanhGia{}, id).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
@@ -178,7 +178,7 @@ func CheckDanhGia(c *gin.Context) {
 
 	var count int64
 
-	config.DB.Model(&dto.DanhGia{}).
+	config.DB.Model(&models.DanhGia{}).
 		Where("ma_hoa_don = ? AND ma_nguoi_dung = ? AND ma_mon_an = ?",
 			maHD, maUser, maMon).
 		Count(&count)
@@ -195,7 +195,7 @@ func (ctrl *DanhGiaController) GetSoLuongDanhGiaHomNay(c *gin.Context) {
 	var soDanhGia int64
 
 	err := config.DB.
-		Model(&dto.DanhGia{}).
+		Model(&models.DanhGia{}).
 		Where(`
 			CAST(ngay_danh_gia AS DATE) = ?
 		`, ngay).
@@ -207,7 +207,7 @@ func (ctrl *DanhGiaController) GetSoLuongDanhGiaHomNay(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"data": ThongKeDanhGiaNgayDTO{
+		"data": ThongKeDanhGiaNgaymodels{
 			Ngay:      ngay,
 			SoDanhGia: soDanhGia,
 		},

@@ -9,10 +9,10 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 )
 
-type UpdateNhaHangDTO struct {
+type UpdateNhaHangmodels struct {
 	TenNhaHang string `form:"ten_nha_hang"`
 	TrangThai  int    `form:"trang_thai"`
 	DiaChi   string    `form:"dia_chi"`
@@ -22,7 +22,7 @@ type UpdateNhaHangDTO struct {
 }
 
 func (h *ChatHandler) CreateNhaHang(c *gin.Context) {
-	var nhahang dto.NhaHang
+	var nhahang models.NhaHang
 
 	// 1️⃣ Bind
 	if err := c.ShouldBind(&nhahang); err != nil {
@@ -120,7 +120,7 @@ func (h *ChatHandler) CreateNhaHang(c *gin.Context) {
 			})
 
 			if err == nil {
-				config.DB.Create(&dto.HinhAnh{
+				config.DB.Create(&models.HinhAnh{
 					OwnerID:   nhahang.MaNhaHang,
 					OwnerType: "nha_hang",
 					Url:       uploadResult.SecureURL,
@@ -140,7 +140,7 @@ func (h *ChatHandler) CreateNhaHang(c *gin.Context) {
 	})
 }
 func GetAllNhaHang(c *gin.Context) {
-	var list []dto.NhaHang
+	var list []models.NhaHang
 
 	// ✅ Preload ảnh nhà hàng (polymorphic)
 	if err := config.DB.
@@ -161,7 +161,7 @@ func GetAllNhaHang(c *gin.Context) {
 
 func GetNhaHangByID(c *gin.Context) {
 	id := c.Param("id")
-	var nhahang dto.NhaHang
+	var nhahang models.NhaHang
 
 	if err := config.DB.First(&nhahang, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -184,7 +184,7 @@ func GetNhaHangByUser(c *gin.Context) {
 		return
 	}
 
-	var nhaHangs []dto.NhaHang
+	var nhaHangs []models.NhaHang
 
 	err := config.DB.
 		Where("ma_nguoi_dung = ?", userID).
@@ -206,7 +206,7 @@ func GetNhaHangByUser(c *gin.Context) {
 
 func UpdateNhaHang(c *gin.Context) {
 	id := c.Param("id")
-	var nhahang dto.NhaHang
+	var nhahang models.NhaHang
 
 	if err := config.DB.First(&nhahang, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -241,7 +241,7 @@ func UpdateNhaHang(c *gin.Context) {
 		// ❌ XÓA ẢNH CŨ
 		config.DB.
 			Where("owner_id = ? AND owner_type = ?", nhahang.MaNhaHang, "nha_hang").
-			Delete(&dto.HinhAnh{})
+			Delete(&models.HinhAnh{})
 
 		src, _ := file.Open()
 		defer src.Close()
@@ -254,7 +254,7 @@ func UpdateNhaHang(c *gin.Context) {
 			return
 		}
 
-		hinhAnh := dto.HinhAnh{
+		hinhAnh := models.HinhAnh{
 			Url:       uploadResult.SecureURL,
 			OwnerID:   nhahang.MaNhaHang,
 			OwnerType: "nha_hang",
@@ -274,7 +274,7 @@ func UpdateNhaHang(c *gin.Context) {
 
 func DeleteNhaHang(c *gin.Context) {
 	id := c.Param("id")
-	var nhahang dto.NhaHang
+	var nhahang models.NhaHang
 
 	if err := config.DB.First(&nhahang, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{

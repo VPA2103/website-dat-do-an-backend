@@ -13,14 +13,12 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 	
 )
 
-
-
 func (h *ChatHandler) CreateMonAn(c *gin.Context) {
-	var monan dto.MonAn
+	var monan models.MonAn
 
 	// 1. bind
 	if err := c.ShouldBind(&monan); err != nil {
@@ -115,7 +113,7 @@ func (h *ChatHandler) CreateMonAn(c *gin.Context) {
 			})
 
 			if err == nil {
-				img := dto.HinhAnh{
+				img := models.HinhAnh{
 					OwnerID:   monan.MaMonAn,
 					OwnerType: "mon_an",
 					Url:       uploadResult.SecureURL,
@@ -138,7 +136,7 @@ func (h *ChatHandler) CreateMonAn(c *gin.Context) {
 
 // ======================= GET ALL =======================
 func GetAllMonAn(c *gin.Context) {
-	var list []dto.MonAn
+	var list []models.MonAn
 	config.DB.Preload("AnhMonAn").Find(&list)
 
 	c.JSON(http.StatusOK, gin.H{"data": list})
@@ -146,7 +144,7 @@ func GetAllMonAn(c *gin.Context) {
 
 func GetMonAnByID(c *gin.Context) {
 	id := c.Param("id")
-	var monan dto.MonAn
+	var monan models.MonAn
 
 	if err := config.DB.
 		Preload("AnhMonAn").
@@ -162,7 +160,7 @@ func GetMonAnByID(c *gin.Context) {
 // ======================= UPDATE =======================
 func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 	id := c.Param("id")
-	var monan dto.MonAn
+	var monan models.MonAn
 
 	// 1️⃣ Find
 	if err := config.DB.First(&monan, id).Error; err != nil {
@@ -171,7 +169,7 @@ func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 	}
 
 	// 2️⃣ Bind
-	var input dto.MonAn
+	var input models.MonAn
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
@@ -266,9 +264,9 @@ func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 			"owner_id = ? AND owner_type = ?",
 			monan.MaMonAn,
 			"mon_an",
-		).Delete(&dto.HinhAnh{})
+		).Delete(&models.HinhAnh{})
 
-		config.DB.Create(&dto.HinhAnh{
+		config.DB.Create(&models.HinhAnh{
 			Url:       upload.SecureURL,
 			OwnerID:   monan.MaMonAn,
 			OwnerType: "mon_an",
@@ -289,7 +287,7 @@ func (h *ChatHandler) UpdateMonAn(c *gin.Context) {
 // ======================= DELETE =======================
 func DeleteMonAn(c *gin.Context) {
 	id := c.Param("id")
-	var monan dto.MonAn
+	var monan models.MonAn
 
 	// 1️⃣ Find món ăn
 	if err := config.DB.First(&monan, id).Error; err != nil {
@@ -316,7 +314,7 @@ func DeleteMonAn(c *gin.Context) {
 		"owner_id = ? AND owner_type = ?",
 		monan.MaMonAn,
 		"mon_an",
-	).Delete(&dto.HinhAnh{})
+	).Delete(&models.HinhAnh{})
 
 	// =========================
 	// 🗑️ DELETE DOMAIN
@@ -332,7 +330,7 @@ func GetMonAnDetail(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var monan dto.MonAn
+	var monan models.MonAn
 
 	err := config.DB.
 		Preload("AnhMonAn").
@@ -374,7 +372,7 @@ func vectorToString(vec []float32) string {
 func SearchMonAn(c *gin.Context) {
 	keyword := c.Query("q")
 
-	var list []dto.MonAn
+	var list []models.MonAn
 
 	query := config.DB.
 		Preload("AnhMonAn").

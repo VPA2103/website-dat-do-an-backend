@@ -3,14 +3,16 @@ package dto
 import "time"
 
 type DanhGia struct {
-	ID uint `gorm:"primaryKey;autoIncrement"`
+	ID uint `json:"id"`
 
-	MaHoaDon    uint `gorm:"column:ma_hoa_don"`
-	MaNguoiDung uint `gorm:"column:ma_nguoi_dung"`
-	MaMonAn     uint `gorm:"column:ma_mon_an"`
+	MaHoaDon    uint `json:"ma_hoa_don"`
+	MaNguoiDung uint `json:"ma_nguoi_dung"`
+	MaMonAn     uint `json:"ma_mon_an"`
 
-	SoSao     int       `json:"so_sao"`
-	NoiDung   string    `json:"noi_dung"`
-	NguoiDung NguoiDung `gorm:"foreignKey:MaNguoiDung;references:MaNguoiDung" json:"nguoi_dung"`
-	CreatedAt time.Time `gorm:"column:ngay_danh_gia" json:"ngay_danh_gia"`
+	SoSao   int    `json:"so_sao"`
+	NoiDung string `json:"noi_dung"`
+
+	NguoiDung *NguoiDung `json:"nguoi_dung,omitempty"`
+
+	CreatedAt time.Time `json:"ngay_danh_gia"`
 }

@@ -1,13 +1,20 @@
 package dto
 
 type MonAn struct {
-	MaMonAn     uint    `gorm:"primaryKey;autoIncrement" json:"ma_mon_an"`
-	MaLoaiMonAn uint    `json:"ma_loai_mon_an" form:"ma_loai_mon_an" gorm:"index"`
-	TenMonAn    string  `json:"ten_mon_an" form:"ten_mon_an"`
-	GiaTien     float64 `json:"gia_tien" form:"gia_tien"`
-	TrangThai   uint    `json:"trang_thai" form:"trang_thai"`
-	MoTa        string  `json:"mo_ta" form:"mo_ta"`
+	MaMonAn     uint    `json:"ma_mon_an"`
+	MaLoaiMonAn uint    `json:"ma_loai_mon_an"`
+	TenMonAn    string  `json:"ten_mon_an"`
+	GiaTien     float64 `json:"gia_tien"`
+	TrangThai   uint    `json:"trang_thai"`
+	MoTa        string  `json:"mo_ta"`
 
-	AnhMonAn    []HinhAnh    `gorm:"polymorphic:Owner;polymorphicValue:mon_an" json:"anh_mon_an,omitempty"`
-	NhomOptions []NhomOption `gorm:"foreignKey:MaMonAn" json:"nhom_options"`
+	AnhMonAn    []HinhAnh    `json:"anh_mon_an,omitempty"`
+	NhomOptions []NhomOption `json:"nhom_options,omitempty"`
+}
+
+type CreateMonAnRequest struct {
+	MaLoaiMonAn uint    `json:"ma_loai_mon_an" binding:"required"`
+	TenMonAn    string  `json:"ten_mon_an" binding:"required"`
+	GiaTien     float64 `json:"gia_tien" binding:"required"`
+	MoTa        string  `json:"mo_ta"`
 }

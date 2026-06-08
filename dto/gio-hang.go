@@ -1,20 +1,20 @@
 package dto
 
 type GioHang struct {
-	MaGioHang   uint `gorm:"primaryKey;autoIncrement"`
-	MaNguoiDung uint `gorm:"index"`
-	MaMonAn     uint `gorm:"index"`
+	MaGioHang   uint
+	MaNguoiDung uint
+	MaMonAn     uint
 
-	MonAn MonAn `gorm:"foreignKey:MaMonAn;references:MaMonAn"`
+	MonAn MonAn
 
 	SoLuong int
 	GiaTien int
 
-	Options []GioHangOption `gorm:"foreignKey:MaGioHang;constraint:OnDelete:CASCADE"`
+	Options []GioHangOption
 }
 
 type GioHangOption struct {
-	MaGioHangOption uint `gorm:"primaryKey;autoIncrement"`
+	MaGioHangOption uint
 
 	MaGioHang    uint `json:"ma_gio_hang"`
 	MaNhomOption uint `json:"ma_nhom_option"`
@@ -23,5 +23,5 @@ type GioHangOption struct {
 	TenNhomOption string     `json:"ten_nhom_option"`
 	TenOption     string     `json:"ten_option"`
 	GiaThem       int        `json:"gia_them"`
-	OptionItem    OptionItem `gorm:"foreignKey:MaOptionItem;references:MaOptionItem"`
+	OptionItem    OptionItem
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 )
 
 func CreateDiaChi(c *gin.Context) {
@@ -24,7 +25,7 @@ func CreateDiaChi(c *gin.Context) {
 	userIDAny, _ := c.Get("user_id")
 	userID := userIDAny.(uint)
 
-	dc := dto.DiaChi{
+	dc := models.DiaChi{
 		HoTen:       input.HoTen,
 		SDT:         input.SDT,
 		DiaChi:      input.DiaChi,
@@ -37,7 +38,7 @@ func CreateDiaChi(c *gin.Context) {
 	}
 
 	if dc.MacDinh {
-		config.DB.Model(&dto.DiaChi{}).
+		config.DB.Model(&models.DiaChi{}).
 			Where("ma_nguoi_dung = ?", userID).
 			Update("mac_dinh", false)
 	}
@@ -55,7 +56,7 @@ func CreateDiaChi(c *gin.Context) {
 func GetDiaChiByUser(c *gin.Context) {
 	maNguoiDung := c.Param("ma_nguoi_dung")
 
-	var list []dto.DiaChi
+	var list []models.DiaChi
 
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", maNguoiDung).
@@ -74,7 +75,7 @@ func GetDiaChiByUser(c *gin.Context) {
 func GetDiaChiByID(c *gin.Context) {
 	id := c.Param("id")
 
-	var dc dto.DiaChi
+	var dc models.DiaChi
 
 	userIDAny, _ := c.Get("user_id")
 	userID := userIDAny.(uint)
@@ -99,7 +100,7 @@ func GetDiaChiByID(c *gin.Context) {
 func UpdateDiaChi(c *gin.Context) {
 	id := c.Param("id")
 
-	var dc dto.DiaChi
+	var dc models.DiaChi
 	if err := config.DB.First(&dc, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Không tìm thấy địa chỉ",
@@ -136,7 +137,7 @@ func UpdateDiaChi(c *gin.Context) {
 
 	// nếu set mặc định -> reset các địa chỉ khác
 	if input.MacDinh {
-		config.DB.Model(&dto.DiaChi{}).
+		config.DB.Model(&models.DiaChi{}).
 			Where("ma_nguoi_dung = ? AND id != ?", dc.MaNguoiDung, dc.ID).
 			Update("mac_dinh", false)
 	}
@@ -154,7 +155,7 @@ func UpdateDiaChi(c *gin.Context) {
 func DeleteDiaChi(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := config.DB.Delete(&dto.DiaChi{}, id).Error; err != nil {
+	if err := config.DB.Delete(&models.DiaChi{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Không thể xóa",
 		})
@@ -168,7 +169,7 @@ func DeleteDiaChi(c *gin.Context) {
 func SetDiaChiMacDinh(c *gin.Context) {
 	id := c.Param("id")
 
-	var dc dto.DiaChi
+	var dc models.DiaChi
 
 	// kiểm tra địa chỉ tồn tại
 	if err := config.DB.First(&dc, id).Error; err != nil {
@@ -182,7 +183,7 @@ func SetDiaChiMacDinh(c *gin.Context) {
 	tx := config.DB.Begin()
 
 	// reset tất cả địa chỉ của user
-	if err := tx.Model(&dto.DiaChi{}).
+	if err := tx.Model(&models.DiaChi{}).
 		Where("ma_nguoi_dung = ?", dc.MaNguoiDung).
 		Update("mac_dinh", false).Error; err != nil {
 
@@ -221,7 +222,7 @@ func GetGoogleMapDirection(c *gin.Context) {
 
 	id := c.Param("id")
 
-	var diaChi dto.DiaChi
+	var diaChi models.DiaChi
 
 	if err := config.DB.First(&diaChi, id).Error; err != nil {
 		c.JSON(404, gin.H{

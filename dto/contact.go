@@ -1,9 +1,9 @@
 package dto
 
 type Contact struct {
-	MaLienHe     string `gorm:"primaryKey;size:10;autoIncrement"`
-	TenKhachHang string
-	SDT          string
-	Email        string
-	NoiDung      string
+	MaLienHe     string `json:"ma_lien_he"`
+	TenKhachHang string `json:"ten_khach_hang"`
+	SDT          string `json:"sdt"`
+	Email        string `json:"email"`
+	NoiDung      string `json:"noi_dung"`
 }

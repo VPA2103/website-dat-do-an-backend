@@ -8,13 +8,13 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // 🧱 Thêm nhân viên
 func CreateNhanVien(c *gin.Context) {
-	var nv dto.NguoiDung
+	var nv models.NguoiDung
 
 	// ✅ Lấy dữ liệu từ form-data
 	if err := c.ShouldBind(&nv); err != nil {
@@ -72,7 +72,7 @@ func CreateNhanVien(c *gin.Context) {
 				Folder: "nhanvien",
 			})
 			if err == nil {
-				img := dto.HinhAnh{
+				img := models.HinhAnh{
 					OwnerID:   nv.MaNguoiDung,
 					OwnerType: "nguoi_dung",
 					Url:       uploadResult.SecureURL,
@@ -93,7 +93,7 @@ func CreateNhanVien(c *gin.Context) {
 
 // 📋 Lấy danh sách nhân viên
 func GetAllNhanVien(c *gin.Context) {
-	var nhanViens []dto.NguoiDung
+	var nhanViens []models.NguoiDung
 	if err := config.DB.Preload("AnhNhanVien").Find(&nhanViens).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -104,7 +104,7 @@ func GetAllNhanVien(c *gin.Context) {
 // 🔍 Lấy 1 nhân viên theo ID
 func GetNhanVienByID(c *gin.Context) {
 	id := c.Param("id")
-	var nv dto.NguoiDung
+	var nv models.NguoiDung
 	if err := config.DB.Preload("AnhNhanVien").Find(&nv, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -115,7 +115,7 @@ func GetNhanVienByID(c *gin.Context) {
 // ✏️ Cập nhật nhân viên
 func UpdateNhanVien(c *gin.Context) {
 	id := c.Param("id")
-	var nv dto.NguoiDung
+	var nv models.NguoiDung
 
 	// Tìm nhân viên theo ID
 	if err := config.DB.First(&nv, id).Error; err != nil {
@@ -179,10 +179,10 @@ func UpdateNhanVien(c *gin.Context) {
 		}
 
 		// Xóa ảnh cũ
-		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nguoi_dung").Delete(&dto.HinhAnh{})
+		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nguoi_dung").Delete(&models.HinhAnh{})
 
 		// Lưu ảnh mới
-		newImg := dto.HinhAnh{
+		newImg := models.HinhAnh{
 			OwnerID:   nv.MaNguoiDung,
 			OwnerType: "nguoi_dung",
 			Url:       uploadResult.SecureURL,
@@ -210,7 +210,7 @@ func UpdateNhanVien(c *gin.Context) {
 func DeleteNhanVien(c *gin.Context) {
 	id := c.Param("id")
 
-	var nv dto.NguoiDung
+	var nv models.NguoiDung
 
 	// Tìm nhân viên
 	if err := config.DB.First(&nv, id).Error; err != nil {
@@ -246,7 +246,7 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 		return
 	}
 
-	var nv dto.NguoiDung
+	var nv models.NguoiDung
 	if err := config.DB.
 		Preload("AnhNhanVien").
 		Preload("DiaChis").
@@ -321,9 +321,9 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 			return
 		}
 
-		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nguoi_dung").Delete(&dto.HinhAnh{})
+		config.DB.Where("owner_id = ? AND owner_type = ?", nv.MaNguoiDung, "nguoi_dung").Delete(&models.HinhAnh{})
 
-		newImg := dto.HinhAnh{
+		newImg := models.HinhAnh{
 			OwnerID:   nv.MaNguoiDung,
 			OwnerType: "nguoi_dung",
 			Url:       uploadResult.SecureURL,

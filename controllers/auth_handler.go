@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/utils"
 
 	//"github.com/vpa/quanlynhahang-backend/utils"
@@ -34,7 +35,7 @@ func Login(c *gin.Context) {
 	// =========================
 	// Check người dùng
 	// =========================
-	var nd dto.NguoiDung
+	var nd models.NguoiDung
 
 	if err := config.DB.
 		Where("email = ?", input.Email).
@@ -127,7 +128,7 @@ func SendOTP(c *gin.Context) {
 		return
 	}
 
-	var user dto.NguoiDung
+	var user models.NguoiDung
 
 	if err := config.DB.
 		Where("email = ?", input.Email).
@@ -230,7 +231,7 @@ func ResetPassword(c *gin.Context) {
 
 	// update password
 	if err := config.DB.
-		Model(&dto.NguoiDung{}).
+		Model(&models.NguoiDung{}).
 		Where("email = ?", input.Email).
 		Update("mat_khau", string(hashedPassword)).Error; err != nil {
 
@@ -260,7 +261,7 @@ func SendRegisterOTP(c *gin.Context) {
 	}
 
 	// Kiểm tra email tồn tại chưa
-	var user dto.NguoiDung
+	var user models.NguoiDung
 
 	err := config.DB.
 		Where("email = ?", input.Email).
@@ -411,7 +412,7 @@ func VerifyRegisterOTP(c *gin.Context) {
 	}
 
 	// Tạo user
-	user := dto.NguoiDung{
+	user := models.NguoiDung{
 		HoTen:         data.UserData.HoTen,
 		Email:         data.UserData.Email,
 		MatKhau:       string(hashedPassword),

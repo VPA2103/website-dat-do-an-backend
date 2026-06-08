@@ -3,8 +3,9 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/internal/websocket"
+	"github.com/vpa/quanlynhahang-backend/models"
 )
 
 type BinhLuanController struct {
@@ -57,13 +58,13 @@ func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
 	}
 	maNguoiDung := maNguoiDungAny.(uint)
 
-	var monAn dto.MonAn
+	var monAn models.MonAn
 	if err := config.DB.First(&monAn, input.MaMonAn).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Món ăn không tồn tại"})
 		return
 	}
 
-	binhLuan := dto.BinhLuan{
+	binhLuan := models.BinhLuan{
 		MaNguoiDung: maNguoiDung,
 		MaMonAn:     input.MaMonAn,
 		NoiDung:     input.NoiDung,
@@ -71,7 +72,7 @@ func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
 	}
 
 	if input.ParentID != nil {
-		var parent dto.BinhLuan
+		var parent models.BinhLuan
 
 		if err := config.DB.First(&parent, *input.ParentID).Error; err != nil {
 			c.JSON(404, gin.H{
@@ -94,7 +95,7 @@ func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
 		Payload: binhLuan,
 	})
 
-	var comments []dto.BinhLuan
+	var comments []models.BinhLuan
 
 	config.DB.
 		Where("ma_mon_an = ? AND parent_id IS NULL", input.MaMonAn).
@@ -113,7 +114,7 @@ func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
 func (ctrl *BinhLuanController) GetBinhLuanByMonAn(c *gin.Context) {
 	maMon := c.Param("ma_mon_an")
 
-	var binhLuans []dto.BinhLuan
+	var binhLuans []models.BinhLuan
 
 	config.DB.
 		Where("ma_mon_an = ? AND parent_id IS NULL", maMon).
@@ -181,7 +182,7 @@ func (ctrl *BinhLuanController) UpdateBinhLuan(c *gin.Context) {
 	maNguoiDungAny, _ := c.Get("user_id")
 	maNguoiDung := maNguoiDungAny.(uint)
 
-	var binhLuan dto.BinhLuan
+	var binhLuan models.BinhLuan
 	if err := config.DB.First(&binhLuan, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy bình luận"})
 		return
@@ -220,7 +221,7 @@ func (ctrl *BinhLuanController) GetBinhLuanByID(c *gin.Context) {
 	maNguoiDungAny, _ := c.Get("user_id")
 	maNguoiDung := maNguoiDungAny.(uint)
 
-	var binhLuan dto.BinhLuan
+	var binhLuan models.BinhLuan
 	if err := config.DB.First(&binhLuan, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy bình luận"})
 		return
@@ -257,7 +258,7 @@ func (ctrl *BinhLuanController) DeleteBinhLuan(c *gin.Context) {
 	maNguoiDungAny, _ := c.Get("user_id")
 	maNguoiDung := maNguoiDungAny.(uint)
 
-	var binhLuan dto.BinhLuan
+	var binhLuan models.BinhLuan
 	if err := config.DB.First(&binhLuan, id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy bình luận"})
 		return

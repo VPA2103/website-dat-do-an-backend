@@ -6,8 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/internal/usecase"
 	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/internal/usecase"
+	"github.com/vpa/quanlynhahang-backend/models"
 )
 
 type ContactHandler struct {
@@ -15,7 +16,7 @@ type ContactHandler struct {
 }
 
 func (h *ContactHandler) GuiLienHe(c *gin.Context) {
-	var lienHe dto.LienHe
+	var lienHe models.LienHe
 
 	if err := c.ShouldBind(&lienHe); err != nil {
 		fmt.Println("❌ Bind error:", err.Error())
@@ -54,7 +55,7 @@ func AdminGetAllLienHe(c *gin.Context) {
 	// 👉 Nếu bạn đã có middleware check admin
 	// thì KHÔNG cần đoạn check quyền ở đây
 
-	var danhSachLienHe []dto.LienHe
+	var danhSachLienHe []models.LienHe
 
 	if err := config.DB.
 		Order("ngay_tao DESC").
@@ -73,7 +74,7 @@ func AdminGetAllLienHe(c *gin.Context) {
 
 func DeleteLienHe(c *gin.Context) {
 	id := c.Param("id")
-	var lienhe dto.LienHe
+	var lienhe models.LienHe
 
 	// Kiểm tra tồn tại
 	if err := config.DB.First(&lienhe, id).Error; err != nil {

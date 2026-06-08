@@ -7,11 +7,11 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 )
 
 func CreateBanAn(c *gin.Context) {
-	var ban dto.BanAn
+	var ban models.BanAn
 
 	// ✅ Bind form data
 	if err := c.ShouldBind(&ban); err != nil {
@@ -71,8 +71,8 @@ func CreateBanAn(c *gin.Context) {
 				Folder: "banan",
 			})
 			if err == nil {
-				img := dto.HinhAnh{
-					OwnerID:   ban.MaBan,
+				img := models.HinhAnh{
+					OwnerID:   ban.MaBanAn,
 					OwnerType: "ban_an",
 					Url:  uploadResult.SecureURL,
 				}
@@ -81,7 +81,7 @@ func CreateBanAn(c *gin.Context) {
 		}
 	}
 
-	config.DB.Preload("AnhBan").First(&ban, ban.MaBan)
+	config.DB.Preload("AnhBan").First(&ban, ban.MaBanAn)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Tạo bàn ăn thành công",
@@ -91,7 +91,7 @@ func CreateBanAn(c *gin.Context) {
 
 // Lấy tất cả bàn ăn kèm ảnh
 func GetAllBanAn(c *gin.Context) {
-	var dsBanAn []dto.BanAn
+	var dsBanAn []models.BanAn
 
 	// ✅ Preload ảnh bàn (quan hệ polymorphic)
 	if err := config.DB.Preload("AnhBan").Find(&dsBanAn).Error; err != nil {
@@ -108,7 +108,7 @@ func GetAllBanAn(c *gin.Context) {
 func GetBanAnByID(c *gin.Context) {
 	id := c.Param("id")
 
-	var banan dto.BanAn
+	var banan models.BanAn
 
 	// 🔥 Query đúng: WHERE id = ? + Preload ảnh
 	if err := config.DB.Preload("AnhBan").First(&banan, "ma_ban = ?", id).Error; err != nil {
@@ -127,7 +127,7 @@ func GetBanAnByID(c *gin.Context) {
 // ✅ Cập nhật thông tin bàn ăn
 func UpdateBanAn(c *gin.Context) {
 	id := c.Param("id")
-	var ban dto.BanAn
+	var ban models.BanAn
 
 	// 1️⃣ Tìm bàn ăn
 	if err := config.DB.First(&ban, id).Error; err != nil {
@@ -136,7 +136,7 @@ func UpdateBanAn(c *gin.Context) {
 	}
 
 	// 2️⃣ Bind dữ liệu form
-	var input dto.BanAn
+	var input models.BanAn
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Dữ liệu gửi lên không hợp lệ: " + err.Error(),
@@ -180,19 +180,19 @@ func UpdateBanAn(c *gin.Context) {
 
 		// 🔥 XÓA TOÀN BỘ ẢNH CŨ CỦA BÀN ĂN
 		config.DB.
-			Where("owner_id = ? AND owner_type = ?", ban.MaBan, "ban_an").
-			Delete(&dto.HinhAnh{})
+			Where("owner_id = ? AND owner_type = ?", ban.MaBanAn, "ban_an").
+			Delete(&models.HinhAnh{})
 
 		// 🔥 THÊM ẢNH MỚI
-		config.DB.Create(&dto.HinhAnh{
-			OwnerID:   ban.MaBan,
+		config.DB.Create(&models.HinhAnh{
+			OwnerID:   ban.MaBanAn,
 			OwnerType: "ban_an",
 			Url:  uploadResult.SecureURL,
 		})
 	}
 
 	// 5️⃣ Load lại quan hệ ảnh
-	config.DB.Preload("AnhBan").First(&ban, ban.MaBan)
+	config.DB.Preload("AnhBan").First(&ban, ban.MaBanAn)
 
 	// 6️⃣ Response
 	c.JSON(http.StatusOK, gin.H{
@@ -210,14 +210,14 @@ func DeleteBanAn(c *gin.Context) {
 		return
 	}
 
-	var ban dto.BanAn
+	var ban models.BanAn
 	if err := config.DB.First(&ban, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy bàn ăn"})
 		return
 	}
 
 	// 🔹 Xóa ảnh liên quan (nếu có)
-	config.DB.Where("owner_id = ? AND owner_type = ?", id, "ban_an").Delete(&dto.HinhAnh{})
+	config.DB.Where("owner_id = ? AND owner_type = ?", id, "ban_an").Delete(&models.HinhAnh{})
 
 	// 🔹 Xóa bàn ăn
 	if err := config.DB.Delete(&ban).Error; err != nil {

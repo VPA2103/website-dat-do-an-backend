@@ -3,10 +3,9 @@ package dto
 import "time"
 
 type YeuThich struct {
-	ID uint `gorm:"primaryKey;autoIncrement"`
-
-	MaNguoiDung uint  `gorm:"uniqueIndex:idx_user_mon"`
-	MaMonAn     uint  `gorm:"uniqueIndex:idx_user_mon"`
-	MonAn       MonAn `gorm:"foreignKey:MaMonAn;references:MaMonAn" json:"mon_an"`
-	CreatedAt   time.Time
+	ID          uint      `json:"id"`
+	MaNguoiDung uint      `json:"ma_nguoi_dung"`
+	MaMonAn     uint      `json:"ma_mon_an"`
+	MonAn       MonAn     `json:"mon_an"`
+	CreatedAt   time.Time `json:"created_at"`
 }

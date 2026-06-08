@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 	"net/http"
 	"strconv"
 )
@@ -62,7 +62,7 @@ func AddToCart(c *gin.Context) {
 	// =======================
 	// CHECK MÓN ĂN
 	// =======================
-	var monAn dto.MonAn
+	var monAn models.MonAn
 	if err := config.DB.
 		Where("ma_mon_an = ?", input.MaMonAn).
 		First(&monAn).Error; err != nil {
@@ -76,10 +76,10 @@ func AddToCart(c *gin.Context) {
 	// TÍNH GIÁ OPTION
 	// =======================
 	var giaOption float64
-	var optionItems []dto.OptionItem
+	var optionItems []models.OptionItem
 
 	for _, opt := range input.Options {
-		var item dto.OptionItem
+		var item models.OptionItem
 		if err := tx.
 			Preload("NhomOption").
 			Where("ma_option_item = ?", opt.MaOptionItem).
@@ -103,7 +103,7 @@ func AddToCart(c *gin.Context) {
 	// =======================
 	// CREATE GIO HANG
 	// =======================
-	gioHang := dto.GioHang{
+	gioHang := models.GioHang{
 		MaNguoiDung: userID,
 		MaMonAn:     monAn.MaMonAn,
 		SoLuong:     input.SoLuong,
@@ -120,7 +120,7 @@ func AddToCart(c *gin.Context) {
 	// INSERT OPTIONS
 	// =======================
 	for _, item := range optionItems {
-		row := dto.GioHangOption{
+		row := models.GioHangOption{
 			MaGioHang:     gioHang.MaGioHang,
 			MaNhomOption:  item.MaNhomOption,
 			MaOptionItem:  item.MaOptionItem,
@@ -141,7 +141,7 @@ func AddToCart(c *gin.Context) {
 	// =======================
 	// RESPONSE
 	// =======================
-	var result dto.GioHang
+	var result models.GioHang
 	config.DB.
 		Preload("MonAn").
 		Preload("Options").
@@ -155,7 +155,7 @@ func AddToCart(c *gin.Context) {
 }
 
 func GetAllCart(c *gin.Context) {
-	var list []dto.GioHang
+	var list []models.GioHang
 
 	if err := config.DB.
 		Preload("MonAn.AnhMonAn").
@@ -180,7 +180,7 @@ func GetCartByUser(c *gin.Context) {
 		return
 	}
 
-	var list []dto.GioHang
+	var list []models.GioHang
 
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", userID).
@@ -219,7 +219,7 @@ func UpdateSoLuongCart(c *gin.Context) {
 	userAny, _ := c.Get("user_id")
 	userID := userAny.(uint)
 
-	var cart dto.GioHang
+	var cart models.GioHang
 
 	if err := config.DB.
 		Preload("Options").
@@ -230,7 +230,7 @@ func UpdateSoLuongCart(c *gin.Context) {
 		return
 	}
 
-	var monAn dto.MonAn
+	var monAn models.MonAn
 	if err := config.DB.
 		Where("ma_mon_an = ?", cart.MaMonAn).
 		First(&monAn).Error; err != nil {
@@ -287,7 +287,7 @@ func DeleteCart(c *gin.Context) {
 	// 1. XÓA OPTIONS TRƯỚC (QUAN TRỌNG)
 	if err := tx.
 		Where("ma_gio_hang = ?", gioHangID).
-		Delete(&dto.GioHangOption{}).Error; err != nil {
+		Delete(&models.GioHangOption{}).Error; err != nil {
 
 		tx.Rollback()
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -297,7 +297,7 @@ func DeleteCart(c *gin.Context) {
 	// 2. XÓA GIỎ HÀNG
 	result := tx.
 		Where("ma_nguoi_dung = ? AND ma_gio_hang = ?", userID, gioHangID).
-		Delete(&dto.GioHang{})
+		Delete(&models.GioHang{})
 
 	if result.Error != nil {
 		tx.Rollback()
@@ -346,7 +346,7 @@ func XoaGioHangNguoiDung(c *gin.Context) {
 	// 2. XÓA GIỎ HÀNG
 	if err := tx.
 		Where("ma_nguoi_dung = ?", maNguoiDung).
-		Delete(&dto.GioHang{}).Error; err != nil {
+		Delete(&models.GioHang{}).Error; err != nil {
 
 		tx.Rollback()
 		c.JSON(500, gin.H{"error": err.Error()})
@@ -375,7 +375,7 @@ func UpdateCartItem(c *gin.Context) {
 	}()
 
 	// 1️⃣ Lấy giỏ hàng
-	var cart dto.GioHang
+	var cart models.GioHang
 	if err := tx.Where(
 		"ma_gio_hang = ? AND ma_nguoi_dung = ?",
 		cartID, userID,
@@ -386,7 +386,7 @@ func UpdateCartItem(c *gin.Context) {
 	}
 
 	// 2️⃣ Lấy món ăn
-	var monAn dto.MonAn
+	var monAn models.MonAn
 	if err := tx.Where(
 		"ma_mon_an = ?", cart.MaMonAn,
 	).First(&monAn).Error; err != nil {
@@ -398,7 +398,7 @@ func UpdateCartItem(c *gin.Context) {
 	// 3️⃣ XOÁ TOÀN BỘ OPTION CŨ
 	if err := tx.Where(
 		"ma_gio_hang = ?", cart.MaGioHang,
-	).Delete(&dto.GioHangOption{}).Error; err != nil {
+	).Delete(&models.GioHangOption{}).Error; err != nil {
 		tx.Rollback()
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -410,7 +410,7 @@ func UpdateCartItem(c *gin.Context) {
 
 	for _, opt := range input.Options {
 
-		var item dto.OptionItem
+		var item models.OptionItem
 		if err := tx.
 			Preload("NhomOption").
 			Where("ma_option_item = ?", opt.MaOptionItem).
@@ -433,7 +433,7 @@ func UpdateCartItem(c *gin.Context) {
 			usedGroup[item.MaNhomOption] = true
 		}
 
-		row := dto.GioHangOption{
+		row := models.GioHangOption{
 			MaGioHang:     cart.MaGioHang,
 			MaNhomOption:  item.MaNhomOption,
 			MaOptionItem:  item.MaOptionItem,

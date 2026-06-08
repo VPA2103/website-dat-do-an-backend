@@ -1,7 +1,7 @@
 package dto
 
 type KhachHang struct {
-	MaKH         uint   `gorm:"primaryKey;autoIncrement" json:"ma_kh"`
+	MaKH         uint   `json:"ma_kh"`
 	HoTen        string `json:"ho_ten"`
 	GioiTinh     string `json:"gioi_tinh"`
 	NgaySinh     string `json:"ngay_sinh"`

@@ -15,8 +15,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/internal/websocket"
+	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/utils"
 )
 
@@ -170,14 +171,14 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 	}
 
 	// ✅ LOAD HÓA ĐƠN TRƯỚC
-	var hoaDon dto.HoaDon
+	var hoaDon models.HoaDon
 	if err := config.DB.First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy hóa đơn"})
 		return
 	}
 
 	// ✅ CHECK ĐÃ THANH TOÁN CHƯA (chống webhook gửi lại)
-	var existing dto.ThanhToan
+	var existing models.ThanhToan
 	if err := config.DB.
 		Where("ma_hd = ?", hoaDon.MaHoaDon).
 		First(&existing).Error; err == nil {
@@ -215,7 +216,7 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 	})
 
 	// ✅ TẠO BẢN GHI THANH TOÁN
-	thanhToan := dto.ThanhToan{
+	thanhToan := models.ThanhToan{
 		MaHoaDon:              hoaDon.MaHoaDon,
 		SoTien:            float64(paid),
 		HinhThucThanhToan: "chuyen_khoan",

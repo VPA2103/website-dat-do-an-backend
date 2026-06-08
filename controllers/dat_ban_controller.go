@@ -6,12 +6,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
-	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/services/send_mail"
 )
 
 func CreateDatBan(c *gin.Context) {
-	var input dto.DatBan
+	var input models.DatBan
 
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -19,7 +19,7 @@ func CreateDatBan(c *gin.Context) {
 	}
 
 	// ÉP logic nghiệp vụ
-	datban := dto.DatBan{
+	datban := models.DatBan{
 		TenKhachHang: input.TenKhachHang,
 		Email:        input.Email,
 		SDT:          input.SDT,
@@ -50,7 +50,7 @@ func CreateDatBan(c *gin.Context) {
 }
 
 func GetAllDatBan(c *gin.Context) {
-	var datbans []dto.DatBan
+	var datbans []models.DatBan
 
 	if err := config.DB.Preload("NhanVienXacNhan").Find(&datbans).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -66,7 +66,7 @@ func GetAllDatBan(c *gin.Context) {
 
 func GetDatBanByID(c *gin.Context) {
 	id := c.Param("id")
-	var datban dto.DatBan
+	var datban models.DatBan
 
 	if err := config.DB.Preload("NhanVienXacNhan").First(&datban, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -82,7 +82,7 @@ func GetDatBanByID(c *gin.Context) {
 
 func UpdateDatBan(c *gin.Context) {
 	id := c.Param("id")
-	var datban dto.DatBan
+	var datban models.DatBan
 
 	if err := config.DB.First(&datban, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy đặt bàn"})
@@ -120,7 +120,7 @@ func XacNhanDatBan(c *gin.Context) {
 	}
 	nhanVienID := userID.(uint)
 
-	var datban dto.DatBan
+	var datban models.DatBan
 	if err := config.DB.First(&datban, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy đặt bàn"})
 		return
@@ -141,7 +141,7 @@ func XacNhanDatBan(c *gin.Context) {
 
 func DeleteDatBan(c *gin.Context) {
 	id := c.Param("id")
-	var datban dto.DatBan
+	var datban models.DatBan
 
 	if err := config.DB.First(&datban, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
