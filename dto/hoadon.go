@@ -3,7 +3,7 @@ package dto
 import "time"
 
 type HoaDon struct {
-	MaHD        uint      `gorm:"primaryKey;size:10;autoIncrement" json:"ma_hd"`
+	MaHoaDon        uint      `gorm:"primaryKey;size:10;autoIncrement" json:"ma_hd"`
 	MaNguoiDung uint      `json:"ma_nguoi_dung"`
 	HoTen       string    `json:"ho_ten"`
 	SDT         string    `json:"sdt"`

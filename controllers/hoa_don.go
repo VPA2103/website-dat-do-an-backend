@@ -142,6 +142,8 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 
 		tx.Rollback()
 
+		log.Println("CREATE HOADON ERROR:", err)
+
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Không thể tạo hóa đơn",
 		})
@@ -201,7 +203,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		tongTienServer += thanhTien
 
 		chiTiet := dto.ChiTietHoaDon{
-			MaHoaDon:  hoaDon.MaHD,
+			MaHoaDon:  hoaDon.MaHoaDon,
 			MaMonAn:   item.MaMonAn,
 			SoLuong:   item.SoLuong,
 			DonGia:    monAn.GiaTien,
@@ -390,7 +392,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		return
 	}
 
-	content := fmt.Sprintf("HD%07d", hoaDon.MaHD)
+	content := fmt.Sprintf("HD%07d", hoaDon.MaHoaDon)
 
 	// Tạo qr động chuyển khoản từ sepay có webhook gửi về serve
 	qrURL := utils.GenerateSePayQR(
@@ -407,7 +409,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 		Preload("GiamGia").
 		Preload("ChiTietHoaDons").
 		Preload("ChiTietHoaDons.MonAn").
-		First(&result, "ma_hd = ?", hoaDon.MaHD).Error; err != nil {
+		First(&result, "ma_hoa_don = ?", hoaDon.MaHoaDon).Error; err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Không thể lấy hóa đơn",
@@ -426,7 +428,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 
 		err := utils.SendMailSauKhiDatDoAn(nguoiDung.Email, utils.DatDoAnMailInfo{
 			TenKhachHang: result.HoTen,
-			MaDon:        fmt.Sprintf("%d", result.MaHD),
+			MaDon:        fmt.Sprintf("%d", result.MaHoaDon),
 			NgayGio:      result.Ngay.Format("02/01/2006 lúc 15:04"),
 			DiaChi:       result.DiaChi,
 			SoMonAn:      len(result.ChiTietHoaDons),
@@ -436,7 +438,7 @@ func (ctrl *HoaDonController) DatDoAn(c *gin.Context) {
 			GhiChu:       result.GhiChu,
 		})
 		if err != nil {
-			log.Printf("SendMail: lỗi gửi mail đơn #%d: %v", result.MaHD, err)
+			log.Printf("SendMail: lỗi gửi mail đơn #%d: %v", result.MaHoaDon, err)
 		}
 	}()
 
@@ -467,7 +469,7 @@ func (ctrl *HoaDonController) XoaHoaDon(c *gin.Context) {
 
 	// kiểm tra hóa đơn tồn tại
 	if err := config.DB.
-		First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
+		First(&hoaDon, "ma_hoa_don = ?", id).Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Hóa đơn không tồn tại",
@@ -519,7 +521,7 @@ func (ctrl *HoaDonController) GetHoaDons(c *gin.Context) {
 		Preload("ChiTietHoaDons.Options").
 		Preload("ChiTietHoaDons.Options.OptionItem").
 		Preload("ChiTietHoaDons.Options.OptionItem.NhomOption").
-		Order("ma_hd DESC").
+		Order("ma_hoa_don DESC").
 		Find(&hoaDons).Error; err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -553,7 +555,7 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 	if err := config.DB.
 		Preload("ChiTietHoaDons").
 		Preload("ChiTietHoaDons.Options").
-		First(&hoaDon, "ma_hd = ? AND ma_nguoi_dung = ?", id, userID).Error; err != nil {
+		First(&hoaDon, "ma_hoa_don = ? AND ma_nguoi_dung = ?", id, userID).Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Bạn không có quyền xem hóa đơn này",
@@ -572,7 +574,7 @@ func (ctrl *HoaDonController) GetHoaDonByID(c *gin.Context) {
 			"123456789", // số tài khoản
 			"MB",        // mã ngân hàng
 			int(hoaDon.TongTien),
-			fmt.Sprintf("HD%d", hoaDon.MaHD),
+			fmt.Sprintf("HD%d", hoaDon.MaHoaDon),
 		)
 	}
 
@@ -609,7 +611,7 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 	// tìm hóa đơn
 	var hoaDon dto.HoaDon
 
-	if err := config.DB.First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
+	if err := config.DB.First(&hoaDon, "ma_hoa_don = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Không tìm thấy hóa đơn",
 		})
@@ -628,7 +630,7 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 	}
 
 	// reload lại data mới
-	config.DB.First(&hoaDon, "ma_hd = ?", id)
+	config.DB.First(&hoaDon, "ma_hoa_don = ?", id)
 
 	// broadcast realtime admin
 	ctrl.Hub.Broadcast(dto.WSMessage{
@@ -640,7 +642,7 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type: "update_trang_thai_hoa_don_user",
 		Payload: gin.H{
-			"ma_hd":      hoaDon.MaHD,
+			"ma_hoa_don":      hoaDon.MaHoaDon,
 			"trang_thai": hoaDon.TrangThai,
 		},
 	})
@@ -658,7 +660,7 @@ func (ctrl *HoaDonController) HuyHoaDon(c *gin.Context) {
 	var hoaDon dto.HoaDon
 
 	if err := config.DB.
-		First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
+		First(&hoaDon, "ma_hoa_don = ?", id).Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Không tìm thấy hóa đơn",
@@ -683,7 +685,7 @@ func (ctrl *HoaDonController) HuyHoaDon(c *gin.Context) {
 		return
 	}
 
-	config.DB.First(&hoaDon, "ma_hd = ?", id)
+	config.DB.First(&hoaDon, "ma_hoa_don = ?", id)
 
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "cancel_hoa_don",
@@ -693,7 +695,7 @@ func (ctrl *HoaDonController) HuyHoaDon(c *gin.Context) {
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type: "cancel_hoa_don_user",
 		Payload: gin.H{
-			"ma_hd": hoaDon.MaHD,
+			"ma_hoa_don": hoaDon.MaHoaDon,
 		},
 	})
 
@@ -747,7 +749,7 @@ func (ctrl *HoaDonController) UpdateHoaDon(c *gin.Context) {
 	var hoaDon dto.HoaDon
 
 	if err := config.DB.
-		First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
+		First(&hoaDon, "ma_hoa_don = ?", id).Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Không tìm thấy hóa đơn",
@@ -795,7 +797,7 @@ func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 		Preload("ChiTietHoaDons.MonAn").
 		Preload("ChiTietHoaDons.Options").
 		Preload("ChiTietHoaDons.Options.OptionItem").
-		Order("ma_hd DESC").
+		Order("ma_hoa_don DESC").
 		Find(&hoaDons).Error; err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -834,7 +836,7 @@ func (ctrl *HoaDonController) HuyHoaDonNguoiDung(c *gin.Context) {
 
 	// 🔒 chỉ chủ hóa đơn mới hủy được
 	if err := config.DB.
-		First(&hoaDon, "ma_hd = ? AND ma_nguoi_dung = ?", id, userID).
+		First(&hoaDon, "ma_hoa_don = ? AND ma_nguoi_dung = ?", id, userID).
 		Error; err != nil {
 
 		c.JSON(http.StatusNotFound, gin.H{
@@ -872,7 +874,7 @@ func (ctrl *HoaDonController) HuyHoaDonNguoiDung(c *gin.Context) {
 	}
 
 	// reload
-	config.DB.First(&hoaDon, hoaDon.MaHD)
+	config.DB.First(&hoaDon, hoaDon.MaHoaDon)
 
 	// 🔥 realtime admin
 	ctrl.Hub.Broadcast(dto.WSMessage{
@@ -884,7 +886,7 @@ func (ctrl *HoaDonController) HuyHoaDonNguoiDung(c *gin.Context) {
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type: "hoa_don_bi_huy_user",
 		Payload: gin.H{
-			"ma_hd":                 hoaDon.MaHD,
+			"ma_hoa_don":                 hoaDon.MaHoaDon,
 			"trang_thai":            "da_huy",
 			"trang_thai_thanh_toan": "da_huy",
 		},
@@ -912,7 +914,7 @@ func (ctrl *HoaDonController) GetHoaDonChoThanhToan(c *gin.Context) {
 
 	err := config.DB.
 		Where("ma_nguoi_dung = ? AND trang_thai_thanh_toan = ?", userID, "chua_thanh_toan").
-		Order("ma_hd DESC").
+		Order("ma_hoa_don DESC").
 		Find(&hoaDons).Error
 
 	if err != nil {
@@ -942,7 +944,7 @@ func (ctrl *HoaDonController) GetDoanhThuTheoNgay(c *gin.Context) {
 		Model(&dto.HoaDon{}).
 		Select(`
 			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
-			COUNT(ma_hd) AS so_don
+			COUNT(ma_hoa_don) AS so_don
 		`).
 		Where(`
 			CAST(ngay AS DATE) = ?
@@ -976,7 +978,7 @@ func (ctrl *HoaDonController) GetDoanhThuTheoThang(c *gin.Context) {
 		Model(&dto.HoaDon{}).
 		Select(`
 			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
-			COUNT(ma_hd) AS so_don
+			COUNT(ma_hoa_don) AS so_don
 		`).
 		Where(`
 			EXTRACT(MONTH FROM ngay) = ?
@@ -1006,7 +1008,7 @@ func (ctrl *HoaDonController) GetDoanhThuTheoNam(c *gin.Context) {
 		Model(&dto.HoaDon{}).
 		Select(`
 			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
-			COUNT(ma_hd) AS so_don
+			COUNT(ma_hoa_don) AS so_don
 		`).
 		Where(`
 			EXTRACT(YEAR FROM ngay) = ?
@@ -1036,7 +1038,7 @@ func (ctrl *HoaDonController) GetTopMonAnBanChay(c *gin.Context) {
 		ma.ten_mon_an,
 		SUM(cthd.so_luong) AS so_luong
 	FROM chi_tiet_hoa_dons cthd
-	JOIN hoa_dons hd ON hd.ma_hd = cthd.ma_hoa_don
+	JOIN hoa_dons hd ON hd.ma_hoa_don = cthd.ma_hoa_don
 	JOIN mon_ans ma ON ma.ma_mon_an = cthd.ma_mon_an
 	WHERE hd.trang_thai = 'da_giao'
 	  AND hd.trang_thai_thanh_toan = 'da_thanh_toan'

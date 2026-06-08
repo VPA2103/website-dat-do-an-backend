@@ -5,7 +5,7 @@ import "time"
 type ThanhToan struct {
 	MaThanhToan uint `gorm:"primaryKey;autoIncrement" json:"ma_thanh_toan"`
 
-	MaHD uint `gorm:"not null" json:"ma_hd"`
+	MaHoaDon uint `gorm:"not null" json:"ma_hd"`
 
 	HoaDon HoaDon `gorm:"foreignKey:MaHD;references:MaHD" json:"hoa_don"`
 

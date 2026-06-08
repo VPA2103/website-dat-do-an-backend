@@ -22,5 +22,5 @@ type HoaDon struct {
 	GiamGiaID      *uint           `json:"giam_gia_id"`
 	GiamGia        GiamGia         `gorm:"foreignKey:GiamGiaID;references:ID" json:"giam_gia"`
 	ChiTietHoaDons []ChiTietHoaDon `gorm:"foreignKey:MaHoaDon" json:"chi_tiet_hoa_dons"`
-	ThanhToans     *ThanhToan      `gorm:"foreignKey:MaHD;" json:"thanh_toans"`
+	ThanhToans     *ThanhToan      `gorm:"foreignKey:MaHoaDon;references:MaHoaDon" json:"thanh_toans"`
 }

@@ -40,7 +40,7 @@ func GetMonDaGoi(maBan uint) ([]models.ChiTietHoaDon, error) {
 
 	err = config.DB.
 		Preload("MonAn").
-		Where("ma_hd = ?", hoaDon.MaHD).
+		Where("ma_hd = ?", hoaDon.MaHoaDon).
 		Find(&ds).Error
 
 	return ds, err
@@ -62,7 +62,7 @@ func TaoQRThanhToan(maBan uint) (string, float64, error) {
 		hoaDon.TongTien,
 		os.Getenv("VIETQR_BANK_BIN"),
 		os.Getenv("VIETQR_ACCOUNT_NO"),
-		fmt.Sprintf("HOADON_%d", hoaDon.MaHD),
+		fmt.Sprintf("HOADON_%d", hoaDon.MaHoaDon),
 	)
 
 	if err != nil {
