@@ -11,6 +11,7 @@ type NguoiDung struct {
 	Email         string `json:"email" form:"email"`
 	MatKhau       string `json:"mat_khau" form:"mat_khau"`
 	LoaiNguoiDung string `gorm:"type:text;not null" json:"loai_nguoi_dung" form:"loai_nguoi_dung"`
+	TrangThai     string `gorm:"type:varchar(20);default:'hoat_dong'" json:"trang_thai" form:"trang_thai"`
 
 	// Quan hệ
 	DiaChis []DiaChi `gorm:"foreignKey:MaNguoiDung;references:MaNguoiDung" json:"dia_chis,omitempty"`

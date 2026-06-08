@@ -24,35 +24,70 @@ type LoginInput struct {
 
 func Login(c *gin.Context) {
 	var input LoginInput
+
 	if err := c.ShouldBind(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập email và mật khẩu"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Vui lòng nhập email và mật khẩu",
+		})
 		return
 	}
 
 	// =========================
-	// ✅ Check khách hàng trước
+	// Check người dùng
 	// =========================
 	var nd models.NguoiDung
-	if err := config.DB.Where("email = ?", input.Email).First(&nd).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Email không tồn tại"})
+
+	if err := config.DB.
+		Where("email = ?", input.Email).
+		First(&nd).Error; err != nil {
+
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Email không tồn tại",
+		})
 		return
 	}
 
-	// check password
-	if bcrypt.CompareHashAndPassword([]byte(nd.MatKhau), []byte(input.Password)) != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Mật khẩu không đúng"})
+	// =========================
+	// Check trạng thái tài khoản
+	// =========================
+	if nd.TrangThai == "khoa" {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Tài khoản đã bị khóa",
+		})
+		return
+	}
+
+	// =========================
+	// Check mật khẩu
+	// =========================
+	if bcrypt.CompareHashAndPassword(
+		[]byte(nd.MatKhau),
+		[]byte(input.Password),
+	) != nil {
+
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Mật khẩu không đúng",
+		})
 		return
 	}
 
 	role := nd.LoaiNguoiDung
+
 	redirect := "/user"
 	if role == "admin" {
 		redirect = "/admin"
 	}
 
-	token, err := utils.GenerateToken(nd.MaNguoiDung, nd.Email, role)
+	token, err := utils.GenerateToken(
+		nd.MaNguoiDung,
+		nd.Email,
+		role,
+	)
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể tạo token",
+		})
 		return
 	}
 

@@ -209,18 +209,28 @@ func UpdateNhanVien(c *gin.Context) {
 // 🗑️ Xóa nhân viên
 func DeleteNhanVien(c *gin.Context) {
 	id := c.Param("id")
+
 	var nv models.NguoiDung
+
+	// Tìm nhân viên
 	if err := config.DB.First(&nv, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy nhân viên"})
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Không tìm thấy nhân viên",
+		})
 		return
 	}
 
-	if err := config.DB.Delete(&nv).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// Cập nhật trạng thái thành khóa
+	if err := config.DB.Model(&nv).Update("trang_thai", "khoa").Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Đã xóa nhân viên thành công"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Đã khóa tài khoản nhân viên",
+	})
 }
 
 func UpdateThongTinCaNhan(c *gin.Context) {
