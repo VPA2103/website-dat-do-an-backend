@@ -62,7 +62,7 @@ func SendMailSauKhiDatDoAn(email string, info DatDoAnMailInfo) error {
 					<!-- Title -->
 					<div style="background:#f7f0e3;padding:24px 32px 16px;text-align:center;border-bottom:1px solid #e0d0b0;">
 					<div style="font-size:11px;letter-spacing:5px;color:#8a7a5a;font-family:'Courier New',monospace;margin-bottom:8px;">THÔNG BÁO</div>
-					<div style="font-size:22px;color:#2a1f0a;letter-spacing:1px;">Đặt bàn thành công</div>
+					<div style="font-size:22px;color:#2a1f0a;letter-spacing:1px;">Đặt món ăn thành công</div>
 					<div style="width:40px;height:1px;background:#c4a55a;margin:12px auto 0;"></div>
 					</div>
 
@@ -86,12 +86,12 @@ func SendMailSauKhiDatDoAn(email string, info DatDoAnMailInfo) error {
 						<td style="padding:10px 14px;color:#2a1f0a;">%s</td>
 						</tr>
 						<tr style="border-bottom:0.5px solid #f0e4c8;">
-						<td style="padding:10px 14px;color:#8a7a5a;">Số khách</td>
-						<td style="padding:10px 14px;color:#2a1f0a;">%d người</td>
+						<td style="padding:10px 14px;color:#8a7a5a;">Tạm tính</td>
+						<td style="padding:10px 14px;color:#2a1f0a;">%s</td>
 						</tr>
 						<tr>
-						<td style="padding:10px 14px;color:#8a7a5a;">Số điện thoại</td>
-						<td style="padding:10px 14px;color:#2a1f0a;">%s</td>
+						<td style="padding:10px 14px;color:#8a7a5a;">Tổng cộng</td>
+						<td style="padding:10px 14px;color:#2a1f0a;font-weight:600;">%s</td>
 						</tr>
 					</table>
 
@@ -125,17 +125,30 @@ func SendMailSauKhiDatDoAn(email string, info DatDoAnMailInfo) error {
 				</body>
 				</html>`,
 		info.TenKhachHang,
-		info.MaDon,
+		fmt.Sprintf("HD%s", info.MaDon),
 		info.NgayGio,
-		info.DiaChi,
-		info.SoMonAn,
-		info.TamTinh,
-		info.TienGiam,
-		info.TongCuoi,
+		// info.DiaChi,
+		// info.SoMonAn,
+		formatVND(info.TamTinh),
+		formatVND(info.TongCuoi),
 		info.GhiChu,
 	)
 
 	return SendMail(email, "✦ Xác nhận đặt đồ ăn thành công", body)
+}
+
+func formatVND(amount float64) string {
+	s := fmt.Sprintf("%.0f", amount)
+	// Thêm dấu chấm mỗi 3 chữ số từ phải sang
+	n := len(s)
+	var result []byte
+	for i, c := range s {
+		if i > 0 && (n-i)%3 == 0 {
+			result = append(result, '.')
+		}
+		result = append(result, byte(c))
+	}
+	return string(result) + " ₫"
 }
 
 type DangKyMailInfo struct {
