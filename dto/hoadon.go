@@ -3,7 +3,7 @@ package dto
 import "time"
 
 type HoaDon struct {
-	MaHoaDon        uint      `json:"ma_hd"`
+	MaHoaDon        uint      `json:"ma_hoa_don"`
 	MaNguoiDung     uint      `json:"ma_nguoi_dung"`
 	HoTen           string    `json:"ho_ten"`
 	SDT             string    `json:"sdt"`

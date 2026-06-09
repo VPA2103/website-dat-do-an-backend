@@ -18,6 +18,8 @@ type NguoiDung struct {
 	DatBans     []DatBan  `gorm:"foreignKey:IDNhanVienXacNhan" json:"dat_bans,omitempty"`
 	AnhNhanVien []HinhAnh `gorm:"polymorphic:Owner;polymorphicValue:nguoi_dung" json:"anh_nguoi_dung,omitempty"`
 
+	ShipOrders []ShipOrder `gorm:"foreignKey:MaShipper"`
+
 	DiaChis   []DiaChi   `gorm:"foreignKey:MaNguoiDung;references:MaNguoiDung;" json:"dia_chis,omitempty"`
 	YeuThichs []YeuThich `gorm:"foreignKey:MaNguoiDung;" json:"yeu_thichs,omitempty"`
 	DanhGias  []DanhGia  `gorm:"foreignKey:MaNguoiDung;" json:"danh_gias,omitempty"`

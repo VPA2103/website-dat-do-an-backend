@@ -41,6 +41,6 @@ func HoaDonRoutes(r *gin.Engine, hub *websocket.Hub) {
 		hoaDon.GET("/mon-an-ban-chay", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetTopMonAnBanChay)
 		hoaDon.GET("/ti-le-hoan-thanh-hom-nay", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetTiLeHoanThanhHomNay)
 
-		// hoaDon.POST("/:ma_hd/thanh-toan", controllers.ThanhToanHoaDon)
+		// hoaDon.POST("/:ma_hoa_don/thanh-toan", controllers.ThanhToanHoaDon)
 	}
 }

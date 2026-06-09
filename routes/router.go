@@ -31,7 +31,7 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	// 👨‍💼 Nhân viên routes (có thể để ngoài hoặc trong nhóm admin)
 	AuthRoutes(r)
 
-	NguoiDungRoutes(r)
+	NguoiDungRoutes(r,hub)
 
 	BanAnRoutes(r)
 

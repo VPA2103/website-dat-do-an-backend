@@ -8,6 +8,8 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
+	"github.com/vpa/quanlynhahang-backend/dto"
+	"github.com/vpa/quanlynhahang-backend/internal/websocket"
 	"github.com/vpa/quanlynhahang-backend/models"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,7 +25,7 @@ func CreateNhanVien(c *gin.Context) {
 	}
 
 	// ✅ Kiểm tra loại nhân viên chỉ được phép là "user" hoặc "admin"
-	if nv.LoaiNguoiDung != "user" && nv.LoaiNguoiDung != "admin"&& nv.LoaiNguoiDung != "shipper" {
+	if nv.LoaiNguoiDung != "user" && nv.LoaiNguoiDung != "admin" && nv.LoaiNguoiDung != "shipper" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Loại nhân viên không hợp lệ. Chỉ chấp nhận 'user' hoặc 'admin'."})
 		return
 	}
@@ -342,5 +344,117 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Cập nhật thông tin cá nhân thành công",
 		"data":    nv,
+	})
+}
+
+func AssignShipper(hub *websocket.Hub) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var input struct {
+			MaHoaDon  uint  `json:"ma_hoa_don"`
+			MaShipper *uint `json:"ma_shipper"`
+		}
+
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(400, gin.H{"error": "invalid input"})
+			return
+		}
+
+		// ✅ 1. validate TRƯỚC khi insert
+		if input.MaShipper == nil {
+			c.JSON(400, gin.H{"error": "ma_shipper is required"})
+			return
+		}
+		var count int64
+		config.DB.Model(&models.ShipOrder{}).
+			Where("ma_hoa_don = ? AND status IN ?", input.MaHoaDon, []string{"pending", "accepted", "delivering"}).
+			Count(&count)
+
+		if count > 0 {
+			c.JSON(400, gin.H{"error": "order already assigned"})
+			return
+		}
+		// lấy value
+		shipperID := *input.MaShipper
+
+		// ✅ 2. tạo ship order
+		ship := models.ShipOrder{
+			MaHoaDon:  input.MaHoaDon,
+			MaShipper: &shipperID,
+			Status:    "pending",
+		}
+
+		if err := config.DB.Create(&ship).Error; err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		// ✅ 3. update hóa đơn
+		config.DB.Model(&models.HoaDon{}).
+			Where("ma_hoa_don = ?", input.MaHoaDon).
+			Updates(map[string]interface{}{
+				"trang_thai": "cho_shipper",
+			})
+
+		// ✅ 4. notify shipper (GIỮ NGUYÊN HUB CỦA BẠN)
+		NotifyShipper(hub, shipperID, ship)
+
+		c.JSON(200, gin.H{
+			"message": "assigned successfully",
+		})
+	}
+}
+
+func NotifyShipper(hub *websocket.Hub, shipperID uint, ship models.ShipOrder) {
+
+	msg := dto.WSMessage{
+		Type:    "NEW_ORDER",
+		Payload: ship,
+	}
+
+	hub.SendToUser(shipperID, msg)
+}
+
+func AcceptShipOrder(c *gin.Context) {
+	var input struct {
+		ShipOrderID uint `json:"ship_order_id"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(400, gin.H{"error": "invalid input"})
+		return
+	}
+
+	var ship models.ShipOrder
+
+	// 1. lấy đơn
+	if err := config.DB.First(&ship, input.ShipOrderID).Error; err != nil {
+		c.JSON(404, gin.H{"error": "not found"})
+		return
+	}
+
+	// 2. check trạng thái
+	if ship.Status != "pending" {
+		c.JSON(400, gin.H{"error": "order already taken"})
+		return
+	}
+
+	now := time.Now()
+
+	// 3. update ship order
+	config.DB.Model(&ship).Updates(map[string]interface{}{
+		"status":      "accepted",
+		"accepted_at": now,
+	})
+
+	// 4. update hóa đơn
+	config.DB.Model(&models.HoaDon{}).
+		Where("ma_hoa_don = ?", ship.MaHoaDon).
+		Updates(map[string]interface{}{
+			"ma_shipper": ship.MaShipper,
+			"trang_thai": "dang_giao",
+		})
+
+	c.JSON(200, gin.H{
+		"message": "Đã xác nhận đơn hàng",
 	})
 }

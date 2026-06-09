@@ -172,7 +172,7 @@ func (ctrl *DanhGiaController) DeleteDanhGia(c *gin.Context) {
 }
 
 func CheckDanhGia(c *gin.Context) {
-	maHD, _ := strconv.Atoi(c.Query("ma_hd"))
+	maHD, _ := strconv.Atoi(c.Query("ma_hoa_don"))
 	maUser, _ := strconv.Atoi(c.Query("ma_nguoi_dung"))
 	maMon, _ := strconv.Atoi(c.Query("ma_mon_an"))
 

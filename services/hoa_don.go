@@ -40,7 +40,7 @@ func GetMonDaGoi(maBan uint) ([]models.ChiTietHoaDon, error) {
 
 	err = config.DB.
 		Preload("MonAn").
-		Where("ma_hd = ?", hoaDon.MaHoaDon).
+		Where("ma_hoa_don = ?", hoaDon.MaHoaDon).
 		Find(&ds).Error
 
 	return ds, err

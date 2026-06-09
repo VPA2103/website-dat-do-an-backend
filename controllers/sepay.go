@@ -172,7 +172,7 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 
 	// ✅ LOAD HÓA ĐƠN TRƯỚC
 	var hoaDon models.HoaDon
-	if err := config.DB.First(&hoaDon, "ma_hd = ?", id).Error; err != nil {
+	if err := config.DB.First(&hoaDon, "ma_hoa_don = ?", id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "Không tìm thấy hóa đơn"})
 		return
 	}
@@ -180,7 +180,7 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 	// ✅ CHECK ĐÃ THANH TOÁN CHƯA (chống webhook gửi lại)
 	var existing models.ThanhToan
 	if err := config.DB.
-		Where("ma_hd = ?", hoaDon.MaHoaDon).
+		Where("ma_hoa_don = ?", hoaDon.MaHoaDon).
 		First(&existing).Error; err == nil {
 
 		c.JSON(200, gin.H{"message": "Đã xử lý trước đó"})
@@ -210,7 +210,7 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type: "update_trang_thai_thanh_toan",
 		Payload: gin.H{
-			"ma_hd":                 hoaDon.MaHoaDon,
+			"ma_hoa_don":                 hoaDon.MaHoaDon,
 			"trang_thai_thanh_toan": "da_thanh_toan",
 		},
 	})
