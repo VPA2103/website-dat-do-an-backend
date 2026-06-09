@@ -17,5 +17,6 @@ func ShipRoutes(r *gin.Engine, hub *websocket.Hub) {
 
 		ship.PUT("/:id/trang-thai", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), ctrl.UpdateTrangThaiHoaDon)
 
+		ship.POST("/accept-order", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), controllers.AcceptShipOrder)
 	}
 }

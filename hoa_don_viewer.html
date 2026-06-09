@@ -365,7 +365,7 @@
       /* ── Render ── */
       function render(hd) {
         const isPaid    = hd.trang_thai_thanh_toan === "da_thanh_toan";
-        const qrContent = `HD${hd.ma_hd}`;
+        const qrContent = `HD${hd.ma_hoa_don}`;
         const qrURL     = sePayQR(Math.round(hd.tong_tien), qrContent);
         const details   = hd.chi_tiet_hoa_dons || [];
 
@@ -403,7 +403,7 @@
           ? `<div class="paid-overlay" style="display:flex;">
               <div class="paid-icon">✓</div>
               <div class="paid-title">Đã thanh toán</div>
-              <div class="paid-sub">Hóa đơn #${hd.ma_hd} đã được xác nhận thanh toán</div>
+              <div class="paid-sub">Hóa đơn #${hd.ma_hoa_don} đã được xác nhận thanh toán</div>
              </div>`
           : `<div class="qr-section" id="qr-section">
               <div class="card-title">Thanh toán qua QR</div>
@@ -421,7 +421,7 @@
                 <div><div class="bi-label">Số tiền</div><div class="bi-val" style="color:var(--accent)">${fmt(hd.tong_tien)}</div></div>
                 <div><div class="bi-label">Nội dung</div><div class="bi-val">${qrContent}</div></div>
               </div>
-              <button class="btn btn-primary" onclick="checkPayment(${hd.ma_hd})" id="btn-check">
+              <button class="btn btn-primary" onclick="checkPayment(${hd.ma_hoa_don})" id="btn-check">
                 <span id="btn-icon">↻</span> Kiểm tra thanh toán
               </button>
             </div>`;
@@ -454,12 +454,12 @@
           </div>` : "";
 
         document.getElementById("app").innerHTML = `
-          ${searchBarHTML(hd.ma_hd)}
+          ${searchBarHTML(hd.ma_hoa_don)}
 
           <div class="hd-header">
             <div>
               <div class="brand">Hóa đơn</div>
-              <div class="hd-title">#<span>${hd.ma_hd}</span></div>
+              <div class="hd-title">#<span>${hd.ma_hoa_don}</span></div>
               <div style="margin-top:8px;font-size:12px;color:var(--muted)">
                 Khách hàng #${hd.ma_nguoi_dung ?? "—"} · ${fmtDate(hd.ngay)}
               </div>
@@ -517,7 +517,7 @@
           <div class="card" id="payment-card">${qrBlock}</div>`;
 
         fillTokenInput();
-        if (!isPaid) startPolling(hd.ma_hd);
+        if (!isPaid) startPolling(hd.ma_hoa_don);
       }
 
       /* ── Manual check ── */

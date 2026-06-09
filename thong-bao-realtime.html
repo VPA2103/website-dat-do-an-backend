@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shipper — Đơn hàng realtime</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inconsolata:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0d0f14;
+        --surface: #161a24;
+        --card: #1e2333;
+        --border: #2a3048;
+        --accent: #f0b429;
+        --accent2: #e05c2e;
+        --text: #e8ecf4;
+        --muted: #6b7494;
+        --success: #2dd68c;
+        --danger: #f0524f;
+        --warn: #f0b429;
+        --info: #5ab4ff;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Sora", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 32px 16px 64px;
+      }
+      .page {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+
+      /* Header */
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+      }
+      .brand {
+        font-family: "Inconsolata", monospace;
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .page-title {
+        font-size: 26px;
+        font-weight: 700;
+      }
+      .page-title span {
+        color: var(--accent);
+      }
+
+      /* WS Status Badge */
+      .ws-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        cursor: default;
+        user-select: none;
+        transition: all 0.3s;
+      }
+      .ws-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .ws-disconnected {
+        background: #1e1a14;
+        color: var(--muted);
+        border-color: #3a3428;
+      }
+      .ws-disconnected .ws-dot {
+        background: var(--muted);
+      }
+      .ws-connecting {
+        background: #1a2030;
+        color: var(--info);
+        border-color: #1e3a5a;
+      }
+      .ws-connecting .ws-dot {
+        background: var(--info);
+        animation: blink 0.9s infinite;
+      }
+      .ws-connected {
+        background: #162a22;
+        color: var(--success);
+        border-color: #1e3d2f;
+      }
+      .ws-connected .ws-dot {
+        background: var(--success);
+        animation: pulse 2s infinite;
+      }
+      .ws-error {
+        background: #2a1a1a;
+        color: var(--danger);
+        border-color: #4a2020;
+      }
+      .ws-error .ws-dot {
+        background: var(--danger);
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.2;
+        }
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(45, 214, 140, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 0 5px rgba(45, 214, 140, 0);
+        }
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(40px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Config Card */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+      }
+      .card-title {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .input-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .input-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        margin-bottom: 5px;
+      }
+      .input-group {
+        flex: 1;
+        min-width: 180px;
+      }
+      .cfg-input {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        font-family: "Inconsolata", monospace;
+        font-size: 14px;
+        padding: 10px 14px;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .cfg-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.12);
+      }
+      .cfg-input::placeholder {
+        color: var(--muted);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-family: "Sora", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #0d0f14;
+      }
+      .btn-primary:hover {
+        background: #e6a820;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(240, 180, 41, 0.3);
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .btn-danger {
+        background: rgba(240, 82, 79, 0.15);
+        color: var(--danger);
+        border: 1px solid rgba(240, 82, 79, 0.3);
+      }
+      .btn-danger:hover {
+        background: rgba(240, 82, 79, 0.25);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .btn-ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* Stats row */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 18px;
+      }
+      .stat-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+      }
+      .stat-val {
+        font-family: "Inconsolata", monospace;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .stat-val.accent {
+        color: var(--accent);
+      }
+      .stat-val.success {
+        color: var(--success);
+      }
+      .stat-val.info {
+        color: var(--info);
+      }
+      .stat-val.muted {
+        color: var(--muted);
+      }
+
+      /* Log area */
+      .log-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .log-title {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .log-count {
+        font-family: "Inconsolata", monospace;
+        font-size: 11px;
+        background: rgba(240, 180, 41, 0.12);
+        color: var(--accent);
+        border: 1px solid rgba(240, 180, 41, 0.25);
+        border-radius: 999px;
+        padding: 2px 9px;
+      }
+      .log-empty {
+        text-align: center;
+        padding: 48px 20px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .log-empty .log-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+        opacity: 0.4;
+      }
+
+      /* Order notification card */
+      .order-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 12px;
+        animation: slideIn 0.4s ease both;
+        position: relative;
+        overflow: hidden;
+      }
+      .order-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--accent);
+        border-radius: 3px 0 0 3px;
+      }
+      .order-card.type-accepted::before {
+        background: var(--success);
+      }
+      .order-card.type-cancelled::before {
+        background: var(--danger);
+      }
+      .order-card.type-system::before {
+        background: var(--muted);
+      }
+
+      .order-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .order-type {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .order-type.new {
+        color: var(--accent);
+      }
+      .order-type.accepted {
+        color: var(--success);
+      }
+      .order-type.cancelled {
+        color: var(--danger);
+      }
+      .order-type.system {
+        color: var(--muted);
+      }
+      .order-time {
+        font-family: "Inconsolata", monospace;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .order-id {
+        font-family: "Inconsolata", monospace;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .order-id span {
+        color: var(--accent);
+      }
+
+      .order-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .oi-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 3px;
+      }
+      .oi-val {
+        font-size: 13px;
+        font-weight: 500;
+        word-break: break-word;
+      }
+      .oi-val.mono {
+        font-family: "Inconsolata", monospace;
+        font-size: 14px;
+      }
+
+      .order-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+
+      /* Raw JSON toggle */
+      .raw-toggle {
+        font-size: 11px;
+        color: var(--muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 10px;
+      }
+      .raw-toggle:hover {
+        color: var(--accent);
+      }
+      .raw-block {
+        display: none;
+        margin-top: 10px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        font-family: "Inconsolata", monospace;
+        font-size: 11px;
+        color: #a0aabf;
+        overflow-x: auto;
+        white-space: pre;
+        line-height: 1.6;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      /* Toast */
+      .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+      }
+      .toast {
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-size: 13px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 340px;
+        animation: slideIn 0.3s ease;
+        pointer-events: auto;
+      }
+      .toast-new {
+        border-color: rgba(240, 180, 41, 0.4);
+        background: #1e1c14;
+      }
+      .toast-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      /* Spinner */
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+      }
+
+      /* Ping animation for new order */
+      .ping-ring {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 80px;
+        height: 80px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        pointer-events: none;
+        border: 3px solid var(--accent);
+        animation: pingRing 0.8s ease-out forwards;
+        z-index: 9998;
+      }
+      @keyframes pingRing {
+        0% {
+          opacity: 0.9;
+          transform: translate(-50%, -50%) scale(0.5);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(3);
+        }
+      }
+
+      @media (max-width: 540px) {
+        .top-bar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .order-info {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="page">
+      <!-- Top bar -->
+      <div class="top-bar">
+        <div>
+          <div class="brand">Shipper Dashboard</div>
+          <div class="page-title">Thông báo <span>realtime</span></div>
+        </div>
+        <div id="ws-badge" class="ws-badge ws-disconnected">
+          <span class="ws-dot"></span>
+          <span id="ws-label">Chưa kết nối</span>
+        </div>
+      </div>
+
+      <!-- Config card -->
+      <div class="card">
+        <div class="card-title">Cấu hình kết nối</div>
+        <div class="input-row" style="margin-bottom: 14px">
+          <div class="input-group" style="flex: 2">
+            <div class="input-label">WebSocket URL</div>
+            <input
+              id="ws-url"
+              class="cfg-input"
+              placeholder="ws://localhost:3000/ws"
+              value="ws://localhost:3000/ws"
+            />
+          </div>
+          <div class="input-group">
+            <div class="input-label">Token (JWT)</div>
+            <input
+              id="ws-token"
+              class="cfg-input"
+              placeholder="Dán Bearer token..."
+              type="password"
+            />
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <button
+            class="btn btn-primary"
+            id="btn-connect"
+            onclick="connectWS()"
+          >
+            <span
+              class="spinner"
+              id="conn-spinner"
+              style="display: none"
+            ></span>
+            <span id="conn-label">Kết nối</span>
+          </button>
+          <button
+            class="btn btn-danger"
+            id="btn-disconnect"
+            onclick="disconnectWS()"
+            style="display: none"
+          >
+            Ngắt kết nối
+          </button>
+          <button
+            class="btn btn-ghost"
+            onclick="clearLog()"
+            title="Xoá lịch sử"
+          >
+            Xoá log
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Tổng nhận</div>
+          <div class="stat-val accent" id="stat-total">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Đơn mới</div>
+          <div class="stat-val info" id="stat-new">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Đã xử lý</div>
+          <div class="stat-val success" id="stat-done">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Kết nối lại</div>
+          <div class="stat-val muted" id="stat-retry">0</div>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="card">
+        <div class="log-header">
+          <div class="log-title">
+            Sự kiện nhận được
+            <span class="log-count" id="log-count">0</span>
+          </div>
+        </div>
+        <div id="log-area">
+          <div class="log-empty" id="log-empty">
+            <div class="log-icon">📡</div>
+            <div>Kết nối WebSocket để nhận thông báo realtime</div>
+            <div style="font-size: 12px; margin-top: 6px; opacity: 0.6">
+              Thông báo sẽ xuất hiện ở đây ngay lập tức
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const CONFIG = { API_BASE: "http://localhost:3000" };
+
+      let ws = null;
+      let retryTimer = null;
+      let retryCount = 0;
+      let stats = { total: 0, new: 0, done: 0 };
+      let logItems = [];
+      let autoRetry = true;
+
+      /* ── Persist config ── */
+      function saveConfig() {
+        localStorage.setItem(
+          "shipper_ws_url",
+          document.getElementById("ws-url").value.trim(),
+        );
+        localStorage.setItem(
+          "shipper_ws_token",
+          document.getElementById("ws-token").value.trim(),
+        );
+      }
+      function loadConfig() {
+        const url = localStorage.getItem("shipper_ws_url");
+        const token = localStorage.getItem("shipper_ws_token");
+        if (url) document.getElementById("ws-url").value = url;
+        if (token) document.getElementById("ws-token").value = token;
+      }
+
+      /* ── WS Badge ── */
+      function setStatus(state, label) {
+        const b = document.getElementById("ws-badge");
+        b.className = `ws-badge ws-${state}`;
+        document.getElementById("ws-label").textContent = label;
+      }
+
+      /* ── Connect ── */
+      function connectWS() {
+        const url = document.getElementById("ws-url").value.trim();
+        const token = document.getElementById("ws-token").value.trim();
+        if (!url) {
+          showToast("Nhập WebSocket URL trước", "warn");
+          return;
+        }
+
+        saveConfig();
+        autoRetry = true;
+        clearTimeout(retryTimer);
+
+        const fullURL = token
+          ? `${url}?token=${encodeURIComponent(token)}`
+          : url;
+
+        setStatus("connecting", "Đang kết nối...");
+        document.getElementById("conn-spinner").style.display = "inline-block";
+        document.getElementById("conn-label").textContent = "Đang kết nối";
+        document.getElementById("btn-connect").disabled = true;
+
+        if (ws && ws.readyState < 2) ws.close();
+
+        ws = new WebSocket(fullURL);
+
+        ws.onopen = () => {
+          retryCount = 0;
+          updateStat("retry", retryCount);
+          setStatus("connected", "Đã kết nối");
+          document.getElementById("conn-spinner").style.display = "none";
+          document.getElementById("conn-label").textContent = "Kết nối";
+          document.getElementById("btn-connect").style.display = "none";
+          document.getElementById("btn-disconnect").style.display =
+            "inline-flex";
+          document.getElementById("btn-connect").disabled = false;
+          addSystemLog("✓ WebSocket kết nối thành công");
+          showToast("Kết nối thành công!", "success");
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            handleMessage(msg, event.data);
+          } catch (e) {
+            addSystemLog(
+              "⚠ Dữ liệu không phải JSON: " + event.data.substring(0, 80),
+            );
+          }
+        };
+
+        ws.onerror = () => {
+          setStatus("error", "Lỗi kết nối");
+          document.getElementById("conn-spinner").style.display = "none";
+          document.getElementById("conn-label").textContent = "Kết nối";
+          document.getElementById("btn-connect").disabled = false;
+        };
+
+        ws.onclose = (ev) => {
+          document.getElementById("btn-connect").style.display = "inline-flex";
+          document.getElementById("btn-disconnect").style.display = "none";
+          document.getElementById("btn-connect").disabled = false;
+          document.getElementById("conn-spinner").style.display = "none";
+          document.getElementById("conn-label").textContent = "Kết nối";
+
+          if (autoRetry && ev.code !== 1000) {
+            retryCount++;
+            updateStat("retry", retryCount);
+            const delay = Math.min(3000 * retryCount, 15000);
+            setStatus("connecting", `Thử lại sau ${delay / 1000}s...`);
+            addSystemLog(
+              `⟳ Mất kết nối (code ${ev.code}) — thử lại sau ${delay / 1000}s`,
+            );
+            retryTimer = setTimeout(() => {
+              if (autoRetry) connectWS();
+            }, delay);
+          } else {
+            setStatus("disconnected", "Đã ngắt kết nối");
+            addSystemLog("✕ Kết nối đã đóng");
+          }
+        };
+      }
+
+      function disconnectWS() {
+        autoRetry = false;
+        clearTimeout(retryTimer);
+        if (ws) ws.close(1000);
+        setStatus("disconnected", "Đã ngắt kết nối");
+      }
+
+      /* ── Handle message ── */
+      function handleMessage(msg, raw) {
+        stats.total++;
+        updateStat("total", stats.total);
+        updateStat("logCount");
+
+        const type = (msg.type || "UNKNOWN").toUpperCase();
+        const payload = msg.payload || msg.data || msg;
+
+        if (type === "NEW_ORDER") {
+          stats.new++;
+          updateStat("new", stats.new);
+          pingRing();
+          playBeep();
+          renderOrderCard(type, payload, raw);
+          showToast(
+            `Đơn mới #${payload.ma_hoa_don ?? payload.ma_ship_order ?? "?"}`,
+            "new",
+          );
+        } else if (type === "ORDER_ACCEPTED" || type === "ACCEPTED") {
+          stats.done++;
+          updateStat("done", stats.done);
+          renderOrderCard(type, payload, raw);
+        } else if (type === "ORDER_CANCELLED" || type === "CANCELLED") {
+          renderOrderCard(type, payload, raw);
+        } else {
+          renderGenericCard(type, payload, raw);
+        }
+      }
+
+      /* ── Render cards ── */
+      const fmt = (n) =>
+        new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(n ?? 0);
+      const fmtTime = () => new Date().toLocaleTimeString("vi-VN");
+
+      function renderOrderCard(type, payload, raw) {
+        const id = payload?.ma_hoa_don ?? payload?.ma_ship_order ?? "—";
+        const shipperName =
+          payload?.shipper?.ho_ten ?? payload?.ma_shipper ?? "—";
+        const address = payload?.hoa_don?.dia_chi ?? payload?.dia_chi ?? "—";
+        const total = payload?.hoa_don?.tong_tien ?? payload?.tong_tien;
+        const status = payload?.status ?? payload?.trang_thai ?? "—";
+
+        const typeClass =
+          type === "NEW_ORDER"
+            ? "new"
+            : type.includes("ACCEPTED")
+              ? "accepted"
+              : "cancelled";
+        const cardClass =
+          type === "NEW_ORDER"
+            ? ""
+            : type.includes("ACCEPTED")
+              ? "type-accepted"
+              : "type-cancelled";
+
+        const typeLabel =
+          {
+            NEW_ORDER: "🛵 Đơn mới",
+            ORDER_ACCEPTED: "✓ Đã nhận",
+            ACCEPTED: "✓ Đã nhận",
+            ORDER_CANCELLED: "✕ Đã huỷ",
+            CANCELLED: "✕ Đã huỷ",
+          }[type] || type;
+
+        const uid =
+          "card_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+
+        const html = `
+  <div class="order-card ${cardClass}" id="${uid}">
+    <div class="order-head">
+      <div>
+        <div class="order-type ${typeClass}">${typeLabel}</div>
+        <div class="order-id">#<span>${id}</span></div>
+      </div>
+      <div class="order-time">${fmtTime()}</div>
+    </div>
+    <div class="order-info">
+      ${address !== "—" ? `<div><div class="oi-label">Địa chỉ giao</div><div class="oi-val">${address}</div></div>` : ""}
+      ${total != null ? `<div><div class="oi-label">Tổng tiền</div><div class="oi-val mono" style="color:var(--accent)">${fmt(total)}</div></div>` : ""}
+      <div><div class="oi-label">Trạng thái</div><div class="oi-val">${status}</div></div>
+      ${shipperName !== "—" ? `<div><div class="oi-label">Shipper ID</div><div class="oi-val mono">${shipperName}</div></div>` : ""}
+    </div>
+    ${
+      type === "NEW_ORDER"
+        ? `
+    <div class="order-actions">
+      <button class="btn btn-primary" onclick="acceptOrder('${id}', '${uid}')">Nhận đơn</button>
+      <button class="btn btn-ghost" onclick="viewOrder('${id}')">Xem chi tiết ↗</button>
+    </div>`
+        : ""
+    }
+    <div class="raw-toggle" onclick="toggleRaw('raw_${uid}')">▶ Xem raw JSON</div>
+    <pre class="raw-block" id="raw_${uid}">${escapeHTML(JSON.stringify(JSON.parse(raw), null, 2))}</pre>
+  </div>`;
+
+        prependLog(html);
+      }
+
+      function renderGenericCard(type, payload, raw) {
+        const uid = "card_" + Date.now();
+        const html = `
+  <div class="order-card type-system" id="${uid}">
+    <div class="order-head">
+      <div class="order-type system">📨 ${type}</div>
+      <div class="order-time">${fmtTime()}</div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px">Sự kiện không xác định</div>
+    <div class="raw-toggle" onclick="toggleRaw('raw_${uid}')">▶ Xem raw JSON</div>
+    <pre class="raw-block" id="raw_${uid}">${escapeHTML(JSON.stringify(payload, null, 2))}</pre>
+  </div>`;
+        prependLog(html);
+      }
+
+      function addSystemLog(msg) {
+        const uid = "sys_" + Date.now();
+        const html = `
+  <div class="order-card type-system" id="${uid}" style="padding:12px 18px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;color:var(--muted)">${msg}</div>
+      <div class="order-time">${fmtTime()}</div>
+    </div>
+  </div>`;
+        prependLog(html);
+      }
+
+      function prependLog(html) {
+        const area = document.getElementById("log-area");
+        document.getElementById("log-empty")?.remove();
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = html;
+        area.prepend(wrapper.firstElementChild);
+        logItems.unshift(html);
+        updateStat("logCount");
+      }
+
+      /* ── Actions ── */
+      async function acceptOrder(orderId, cardId) {
+        const token = document.getElementById("ws-token").value.trim();
+        const btn = document.querySelector(`#${cardId} .btn-primary`);
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Đang nhận...";
+        }
+        try {
+          const res = await fetch(`${CONFIG.API_BASE}/ship-orders/accept`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ ma_hoa_don: Number(orderId) }),
+          });
+          if (res.ok) {
+            showToast(`Nhận đơn #${orderId} thành công!`, "success");
+            const card = document.getElementById(cardId);
+            if (card) {
+              card.classList.add("type-accepted");
+              const actArea = card.querySelector(".order-actions");
+              if (actArea)
+                actArea.innerHTML = `<span style="font-size:13px;color:var(--success)">✓ Đã nhận đơn</span>`;
+            }
+            stats.done++;
+            updateStat("done", stats.done);
+          } else {
+            const err = await res.json().catch(() => ({}));
+            showToast("Lỗi: " + (err.error || res.status), "warn");
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = "Nhận đơn";
+            }
+          }
+        } catch (e) {
+          showToast("Không kết nối được server", "warn");
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Nhận đơn";
+          }
+        }
+      }
+
+      function viewOrder(id) {
+        window.open(`/hoa-don.html?id=${id}`, "_blank");
+      }
+
+      /* ── Helpers ── */
+      function clearLog() {
+        document.getElementById("log-area").innerHTML = `
+    <div class="log-empty" id="log-empty">
+      <div class="log-icon">📡</div>
+      <div>Log đã được xoá</div>
+    </div>`;
+        logItems = [];
+        stats = { total: 0, new: 0, done: 0 };
+        ["stat-total", "stat-new", "stat-done"].forEach(
+          (id) => (document.getElementById(id).textContent = "0"),
+        );
+        updateStat("logCount");
+      }
+
+      function toggleRaw(id) {
+        const el = document.getElementById(id);
+        const tog = el.previousElementSibling;
+        const visible = el.style.display === "block";
+        el.style.display = visible ? "none" : "block";
+        tog.textContent = (visible ? "▶" : "▼") + " Xem raw JSON";
+      }
+
+      function escapeHTML(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function updateStat(key, val) {
+        if (key === "logCount") {
+          document.getElementById("log-count").textContent = logItems.length;
+          return;
+        }
+        const map = {
+          total: "stat-total",
+          new: "stat-new",
+          done: "stat-done",
+          retry: "stat-retry",
+        };
+        const el = document.getElementById(map[key]);
+        if (el) el.textContent = val;
+      }
+
+      /* ── Toast ── */
+      function showToast(msg, type = "info") {
+        const dotColor =
+          {
+            new: "var(--accent)",
+            success: "var(--success)",
+            warn: "var(--warn)",
+            info: "var(--info)",
+          }[type] || "var(--muted)";
+        const cls = type === "new" ? "toast toast-new" : "toast";
+        const t = document.createElement("div");
+        t.className = cls;
+        t.innerHTML = `<span class="toast-dot" style="background:${dotColor}"></span><span>${msg}</span>`;
+        const container = document.getElementById("toast-container");
+        container.appendChild(t);
+        setTimeout(() => {
+          t.style.opacity = "0";
+          t.style.transition = "opacity .4s";
+          setTimeout(() => t.remove(), 400);
+        }, 3500);
+      }
+
+      /* ── Ping ring ── */
+      function pingRing() {
+        const r = document.createElement("div");
+        r.className = "ping-ring";
+        document.body.appendChild(r);
+        setTimeout(() => r.remove(), 900);
+      }
+
+      /* ── Beep ── */
+      function playBeep() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.value = 880;
+          osc.type = "sine";
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        } catch (_) {}
+      }
+
+      /* ── Bootstrap ── */
+      loadConfig();
+      document.getElementById("ws-token").addEventListener("blur", saveConfig);
+      document.getElementById("ws-url").addEventListener("blur", saveConfig);
+    </script>
+  </body>
+</html>

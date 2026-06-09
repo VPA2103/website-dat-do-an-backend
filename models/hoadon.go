@@ -3,7 +3,7 @@ package models
 import "time"
 
 type HoaDon struct {
-	MaHoaDon        uint      `gorm:"primaryKey;size:10;autoIncrement" json:"ma_hd"`
+	MaHoaDon uint `gorm:"column:ma_hoa_don;primaryKey" json:"ma_hd"`
 	MaNguoiDung uint      `json:"ma_nguoi_dung"`
 	HoTen       string    `json:"ho_ten"`
 	SDT         string    `json:"sdt"`
@@ -23,4 +23,17 @@ type HoaDon struct {
 	GiamGia        GiamGia         `gorm:"foreignKey:GiamGiaID;references:ID" json:"giam_gia"`
 	ChiTietHoaDons []ChiTietHoaDon `gorm:"foreignKey:MaHoaDon" json:"chi_tiet_hoa_dons"`
 	ThanhToans     *ThanhToan      `gorm:"foreignKey:MaHoaDon;references:MaHoaDon" json:"thanh_toans"`
+}
+
+type ShipOrder struct {
+	ID uint `gorm:"primaryKey"`
+
+	MaHoaDon uint `gorm:"index"`
+
+	MaShipper *uint `gorm:"index"`
+
+	Status string // pending | accepted | rejected | delivering | done
+
+	CreatedAt  time.Time
+	AcceptedAt *time.Time
 }

@@ -61,14 +61,14 @@ func UpdateTongTien(maHD uint) error {
 	var tong float64
 
 	if err := config.DB.Model(&models.ChiTietHoaDon{}).
-		Where("ma_hd = ?", maHD).
+		Where("ma_hoa_don = ?", maHD).
 		Select("SUM(thanh_tien)").
 		Scan(&tong).Error; err != nil {
 		return err
 	}
 
 	if err := config.DB.Model(&models.HoaDon{}).
-		Where("ma_hd = ?", maHD).
+		Where("ma_hoa_don = ?", maHD).
 		Update("tong_tien", tong).Error; err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func UpdateTongTien(maHD uint) error {
 // 	var chiTiet models.ChiTietHoaDon
 
 // 	err = config.DB.
-// 		Where("ma_hd = ? AND ma_mon_an = ?", hoaDon.MaHD, maMon).
+// 		Where("ma_hoa_don = ? AND ma_mon_an = ?", hoaDon.MaHD, maMon).
 // 		First(&chiTiet).Error
 
 // 	// nếu món đã tồn tại trong hóa đơn

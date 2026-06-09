@@ -7,6 +7,7 @@ import (
 )
 
 func AdminRoutes(r *gin.Engine) {
+
 	nhanvien := r.Group("/admin")
 	{
 		// ✅ Chỉ admin được phép
