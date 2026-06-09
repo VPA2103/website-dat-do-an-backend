@@ -90,15 +90,19 @@ func ConnectDB() {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger:                                   logger.Default.LogMode(logger.Info),
 	})
-	
+
 	if err != nil {
 		panic(fmt.Sprintf("❌ Failed to connect to database: %v", err))
 	}
 
+	if err := db.Exec(`CREATE EXTENSION IF NOT EXISTS vector`).Error; err != nil {
+		panic(fmt.Sprintf("❌ Failed to create extension vector: %v", err))
+	}
+
 	DB = db
-	fmt.Println("🚀 Database connected successfully")
+	fmt.Println("✔ Database connected successfully")
 }
 
 func LoadGeminiConfig() GeminiConfig {
