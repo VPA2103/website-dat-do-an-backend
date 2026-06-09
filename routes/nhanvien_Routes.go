@@ -22,6 +22,6 @@ func NguoiDungRoutes(r *gin.Engine) {
 
 		// ✅ Cả admin và user đều có thể xem danh sách
 		nguoidung.GET("/layTatCa", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin", "user"), controllers.GetAllNhanVien)
-
+		nguoidung.GET("/shippers",middleware.AuthMiddleware(),middleware.RoleMiddleware("admin"),controllers.GetShippers)
 	}
 }

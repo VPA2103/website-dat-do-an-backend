@@ -344,3 +344,21 @@ func UpdateThongTinCaNhan(c *gin.Context) {
 		"data":    nv,
 	})
 }
+func GetShippers(c *gin.Context) {
+	var shippers []models.NguoiDung
+
+	err := config.DB.
+		Preload("AnhNhanVien").
+		Where("loai_nguoi_dung = ?", "shipper").
+		Find(&shippers).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Lỗi lấy danh sách shipper",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, shippers)
+}
