@@ -3,7 +3,7 @@ package models
 import "time"
 
 type HoaDon struct {
-	MaHoaDon uint `gorm:"column:ma_hoa_don;primaryKey" json:"ma_hd"`
+	MaHoaDon uint `gorm:"column:ma_hoa_don;primaryKey" json:"ma_hoa_don"`
 	MaNguoiDung uint      `json:"ma_nguoi_dung"`
 	HoTen       string    `json:"ho_ten"`
 	SDT         string    `json:"sdt"`

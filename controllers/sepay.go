@@ -210,14 +210,14 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type: "update_trang_thai_thanh_toan",
 		Payload: gin.H{
-			"ma_hoa_don":                 hoaDon.MaHoaDon,
+			"ma_hoa_don":            hoaDon.MaHoaDon,
 			"trang_thai_thanh_toan": "da_thanh_toan",
 		},
 	})
 
 	// ✅ TẠO BẢN GHI THANH TOÁN
 	thanhToan := models.ThanhToan{
-		MaHoaDon:              hoaDon.MaHoaDon,
+		MaHoaDon:          hoaDon.MaHoaDon,
 		SoTien:            float64(paid),
 		HinhThucThanhToan: "chuyen_khoan",
 		NgayThanhToan:     time.Now(),
@@ -225,6 +225,21 @@ func (ctrl *SepayController) SePayWebhook(c *gin.Context) {
 
 	if err := config.DB.Create(&thanhToan).Error; err != nil {
 		log.Println("create payment error:", err)
+	}
+
+	var khachHang models.NguoiDung
+	if err := config.DB.First(&khachHang, hoaDon.MaNguoiDung).Error; err == nil {
+		mailInfo := utils.ThanhToanMailInfo{
+			TenKhachHang: khachHang.HoTen,
+			MaDon:        strconv.Itoa(int(hoaDon.MaHoaDon)),
+			NgayGio:      time.Now().Format("15:04 – 02/01/2006"),
+			TongTien:     hoaDon.TongTien,
+			SoTienDaTra:  float64(paid),
+		}
+
+		if err := utils.SendMailSauKhiThanhToan(khachHang.Email, mailInfo); err != nil {
+			log.Println("send payment mail error:", err)
+		}
 	}
 
 	// realtime success

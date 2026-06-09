@@ -23,7 +23,13 @@
         --warn: #f0b429;
       }
 
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
       body {
         font-family: "Sora", sans-serif;
@@ -33,200 +39,493 @@
         padding: 32px 16px 64px;
       }
 
-      .page { max-width: 860px; margin: 0 auto; animation: fadeUp 0.5s ease both; }
+      .page {
+        max-width: 860px;
+        margin: 0 auto;
+        animation: fadeUp 0.5s ease both;
+      }
 
       @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(24px); }
-        to   { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .hd-header {
-        display: flex; justify-content: space-between; align-items: flex-start;
-        gap: 16px; margin-bottom: 32px; flex-wrap: wrap;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
       }
 
       .brand {
-        font-family: "Inconsolata", monospace; font-size: 13px; color: var(--muted);
-        letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
+        font-family: "Inconsolata", monospace;
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
       }
 
-      .hd-title { font-size: 28px; font-weight: 700; line-height: 1.1; }
-      .hd-title span { color: var(--accent); }
+      .hd-title {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+      .hd-title span {
+        color: var(--accent);
+      }
 
       .badge {
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 5px 14px; border-radius: 999px; font-size: 12px;
-        font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
         border: 1px solid transparent;
       }
 
-      .badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
 
-      .tt-cho_xac_nhan  { background:#2a2518; color:var(--warn);    border-color:#4a3f1a; }
-      .tt-dang_giao     { background:#1a2432; color:#5ab4ff;         border-color:#1e3a5a; }
-      .tt-da_giao       { background:#162a22; color:var(--success);  border-color:#1e3d2f; }
-      .tt-huy           { background:#2a1a1a; color:var(--danger);   border-color:#4a2020; }
-      .dot-cho_xac_nhan { background:var(--warn); }
-      .dot-dang_giao    { background:#5ab4ff; }
-      .dot-da_giao      { background:var(--success); }
-      .dot-huy          { background:var(--danger); }
+      .tt-cho_xac_nhan {
+        background: #2a2518;
+        color: var(--warn);
+        border-color: #4a3f1a;
+      }
+      .tt-dang_giao {
+        background: #1a2432;
+        color: #5ab4ff;
+        border-color: #1e3a5a;
+      }
+      .tt-da_giao {
+        background: #162a22;
+        color: var(--success);
+        border-color: #1e3d2f;
+      }
+      .tt-huy {
+        background: #2a1a1a;
+        color: var(--danger);
+        border-color: #4a2020;
+      }
+      .dot-cho_xac_nhan {
+        background: var(--warn);
+      }
+      .dot-dang_giao {
+        background: #5ab4ff;
+      }
+      .dot-da_giao {
+        background: var(--success);
+      }
+      .dot-huy {
+        background: var(--danger);
+      }
 
-      .ttp-chua { background:#2a1a18; color:var(--danger);  border-color:#4a2a22; }
-      .ttp-da   { background:#162a22; color:var(--success); border-color:#1e3d2f; }
+      .ttp-chua {
+        background: #2a1a18;
+        color: var(--danger);
+        border-color: #4a2a22;
+      }
+      .ttp-da {
+        background: #162a22;
+        color: var(--success);
+        border-color: #1e3d2f;
+      }
 
       .card {
-        background: var(--card); border: 1px solid var(--border);
-        border-radius: 16px; padding: 24px; margin-bottom: 20px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
       }
 
       .card-title {
-        font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
-        text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
-        display: flex; align-items: center; gap: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
-      .card-title::after { content:""; flex:1; height:1px; background:var(--border); }
+      .card-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
 
-      .info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
-      .info-item label {
-        font-size:11px; color:var(--muted); text-transform:uppercase;
-        letter-spacing:.08em; display:block; margin-bottom:4px;
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
       }
-      .info-item .val { font-size:14px; font-weight:500; color:var(--text); word-break:break-word; }
-      .info-item .val.mono { font-family:"Inconsolata",monospace; font-size:15px; }
+      .info-item label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .info-item .val {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        word-break: break-word;
+      }
+      .info-item .val.mono {
+        font-family: "Inconsolata", monospace;
+        font-size: 15px;
+      }
 
       /* ── Items Table ── */
-      .items-table { width:100%; border-collapse:collapse; }
-      .items-table thead th {
-        font-size:11px; letter-spacing:.08em; text-transform:uppercase;
-        color:var(--muted); text-align:left; padding:0 12px 12px;
-        border-bottom:1px solid var(--border);
+      .items-table {
+        width: 100%;
+        border-collapse: collapse;
       }
-      .items-table thead th:last-child { text-align:right; }
-      .items-table tbody tr { border-bottom:1px solid rgba(42,48,72,.6); transition:background .15s; }
-      .items-table tbody tr:last-child { border-bottom:none; }
-      .items-table tbody tr:hover { background:rgba(255,255,255,.025); }
-      .items-table tbody td { padding:14px 12px; font-size:14px; vertical-align:top; }
-      .items-table tbody td:last-child { text-align:right; }
+      .items-table thead th {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-align: left;
+        padding: 0 12px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .items-table thead th:last-child {
+        text-align: right;
+      }
+      .items-table tbody tr {
+        border-bottom: 1px solid rgba(42, 48, 72, 0.6);
+        transition: background 0.15s;
+      }
+      .items-table tbody tr:last-child {
+        border-bottom: none;
+      }
+      .items-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.025);
+      }
+      .items-table tbody td {
+        padding: 14px 12px;
+        font-size: 14px;
+        vertical-align: top;
+      }
+      .items-table tbody td:last-child {
+        text-align: right;
+      }
 
-      .item-name { font-weight:600; margin-bottom:4px; }
-      .item-code { font-family:"Inconsolata",monospace; font-size:11px; color:var(--muted); margin-bottom:6px; }
+      .item-name {
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .item-code {
+        font-family: "Inconsolata", monospace;
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
 
       /* Options / toppings list */
-      .options-list { display:flex; flex-direction:column; gap:3px; margin-top:4px; }
+      .options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-top: 4px;
+      }
       .option-tag {
-        display:inline-flex; align-items:center; gap:5px;
-        font-size:11px; color:#a0aabf; line-height:1.4;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: #a0aabf;
+        line-height: 1.4;
       }
       .option-tag .opt-price {
-        font-family:"Inconsolata",monospace; font-size:11px;
-        color:var(--accent); opacity:.8;
+        font-family: "Inconsolata", monospace;
+        font-size: 11px;
+        color: var(--accent);
+        opacity: 0.8;
       }
-      .option-tag::before { content:"＋"; font-size:10px; color:var(--muted); }
+      .option-tag::before {
+        content: "＋";
+        font-size: 10px;
+        color: var(--muted);
+      }
 
-      .item-base-price { font-size:12px; color:var(--muted); margin-top:2px; }
+      .item-base-price {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
 
       /* Thành tiền vs don_gia diff indicator */
-      .thanh-tien-val { font-family:"Inconsolata",monospace; font-size:14px; font-weight:600; }
+      .thanh-tien-val {
+        font-family: "Inconsolata", monospace;
+        font-size: 14px;
+        font-weight: 600;
+      }
 
-      .summary { border-top:1px solid var(--border); padding-top:18px; margin-top:4px; }
+      .summary {
+        border-top: 1px solid var(--border);
+        padding-top: 18px;
+        margin-top: 4px;
+      }
       .summary-row {
-        display:flex; justify-content:space-between; align-items:center;
-        padding:6px 0; font-size:14px; color:var(--muted);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 14px;
+        color: var(--muted);
       }
       .summary-row.total {
-        font-size:18px; font-weight:700; color:var(--accent);
-        padding-top:12px; margin-top:6px; border-top:1px solid var(--border);
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--accent);
+        padding-top: 12px;
+        margin-top: 6px;
+        border-top: 1px solid var(--border);
       }
-      .summary-row.discount .val { color:var(--success); }
+      .summary-row.discount .val {
+        color: var(--success);
+      }
 
-      .qr-section { text-align:center; }
+      .qr-section {
+        text-align: center;
+      }
       .qr-wrap {
-        display:inline-block; background:#fff; padding:14px; border-radius:16px;
-        margin:0 auto 18px; box-shadow:0 0 40px rgba(240,180,41,.15);
+        display: inline-block;
+        background: #fff;
+        padding: 14px;
+        border-radius: 16px;
+        margin: 0 auto 18px;
+        box-shadow: 0 0 40px rgba(240, 180, 41, 0.15);
       }
-      .qr-wrap img { display:block; width:220px; height:220px; border-radius:6px; }
-      .qr-hint { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:20px; }
+      .qr-wrap img {
+        display: block;
+        width: 220px;
+        height: 220px;
+        border-radius: 6px;
+      }
+      .qr-hint {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
       .qr-bank-info {
-        background:var(--surface); border:1px solid var(--border); border-radius:12px;
-        padding:16px 20px; margin-bottom:20px;
-        display:grid; grid-template-columns:1fr 1fr; gap:12px; text-align:left;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        text-align: left;
       }
-      .qr-bank-info .bi-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:3px; }
-      .qr-bank-info .bi-val { font-family:"Inconsolata",monospace; font-size:15px; font-weight:600; }
+      .qr-bank-info .bi-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        margin-bottom: 3px;
+      }
+      .qr-bank-info .bi-val {
+        font-family: "Inconsolata", monospace;
+        font-size: 15px;
+        font-weight: 600;
+      }
 
       .paid-overlay {
-        display:none; flex-direction:column; align-items:center;
-        justify-content:center; padding:32px 20px; gap:12px;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+        gap: 12px;
       }
       .paid-icon {
-        width:72px; height:72px; border-radius:50%;
-        background:rgba(45,214,140,.12); border:2px solid var(--success);
-        display:flex; align-items:center; justify-content:center;
-        font-size:32px; margin-bottom:8px;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(45, 214, 140, 0.12);
+        border: 2px solid var(--success);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        margin-bottom: 8px;
       }
-      .paid-title { font-size:20px; font-weight:700; color:var(--success); }
-      .paid-sub   { font-size:13px; color:var(--muted); }
+      .paid-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--success);
+      }
+      .paid-sub {
+        font-size: 13px;
+        color: var(--muted);
+      }
 
       .btn {
-        display:inline-flex; align-items:center; gap:8px;
-        padding:11px 22px; border-radius:10px;
-        font-family:"Sora",sans-serif; font-size:13px; font-weight:600;
-        cursor:pointer; border:none; transition:all .2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 22px;
+        border-radius: 10px;
+        font-family: "Sora", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
       }
-      .btn-primary { background:var(--accent); color:#0d0f14; }
-      .btn-primary:hover { background:#e6a820; transform:translateY(-1px); box-shadow:0 6px 20px rgba(240,180,41,.3); }
-      .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
-      .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+      .btn-primary {
+        background: var(--accent);
+        color: #0d0f14;
+      }
+      .btn-primary:hover {
+        background: #e6a820;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(240, 180, 41, 0.3);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .btn-ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
 
-      .loader { text-align:center; padding:80px 20px; }
-      .spinner {
-        width:40px; height:40px; border:3px solid var(--border);
-        border-top-color:var(--accent); border-radius:50%;
-        animation:spin .8s linear infinite; margin:0 auto 16px;
+      .loader {
+        text-align: center;
+        padding: 80px 20px;
       }
-      @keyframes spin { to { transform:rotate(360deg); } }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 16px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
       .error-box {
-        background:rgba(240,82,79,.08); border:1px solid var(--danger);
-        border-radius:12px; padding:24px; text-align:center; color:var(--danger);
+        background: rgba(240, 82, 79, 0.08);
+        border: 1px solid var(--danger);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        color: var(--danger);
       }
 
-      .search-bar { display:flex; gap:10px; margin-bottom:28px; align-items:center; }
-      .search-wrap { flex:1; position:relative; }
+      .search-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 28px;
+        align-items: center;
+      }
+      .search-wrap {
+        flex: 1;
+        position: relative;
+      }
       .search-wrap .prefix {
-        position:absolute; left:14px; top:50%; transform:translateY(-50%);
-        font-family:"Inconsolata",monospace; font-size:14px;
-        color:var(--muted); pointer-events:none; user-select:none;
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: "Inconsolata", monospace;
+        font-size: 14px;
+        color: var(--muted);
+        pointer-events: none;
+        user-select: none;
       }
       .search-input {
-        width:100%; background:var(--card); border:1px solid var(--border);
-        border-radius:10px; color:var(--text);
-        font-family:"Inconsolata",monospace; font-size:16px;
-        padding:11px 14px 11px 42px; outline:none;
-        transition:border-color .2s,box-shadow .2s;
-        -moz-appearance:textfield;
+        width: 100%;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        font-family: "Inconsolata", monospace;
+        font-size: 16px;
+        padding: 11px 14px 11px 42px;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        -moz-appearance: textfield;
       }
       .search-input::-webkit-outer-spin-button,
-      .search-input::-webkit-inner-spin-button { -webkit-appearance:none; }
-      .search-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(240,180,41,.12); }
-      .search-input::placeholder { color:var(--muted); }
-      #token-input { padding-left:14px; }
+      .search-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+      }
+      .search-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.12);
+      }
+      .search-input::placeholder {
+        color: var(--muted);
+      }
+      #token-input {
+        padding-left: 14px;
+      }
 
       /* items count chip */
       .items-count {
-        font-family:"Inconsolata",monospace; font-size:11px;
-        background:rgba(240,180,41,.12); color:var(--accent);
-        border:1px solid rgba(240,180,41,.25); border-radius:999px;
-        padding:2px 9px; margin-left:6px;
+        font-family: "Inconsolata", monospace;
+        font-size: 11px;
+        background: rgba(240, 180, 41, 0.12);
+        color: var(--accent);
+        border: 1px solid rgba(240, 180, 41, 0.25);
+        border-radius: 999px;
+        padding: 2px 9px;
+        margin-left: 6px;
       }
 
-      @media(max-width:540px){
-        .hd-header{flex-direction:column;}
+      @media (max-width: 540px) {
+        .hd-header {
+          flex-direction: column;
+        }
         .items-table thead th:nth-child(3),
-        .items-table tbody td:nth-child(3){display:none;}
-        .qr-bank-info{grid-template-columns:1fr;}
-        .search-bar{flex-wrap:wrap;}
-        #token-input{max-width:100%!important;}
+        .items-table tbody td:nth-child(3) {
+          display: none;
+        }
+        .qr-bank-info {
+          grid-template-columns: 1fr;
+        }
+        .search-bar {
+          flex-wrap: wrap;
+        }
+        #token-input {
+          max-width: 100% !important;
+        }
       }
     </style>
   </head>
@@ -234,16 +533,18 @@
     <div class="page" id="app">
       <div class="loader" id="loader">
         <div class="spinner"></div>
-        <div style="color:var(--muted);font-size:14px">Đang tải hóa đơn…</div>
+        <div style="color: var(--muted); font-size: 14px">
+          Đang tải hóa đơn…
+        </div>
       </div>
     </div>
 
     <script>
       /* ── CONFIG ── */
       const CONFIG = {
-        API_BASE:      "http://localhost:3000",
-        SEPAY_BANK:    "TPBank",
-        SEPAY_ACC:     "0969224421",
+        API_BASE: "http://localhost:3000",
+        SEPAY_BANK: "TPBank",
+        SEPAY_ACC: "0969224421",
         POLL_INTERVAL: 6000,
       };
 
@@ -270,31 +571,37 @@
 
       /* ── Formatters ── */
       const fmt = (n) =>
-        new Intl.NumberFormat("vi-VN", { style:"currency", currency:"VND" }).format(n ?? 0);
+        new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(n ?? 0);
 
       const fmtDate = (iso) => {
         if (!iso) return "—";
         return new Date(iso).toLocaleString("vi-VN", {
-          day:"2-digit", month:"2-digit", year:"numeric",
-          hour:"2-digit", minute:"2-digit",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         });
       };
 
       const trangThaiLabel = {
         cho_xac_nhan: "Chờ xác nhận",
-        dang_giao:    "Đang giao",
-        da_giao:      "Đã giao",
-        huy:          "Đã huỷ",
+        dang_giao: "Đang giao",
+        da_giao: "Đã giao",
+        huy: "Đã huỷ",
       };
 
       const ttThanhToanLabel = {
         chua_thanh_toan: "Chưa thanh toán",
-        da_thanh_toan:   "Đã thanh toán",
+        da_thanh_toan: "Đã thanh toán",
       };
 
       function badge(val, map, prefix) {
         const label = map[val] || val;
-        const cls   = val.replace(/[^a-z0-9_]/gi, "_");
+        const cls = val.replace(/[^a-z0-9_]/gi, "_");
         return `<span class="badge ${prefix}-${cls}">
           <span class="badge-dot dot-${cls}"></span>${label}
         </span>`;
@@ -327,14 +634,16 @@
       /* ── Render item options ── */
       function renderOptions(options) {
         if (!options || options.length === 0) return "";
-        const tags = options.map(opt => {
-          const name  = opt.ten_option || opt.option_item?.ten_option || "—";
-          const price = opt.gia_them ?? opt.option_item?.gia_them ?? 0;
-          return `<span class="option-tag">
+        const tags = options
+          .map((opt) => {
+            const name = opt.ten_option || opt.option_item?.ten_option || "—";
+            const price = opt.gia_them ?? opt.option_item?.gia_them ?? 0;
+            return `<span class="option-tag">
             ${name.trim()}
             ${price > 0 ? `<span class="opt-price">+${fmt(price)}</span>` : ""}
           </span>`;
-        }).join("");
+          })
+          .join("");
         return `<div class="options-list">${tags}</div>`;
       }
 
@@ -364,24 +673,29 @@
 
       /* ── Render ── */
       function render(hd) {
-        const isPaid    = hd.trang_thai_thanh_toan === "da_thanh_toan";
+        console.log("HD data:", hd);
+        const isPaid = hd.trang_thai_thanh_toan === "da_thanh_toan";
         const qrContent = `HD${hd.ma_hoa_don}`;
-        const qrURL     = sePayQR(Math.round(hd.tong_tien), qrContent);
-        const details   = hd.chi_tiet_hoa_dons || [];
+        const qrURL = sePayQR(Math.round(hd.tong_tien), qrContent);
+        const details = hd.chi_tiet_hoa_dons || [];
 
         /* Tính tổng options để cross-check */
-        const rows = details.map((ct) => {
-          const options     = ct.options || [];
-          const basePrice   = ct.don_gia ?? 0;
-          const qty         = ct.so_luong ?? 1;
-          // Ưu tiên thanh_tien từ server, fallback tính lại
-          const thanhTien   = ct.thanh_tien ?? (qty * basePrice);
-          const hasOptions  = options.length > 0;
+        const rows = details
+          .map((ct) => {
+            const options = ct.options || [];
+            const basePrice = ct.don_gia ?? 0;
+            const qty = ct.so_luong ?? 1;
+            // Ưu tiên thanh_tien từ server, fallback tính lại
+            const thanhTien = ct.thanh_tien ?? qty * basePrice;
+            const hasOptions = options.length > 0;
 
-          // Tổng giá option để hiển thị ghi chú
-          const totalOptPrice = options.reduce((s, o) => s + (o.gia_them ?? 0), 0);
+            // Tổng giá option để hiển thị ghi chú
+            const totalOptPrice = options.reduce(
+              (s, o) => s + (o.gia_them ?? 0),
+              0,
+            );
 
-          return `
+            return `
           <tr>
             <td>
               <div class="item-name">${itemName(ct)}</div>
@@ -397,7 +711,8 @@
               <div class="thanh-tien-val">${fmt(thanhTien)}</div>
             </td>
           </tr>`;
-        }).join("");
+          })
+          .join("");
 
         const qrBlock = isPaid
           ? `<div class="paid-overlay" style="display:flex;">
@@ -406,7 +721,7 @@
               <div class="paid-sub">Hóa đơn #${hd.ma_hoa_don} đã được xác nhận thanh toán</div>
              </div>`
           : `<div class="qr-section" id="qr-section">
-              <div class="card-title">Thanh toán qua QR</div>
+              <div class="card-title">Thanh toRán qua Q</div>
               <div class="qr-wrap">
                 <img id="qr-img" src="${qrURL}" alt="QR Thanh Toán" />
               </div>
@@ -429,29 +744,38 @@
         /* Thông tin giảm giá */
         const giamGia = hd.giam_gia;
         const hasDiscount = hd.tien_giam > 0;
-        const discountBlock = hasDiscount ? `
+        const discountBlock = hasDiscount
+          ? `
           <div class="summary-row discount">
             <span>Giảm giá${giamGia?.ten_chuong_trinh ? ` (${giamGia.ten_chuong_trinh})` : ""}${giamGia?.code ? ` · <span style="font-family:'Inconsolata',monospace;font-size:12px">${giamGia.code}</span>` : ""}</span>
             <span class="val">− ${fmt(hd.tien_giam)}</span>
-          </div>` : "";
+          </div>`
+          : "";
 
         /* Thông tin thanh toán (thanh_toans) */
         const payments = hd.thanh_toans || [];
-        const paymentBlock = payments.length > 0 ? `
+        const paymentBlock =
+          payments.length > 0
+            ? `
           <div class="card">
             <div class="card-title">Lịch sử thanh toán</div>
             <table class="items-table">
               <thead><tr><th>Thời gian</th><th>Phương thức</th><th>Nội dung</th><th>Số tiền</th></tr></thead>
               <tbody>
-                ${payments.map(p => `<tr>
+                ${payments
+                  .map(
+                    (p) => `<tr>
                   <td>${fmtDate(p.ngay_thanh_toan || p.created_at)}</td>
                   <td>${p.phuong_thuc || "—"}</td>
                   <td style="font-family:'Inconsolata',monospace;font-size:12px">${p.noi_dung || "—"}</td>
                   <td style="text-align:right;font-family:'Inconsolata',monospace">${fmt(p.so_tien)}</td>
-                </tr>`).join("")}
+                </tr>`,
+                  )
+                  .join("")}
               </tbody>
             </table>
-          </div>` : "";
+          </div>`
+            : "";
 
         document.getElementById("app").innerHTML = `
           ${searchBarHTML(hd.ma_hoa_don)}
@@ -522,9 +846,12 @@
 
       /* ── Manual check ── */
       async function checkPayment(id) {
-        const btn  = document.getElementById("btn-check");
+        const btn = document.getElementById("btn-check");
         const icon = document.getElementById("btn-icon");
-        if (btn) { btn.disabled = true; icon.classList.add("spinning"); }
+        if (btn) {
+          btn.disabled = true;
+          icon.classList.add("spinning");
+        }
         try {
           const hd = await fetchHoaDon(id);
           if (hd.trang_thai_thanh_toan === "da_thanh_toan") {
@@ -575,11 +902,20 @@
         const t = document.createElement("div");
         t.textContent = msg;
         Object.assign(t.style, {
-          position:"fixed", bottom:"24px", left:"50%", transform:"translateX(-50%)",
-          background:"var(--card)", border:"1px solid var(--border)", color:"var(--text)",
-          padding:"12px 22px", borderRadius:"10px", fontSize:"13px", zIndex:9999,
-          boxShadow:"0 4px 24px rgba(0,0,0,.4)", whiteSpace:"nowrap",
-          animation:"fadeUp .3s ease",
+          position: "fixed",
+          bottom: "24px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          color: "var(--text)",
+          padding: "12px 22px",
+          borderRadius: "10px",
+          fontSize: "13px",
+          zIndex: 9999,
+          boxShadow: "0 4px 24px rgba(0,0,0,.4)",
+          whiteSpace: "nowrap",
+          animation: "fadeUp .3s ease",
         });
         document.body.appendChild(t);
         setTimeout(() => t.remove(), 3000);

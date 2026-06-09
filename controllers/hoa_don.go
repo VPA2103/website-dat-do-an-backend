@@ -1159,7 +1159,7 @@ func (ctrl *HoaDonController) SoDonTheoNgay(c *gin.Context) {
 
 func (ctrl *HoaDonController) DonHangDaGiaoHomNay(c *gin.Context) {
 	type Result struct {
-		MaHD         uint    `json:"ma_hd" gorm:"column:ma_hd"`
+		MaHD         uint    `json:"ma_hoa_don" gorm:"column:ma_hoa_don"`
 		TenKhachHang string  `json:"ten_khach_hang" gorm:"column:ten_khach_hang"`
 		ThanhTien    float64 `json:"thanh_tien" gorm:"column:thanh_tien"`
 		TrangThai    string  `json:"trang_thai" gorm:"column:trang_thai"`
@@ -1169,7 +1169,7 @@ func (ctrl *HoaDonController) DonHangDaGiaoHomNay(c *gin.Context) {
 
 	err := config.DB.Raw(`
         SELECT 
-            h.ma_hoa_don AS ma_hd,
+            h.ma_hoa_don AS ma_hoa_don,
             h.ho_ten AS ten_khach_hang,
             h.tong_tien AS thanh_tien,
             h.trang_thai
