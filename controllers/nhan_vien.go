@@ -364,6 +364,7 @@ func GetShippers(c *gin.Context) {
 
 	c.JSON(http.StatusOK, shippers)
 }
+
 func AssignShipper(hub *websocket.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input struct {
