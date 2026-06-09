@@ -23,6 +23,7 @@ func NguoiDungRoutes(r *gin.Engine, hub *websocket.Hub) {
 
 		// ✅ Cả admin và user đều có thể xem danh sách
 		nguoidung.GET("/layTatCa", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin", "user"), controllers.GetAllNhanVien)
+		nguoidung.GET("/shippers",middleware.AuthMiddleware(),middleware.RoleMiddleware("admin"),controllers.GetShippers)
 
 		nguoidung.POST("/assign-shipper", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), controllers.AssignShipper(hub))
 

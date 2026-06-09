@@ -37,6 +37,12 @@ type MonAnBanChayDTO struct {
 	SoLuong  int64  `json:"so_luong"`
 }
 
+type TopMonBanChayDTO struct {
+	MaMonAn  uint   `json:"ma_mon_an"`
+	TenMonAn string `json:"ten_mon_an"`
+	TongBan  int    `json:"tong_ban"`
+}
+
 type DoanhThuDTO struct {
 	Ngay              string  `json:"ngay,omitempty"`
 	Thang             int     `json:"thang,omitempty"`
@@ -643,7 +649,7 @@ func (ctrl *HoaDonController) UpdateTrangThaiHoaDon(c *gin.Context) {
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type: "update_trang_thai_hoa_don_user",
 		Payload: gin.H{
-			"ma_hoa_don":      hoaDon.MaHoaDon,
+			"ma_hoa_don": hoaDon.MaHoaDon,
 			"trang_thai": hoaDon.TrangThai,
 		},
 	})
@@ -887,7 +893,7 @@ func (ctrl *HoaDonController) HuyHoaDonNguoiDung(c *gin.Context) {
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type: "hoa_don_bi_huy_user",
 		Payload: gin.H{
-			"ma_hoa_don":                 hoaDon.MaHoaDon,
+			"ma_hoa_don":            hoaDon.MaHoaDon,
 			"trang_thai":            "da_huy",
 			"trang_thai_thanh_toan": "da_huy",
 		},
@@ -1081,9 +1087,106 @@ func (ctrl *HoaDonController) GetTiLeHoanThanhHomNay(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"data": gin.H{
-			"tong_don": tongDon,
+			"tong_don":   tongDon,
 			"hoan_thanh": donHoanThanh,
-			"ti_le": math.Round(tiLe),
+			"ti_le":      math.Round(tiLe),
 		},
 	})
+}
+
+func (ctrl *HoaDonController) TopMonBanChay(c *gin.Context) {
+	type Result struct {
+		TenMonAn string `json:"ten_mon_an"`
+		TongBan  int    `json:"tong_ban"`
+	}
+
+	var result []Result
+
+	err := config.DB.Raw(`
+		SELECT 
+			m.ten_mon_an,
+			SUM(ct.so_luong) AS tong_ban
+		FROM chi_tiet_hoa_dons ct
+		JOIN mon_ans m ON m.ma_mon_an = ct.ma_mon_an
+		JOIN hoa_dons h ON h.ma_hoa_don = ct.ma_hoa_don
+		WHERE h.trang_thai = 'da_giao'
+		  AND h.trang_thai_thanh_toan = 'da_thanh_toan'
+		GROUP BY m.ten_mon_an
+		ORDER BY tong_ban DESC
+		LIMIT 9
+	`).Scan(&result).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "Lỗi lấy top món bán chạy",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, result)
+}
+
+func (ctrl *HoaDonController) SoDonTheoNgay(c *gin.Context) {
+	type Result struct {
+		Ngay  string `json:"ngay"`
+		SoDon int    `json:"so_don"`
+	}
+
+	var result []Result
+
+	err := config.DB.Raw(`
+		SELECT 
+			TO_CHAR(DATE(h.ngay), 'YYYY-MM-DD') AS ngay,
+			COUNT(*) AS so_don
+		FROM hoa_dons h
+		WHERE h.trang_thai = 'da_giao'
+		  AND h.trang_thai_thanh_toan = 'da_thanh_toan'
+		GROUP BY DATE(h.ngay)
+		ORDER BY DATE(h.ngay)
+	`).Scan(&result).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "Lỗi lấy số đơn theo ngày",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, result)
+}
+
+func (ctrl *HoaDonController) DonHangDaGiaoHomNay(c *gin.Context) {
+	type Result struct {
+		MaHD         uint    `json:"ma_hd" gorm:"column:ma_hd"`
+		TenKhachHang string  `json:"ten_khach_hang" gorm:"column:ten_khach_hang"`
+		ThanhTien    float64 `json:"thanh_tien" gorm:"column:thanh_tien"`
+		TrangThai    string  `json:"trang_thai" gorm:"column:trang_thai"`
+	}
+
+	var result []Result
+
+	err := config.DB.Raw(`
+        SELECT 
+            h.ma_hoa_don AS ma_hd,
+            h.ho_ten AS ten_khach_hang,
+            h.tong_tien AS thanh_tien,
+            h.trang_thai
+        FROM hoa_dons h
+        WHERE 
+            h.trang_thai = 'da_giao'
+            AND DATE(h.ngay) = CURRENT_DATE
+        ORDER BY h.ma_hoa_don DESC
+    `).Scan(&result).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"message": "Lỗi lấy đơn hàng đã giao hôm nay",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, result)
 }
