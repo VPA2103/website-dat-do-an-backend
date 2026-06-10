@@ -523,6 +523,7 @@ func (ctrl *HoaDonController) GetHoaDons(c *gin.Context) {
 	var hoaDons []models.HoaDon
 
 	if err := config.DB.
+		Preload("Shipper").
 		Preload("ChiTietHoaDons").
 		Preload("ChiTietHoaDons.MonAn").
 		Preload("ChiTietHoaDons.Options").
@@ -536,6 +537,43 @@ func (ctrl *HoaDonController) GetHoaDons(c *gin.Context) {
 		})
 		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": hoaDons,
+	})
+}
+func (ctrl *HoaDonController) GetHoaDonByShipper(c *gin.Context) {
+
+	shipperIDAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Chưa đăng nhập",
+		})
+		return
+	}
+
+	shipperID := shipperIDAny.(uint)
+
+	var hoaDons []models.HoaDon
+
+	if err := config.DB.
+		Where("ma_shipper = ? AND trang_thai = ?", shipperID, "dang_giao").
+		Preload("Shipper").
+		Preload("Shipper").
+		Preload("ChiTietHoaDons").
+		Preload("ChiTietHoaDons.MonAn").
+		Preload("ChiTietHoaDons.Options").
+		Preload("ChiTietHoaDons.Options.OptionItem").
+		Preload("ChiTietHoaDons.Options.OptionItem.NhomOption").
+		Order("ma_hoa_don DESC").
+		Find(&hoaDons).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": hoaDons,
@@ -719,6 +757,7 @@ func (ctrl *HoaDonController) GetHoaDonByTrangThai(c *gin.Context) {
 
 	if err := config.DB.
 		Where("trang_thai = ?", trangThai).
+		Preload("Shipper").
 		Preload("ChiTietHoaDons").
 		Preload("ChiTietHoaDons.Options").
 		Find(&hoaDons).Error; err != nil {
@@ -800,6 +839,8 @@ func (ctrl *HoaDonController) GetHoaDonByNguoiDung(c *gin.Context) {
 	if err := config.DB.
 		Where("ma_nguoi_dung = ?", maNguoiDung).
 		Preload("ChiTietHoaDons").
+		Preload("Shipper").
+		Preload("Shipper.AnhNhanVien").
 		Preload("ChiTietHoaDons.Options.OptionItem.NhomOption").
 		Preload("ChiTietHoaDons.MonAn").
 		Preload("ChiTietHoaDons.Options").
@@ -1189,4 +1230,49 @@ func (ctrl *HoaDonController) DonHangDaGiaoHomNay(c *gin.Context) {
 	}
 
 	c.JSON(200, result)
+}
+
+func (ctrl *HoaDonController) GetALLHoaDonByShipper(c *gin.Context) {
+
+	shipperIDAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Chưa đăng nhập",
+		})
+		return
+	}
+
+	shipperID := shipperIDAny.(uint)
+
+	var hoaDons []models.HoaDon
+
+	if err := config.DB.
+		Where("ma_shipper = ?", shipperID).
+		Preload("ChiTietHoaDons").
+		Preload("Shipper").
+		Preload("Shipper.AnhNhanVien").
+		Preload("ChiTietHoaDons.Options.OptionItem.NhomOption").
+		Preload("ChiTietHoaDons.MonAn").
+		Preload("ChiTietHoaDons.Options").
+		Preload("ChiTietHoaDons.Options.OptionItem").
+		Order("ma_hoa_don DESC").
+		Find(&hoaDons).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// realtime (optional nếu bạn cần)
+	ctrl.Hub.Broadcast(dto.WSMessage{
+		Type: "shipper_xem_hoa_don",
+		Payload: gin.H{
+			"hoa_don": hoaDons,
+		},
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": hoaDons,
+	})
 }

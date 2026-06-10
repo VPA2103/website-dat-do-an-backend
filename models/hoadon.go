@@ -11,6 +11,10 @@ type HoaDon struct {
 	GhiChu      string    `json:"ghi_chu"`
 	Ngay        time.Time `json:"ngay"`
 
+
+	MaShipper *uint      `gorm:"index" json:"ma_shipper"`
+	Shipper   *NguoiDung `gorm:"foreignKey:MaShipper;references:ma_nguoi_dung" json:"shipper"`
+
 	TongTien           float64 `json:"tong_tien"` // sau giảm
 	TamTinh            float64 `json:"tam_tinh"`  // trước giảm
 	TienGiam           float64 `json:"tien_giam"`
@@ -25,15 +29,3 @@ type HoaDon struct {
 	ThanhToans     *ThanhToan      `gorm:"foreignKey:MaHoaDon;references:MaHoaDon" json:"thanh_toans"`
 }
 
-type ShipOrder struct {
-	ID uint `gorm:"primaryKey"`
-
-	MaHoaDon uint `gorm:"index"`
-
-	MaShipper *uint `gorm:"index"`
-
-	Status string // pending | accepted | rejected | delivering | done
-
-	CreatedAt  time.Time
-	AcceptedAt *time.Time
-}

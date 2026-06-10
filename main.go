@@ -73,7 +73,6 @@ func main() {
 		&models.HinhAnh{},
 		&models.ThongBao{},
 		&models.LienHe{},
-		&models.ShipOrder{},
 		&models.Message{},
 		&models.Room{},
 		&models.GioHangOption{},

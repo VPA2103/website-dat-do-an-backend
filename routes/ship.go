@@ -13,10 +13,11 @@ func ShipRoutes(r *gin.Engine, hub *websocket.Hub) {
 
 	ship := r.Group("/ship")
 	{
-		ship.GET("", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), ctrl.GetHoaDons)
+		ship.GET("", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), ctrl.GetHoaDonByShipper)
+		ship.GET("/all-hoa-don", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), ctrl.GetALLHoaDonByShipper)
 
-		ship.PUT("/:id/trang-thai", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), ctrl.UpdateTrangThaiHoaDon)
+		// ship.PUT("/:id/trang-thai", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), ctrl.UpdateTrangThaiHoaDon)
 
-		ship.POST("/accept-order", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), controllers.AcceptShipOrder)
+		// ship.POST("/accept-order", middleware.AuthMiddleware(), middleware.RoleMiddleware("shipper"), controllers.AcceptShipOrder)
 	}
 }
