@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"encoding/json"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/dto"
@@ -40,8 +43,13 @@ type BinhLuanResponse struct {
 	NoiDung   string `json:"noi_dung"`
 	CreatedAt string `json:"created_at"`
 
-	NguoiDung NguoiDungMinii `json:"nguoi_dung"`
+	NguoiDung NguoiDungMinii     `json:"nguoi_dung"`
 	Replies   []BinhLuanResponse `json:"replies"`
+}
+
+func LogJSON(title string, data interface{}) {
+	b, _ := json.MarshalIndent(data, "", "  ")
+	log.Printf("\n========== %s ==========\n%s\n========================\n", title, string(b))
 }
 
 func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
@@ -89,6 +97,9 @@ func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
 
 	config.DB.Preload("NguoiDung").Preload("Replies.NguoiDung").First(&binhLuan, binhLuan.ID)
 
+	LogJSON("CREATE_BINH_LUAN", binhLuan)
+
+	LogJSON("WS_NEW_BINH_LUAN", binhLuan)
 	// ✅ Broadcast realtime
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "new_binh_luan",
@@ -104,6 +115,8 @@ func (ctrl *BinhLuanController) CreateBinhLuan(c *gin.Context) {
 		Preload("Replies.NguoiDung").
 		Order("created_at desc").
 		Find(&comments)
+
+	LogJSON("COMMENTS_RESPONSE", comments)
 
 	c.JSON(200, gin.H{
 		"message": "Tạo bình luận thành công",
@@ -126,6 +139,7 @@ func (ctrl *BinhLuanController) GetBinhLuanByMonAn(c *gin.Context) {
 		Order("created_at desc").
 		Find(&binhLuans)
 
+	LogJSON("GET_BINH_LUAN_RAW", binhLuans)
 	var res []BinhLuanResponse
 
 	for _, cmt := range binhLuans {
@@ -169,6 +183,8 @@ func (ctrl *BinhLuanController) GetBinhLuanByMonAn(c *gin.Context) {
 			},
 			Replies: replies,
 		})
+
+		LogJSON("GET_BINH_LUAN_RESPONSE", res)
 	}
 
 	c.JSON(200, gin.H{
@@ -206,7 +222,9 @@ func (ctrl *BinhLuanController) UpdateBinhLuan(c *gin.Context) {
 	}
 
 	config.DB.Preload("NguoiDung").First(&binhLuan, id)
+	LogJSON("UPDATE_BINH_LUAN", binhLuan)
 
+	LogJSON("WS_UPDATE_BINH_LUAN", binhLuan)
 	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "update_binh_luan",
 		Payload: binhLuan,
@@ -244,7 +262,7 @@ func (ctrl *BinhLuanController) GetBinhLuanByID(c *gin.Context) {
 	}
 
 	// ✅ Broadcast realtime
-	ctrl.Hub.Broadcast( dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "update_binh_luan",
 		Payload: binhLuan,
 	})
@@ -275,7 +293,7 @@ func (ctrl *BinhLuanController) DeleteBinhLuan(c *gin.Context) {
 	}
 
 	// ✅ Broadcast realtime
-	ctrl.Hub.Broadcast( dto.WSMessage{
+	ctrl.Hub.Broadcast(dto.WSMessage{
 		Type:    "delete_binh_luan",
 		Payload: gin.H{"id": id},
 	})

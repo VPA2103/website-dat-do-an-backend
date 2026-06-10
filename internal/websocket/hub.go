@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"log"
 	"sync"
 
 	"github.com/vpa/quanlynhahang-backend/dto"
@@ -13,8 +14,6 @@ type Hub struct {
 	Unregister chan *Client
 	mu         sync.RWMutex
 }
-
-
 
 func NewHub() *Hub {
 	return &Hub{
@@ -75,20 +74,8 @@ func (h *Hub) SendToUser(userID uint, msg dto.WSMessage) {
 	}
 }
 
-// func (h *Hub) BroadcastToRoom(roomID uint, msg dto.WSMessage) {
-//     data, _ := json.Marshal(msg)
-//     h.mu.RLock()
-//     defer h.mu.RUnlock()
-
-//     log.Printf("📡 Broadcasting type=%s to %d clients", msg.Type, len(h.Clients))
-
-//     for c := range h.Clients {
-//         safeSend(c, data) // ✅ bỏ filter c.RoomID == roomID
-//     }
-// }
-
 func (h *Hub) Broadcast(msg dto.WSMessage) {
-
+	log.Printf("Broadcast: %+v\n", msg)
 	data, _ := json.Marshal(msg)
 
 	h.mu.Lock()
