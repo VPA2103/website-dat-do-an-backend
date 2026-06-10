@@ -10,7 +10,7 @@ type DatBan struct {
 	Ngay         string `json:"ngay" form:"ngay" binding:"required"`
 	Gio          string `json:"gio" form:"gio" binding:"required"`
 
-	MaNguoiDung uint
+	MaNguoiDung uint `gorm:"column:ma_nguoi_dung" json:"ma_nguoi_dung"`
 	TrangThai   string `gorm:"type:varchar(50);default:'dang_xu_ly'" json:"trang_thai"`
 
 }

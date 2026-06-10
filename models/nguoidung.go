@@ -15,6 +15,7 @@ type NguoiDung struct {
 
 	// Quan hệ
 
+
 	AnhNhanVien []HinhAnh `gorm:"polymorphic:Owner;polymorphicValue:nguoi_dung" json:"anh_nguoi_dung,omitempty"`
 
 

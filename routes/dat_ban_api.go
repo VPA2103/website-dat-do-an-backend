@@ -18,5 +18,7 @@ func DatBanRoutes(r *gin.Engine) {
 
 		// Nhân viên
 		datban.PUT("/:id/xac-nhan", middleware.AuthMiddleware(), controllers.XacNhanDatBan)
+		datban.GET("/lay-danh-sach-dat-ban-cua-nguoi-dung", middleware.AuthMiddleware(), controllers.GetDatBanCuaNguoiDung)
+		datban.PUT("/huy-dat-ban/:id", middleware.AuthMiddleware(), controllers.HuyDatBan)
 	}
 }

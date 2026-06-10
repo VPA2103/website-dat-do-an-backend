@@ -65,7 +65,7 @@ func CreateDatBan(c *gin.Context) {
 func GetAllDatBan(c *gin.Context) {
 	var datbans []models.DatBan
 
-	if err := config.DB.Preload("NhanVienXacNhan").Find(&datbans).Error; err != nil {
+	if err := config.DB.Find(&datbans).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Không thể lấy danh sách đặt bàn",
 		})
@@ -187,5 +187,82 @@ func DeleteDatBan(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Xóa đặt bàn thành công",
+	})
+}
+func GetDatBanCuaNguoiDung(c *gin.Context) {
+	userIDRaw, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Không xác thực người dùng",
+		})
+		return
+	}
+
+	userID := userIDRaw.(uint) // hoặc uint64 / int tùy bạn lưu
+
+	var datbans []models.DatBan
+
+	if err := config.DB.
+		Where("ma_nguoi_dung = ?", userID).
+		Find(&datbans).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể lấy danh sách đặt bàn",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": datbans,
+	})
+}
+func HuyDatBan(c *gin.Context) {
+	id := c.Param("id")
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Không xác thực người dùng",
+		})
+		return
+	}
+
+	var datban models.DatBan
+	if err := config.DB.First(&datban, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Không tìm thấy đặt bàn",
+		})
+		return
+	}
+
+	// chỉ chủ đặt bàn mới được hủy
+	if datban.MaNguoiDung != userID.(uint) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Bạn không có quyền hủy đặt bàn này",
+		})
+		return
+	}
+
+	// không cho hủy nếu đã xác nhận
+	if datban.TrangThai == "da_xac_nhan" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Đặt bàn đã được xác nhận, không thể hủy",
+		})
+		return
+	}
+
+	// update trạng thái hủy
+	if err := config.DB.Model(&datban).Updates(map[string]interface{}{
+		"trang_thai": "da_huy",
+	}).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể hủy đặt bàn",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Hủy đặt bàn thành công",
 	})
 }
