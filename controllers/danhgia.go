@@ -44,6 +44,7 @@ type DanhGiaResponse struct {
 }
 
 func (ctrl *DanhGiaController) CreateDanhGia(c *gin.Context) {
+	
 	var input DanhGiaInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})

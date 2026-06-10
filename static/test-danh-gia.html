@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>API Tester — Đánh Giá</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #181c25;
+      --border: #262c3a;
+      --accent: #f5a623;
+      --accent-dim: rgba(245,166,35,0.12);
+      --green: #3ecf8e;
+      --green-dim: rgba(62,207,142,0.1);
+      --red: #f56565;
+      --red-dim: rgba(245,101,101,0.1);
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --tag: #2d3348;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --sans: 'Inter', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header .logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+    header span { color: var(--muted); font-size: 12px; margin-left: 4px; }
+
+    /* ── Base URL bar ── */
+    .config-bar {
+      border-bottom: 1px solid var(--border);
+    }
+    .base-bar {
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .base-bar label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .8px; white-space: nowrap; }
+    .base-bar input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+    }
+    .base-bar input:focus { border-color: var(--accent); }
+    .token-bar {
+      padding: 0 32px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .token-bar label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .8px; white-space: nowrap; }
+    .token-bar .token-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .token-bar input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 80px 8px 12px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+    }
+    .token-bar input:focus { border-color: var(--accent); }
+    .token-bar input.has-token { border-color: rgba(62,207,142,.4); }
+    .token-clear-btn {
+      position: absolute; right: 8px;
+      background: var(--tag);
+      border: none; border-radius: 4px;
+      color: var(--muted); font-size: 11px; font-family: var(--sans);
+      padding: 3px 8px; cursor: pointer;
+      transition: color .12s, background .12s;
+    }
+    .token-clear-btn:hover { background: var(--red-dim); color: var(--red); }
+    .token-status {
+      font-size: 11px; white-space: nowrap;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .token-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted);
+      transition: background .2s;
+    }
+    .token-dot.active { background: var(--green); box-shadow: 0 0 6px rgba(62,207,142,.5); }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      height: calc(100vh - 140px);
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 12px 8px;
+    }
+    .sidebar-group { margin-bottom: 4px; }
+    .sidebar-group-label {
+      padding: 6px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+    .ep-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 6px;
+      text-align: left;
+      transition: background .12s;
+      font-family: var(--sans);
+      font-size: 13px;
+    }
+    .ep-btn:hover { background: var(--tag); }
+    .ep-btn.active { background: var(--accent-dim); color: var(--accent); }
+    .method-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      min-width: 42px;
+      text-align: center;
+    }
+    .GET  { background: rgba(62,207,142,.15); color: var(--green); }
+    .POST { background: rgba(99,179,237,.15); color: #63b3ed; }
+    .PUT  { background: rgba(245,166,35,.15); color: var(--accent); }
+    .DELETE { background: rgba(245,101,101,.15); color: var(--red); }
+
+    /* ── Main panel ── */
+    .main {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    .endpoint-header {
+      padding: 20px 28px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .endpoint-header .title-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .endpoint-header h2 { font-size: 15px; font-weight: 600; }
+    .endpoint-desc { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .12s, border-color .12s;
+      font-family: var(--sans);
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover { color: var(--text); }
+
+    /* ── Panels ── */
+    .panels {
+      overflow-y: auto;
+      padding: 24px 28px;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Form fields ── */
+    .field-group { margin-bottom: 18px; }
+    .field-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .7px; color: var(--muted);
+      margin-bottom: 7px;
+    }
+    .field-label .required { color: var(--red); }
+    .field-label .opt { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+    input[type=text], input[type=number], textarea, select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .12s;
+      resize: vertical;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    select option { background: var(--surface); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ── Send button ── */
+    .send-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent);
+      color: #0f1117;
+      font-weight: 700;
+      font-size: 13px;
+      font-family: var(--sans);
+      border: none;
+      border-radius: 7px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    .send-btn:hover { opacity: .9; }
+    .send-btn:active { transform: scale(.97); }
+    .send-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* ── Response ── */
+    .response-box {
+      margin-top: 22px;
+    }
+    .response-meta {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 10px;
+    }
+    .status-pill {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .status-ok   { background: var(--green-dim); color: var(--green); }
+    .status-err  { background: var(--red-dim); color: var(--red); }
+    .status-pending { background: var(--tag); color: var(--muted); }
+    .time-label { color: var(--muted); font-size: 11px; }
+
+    .response-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 380px;
+      overflow-y: auto;
+      color: #aed6f1;
+    }
+    .response-body .json-key    { color: #7ec8e3; }
+    .response-body .json-string { color: var(--green); }
+    .response-body .json-number { color: var(--accent); }
+    .response-body .json-bool   { color: #c084fc; }
+    .response-body .json-null   { color: var(--red); }
+
+    /* ── URL preview ── */
+    .url-preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      word-break: break-all;
+    }
+    .url-preview .method-label { font-weight: 700; margin-right: 8px; }
+
+    /* ── Stars ── */
+    .stars { display: flex; gap: 6px; margin-top: 6px; }
+    .star-btn { font-size: 22px; background: none; border: none; cursor: pointer; opacity: .4; transition: opacity .1s, transform .1s; }
+    .star-btn.lit { opacity: 1; }
+    .star-btn:hover { transform: scale(1.15); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⭐</div>
+  <h1>Đánh Giá API Tester<span>/ quanlynhahang-backend</span></h1>
+</header>
+
+<div class="config-bar">
+  <div class="base-bar">
+    <label>Base URL</label>
+    <input id="baseUrl" type="text" value="http://localhost:8080" placeholder="http://localhost:8080" />
+  </div>
+  <div class="token-bar">
+    <label>Bearer Token</label>
+    <div class="token-wrap">
+      <input id="tokenInput" type="password" placeholder="Dán JWT token vào đây..." oninput="onTokenChange()" />
+      <button class="token-clear-btn" onclick="clearToken()">Xoá</button>
+    </div>
+    <div class="token-status">
+      <div class="token-dot" id="tokenDot"></div>
+      <span id="tokenStatusText" style="color:var(--muted)">Chưa có token</span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Đánh Giá</div>
+      <button class="ep-btn active" onclick="selectEndpoint('create')">
+        <span class="method-tag POST">POST</span> Tạo đánh giá
+      </button>
+      <button class="ep-btn" onclick="selectEndpoint('listByMon')">
+        <span class="method-tag GET">GET</span> Theo món ăn
+      </button>
+      <button class="ep-btn" onclick="selectEndpoint('ratingByMon')">
+        <span class="method-tag GET">GET</span> Rating trung bình
+      </button>
+      <button class="ep-btn" onclick="selectEndpoint('update')">
+        <span class="method-tag PUT">PUT</span> Cập nhật
+      </button>
+      <button class="ep-btn" onclick="selectEndpoint('delete')">
+        <span class="method-tag DELETE">DELETE</span> Xoá đánh giá
+      </button>
+      <button class="ep-btn" onclick="selectEndpoint('check')">
+        <span class="method-tag GET">GET</span> Kiểm tra đã đG
+      </button>
+      <button class="ep-btn" onclick="selectEndpoint('soLuong')">
+        <span class="method-tag GET">GET</span> Số lượng hôm nay
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="endpoint-header">
+      <div class="title-row">
+        <span id="ep-method" class="method-tag POST">POST</span>
+        <h2 id="ep-title">Tạo đánh giá</h2>
+      </div>
+      <p class="endpoint-desc" id="ep-desc">Tạo một đánh giá mới cho món ăn trong hóa đơn.</p>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('params')">Tham số</button>
+        <button class="tab-btn" onclick="switchTab('response')">Kết quả</button>
+      </div>
+    </div>
+
+    <div class="panels">
+      <!-- PARAMS TAB -->
+      <div class="tab-panel active" id="tab-params">
+        <div class="url-preview">
+          <span id="urlPreviewMethod" class="method-label" style="color:var(--accent)">POST</span>
+          <span id="urlPreviewPath">/danh-gia</span>
+        </div>
+        <div id="form-area"><!-- injected per endpoint --></div>
+        <button class="send-btn" id="sendBtn" onclick="sendRequest()">
+          ▶ Gửi Request
+        </button>
+      </div>
+
+      <!-- RESPONSE TAB -->
+      <div class="tab-panel" id="tab-response">
+        <div class="response-box">
+          <div class="response-meta">
+            <span class="status-pill status-pending" id="statusPill">—</span>
+            <span class="time-label" id="timeLabel"></span>
+          </div>
+          <div class="response-body" id="responseBody">Chưa có kết quả. Nhấn "Gửi Request" để bắt đầu.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let currentEndpoint = 'create';
+
+// ── Endpoint definitions ──
+const endpoints = {
+  create: {
+    method: 'POST',
+    path: () => '/danh-gia',
+    title: 'Tạo đánh giá',
+    desc: 'Tạo một đánh giá mới cho món ăn trong hóa đơn.',
+    form: `
+      <div class="form-row">
+        <div class="field-group">
+          <div class="field-label">Mã hóa đơn <span class="required">*</span></div>
+          <input type="number" id="f_maHoaDon" placeholder="1" min="1"/>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Mã người dùng <span class="required">*</span></div>
+          <input type="number" id="f_maNguoiDung" placeholder="1" min="1"/>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Mã món ăn <span class="required">*</span></div>
+        <input type="number" id="f_maMonAn" placeholder="1" min="1"/>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Số sao <span class="required">*</span></div>
+        <div class="stars" id="starPicker">
+          <button class="star-btn" data-val="1" onclick="setStar(1)">★</button>
+          <button class="star-btn" data-val="2" onclick="setStar(2)">★</button>
+          <button class="star-btn" data-val="3" onclick="setStar(3)">★</button>
+          <button class="star-btn" data-val="4" onclick="setStar(4)">★</button>
+          <button class="star-btn" data-val="5" onclick="setStar(5)">★</button>
+        </div>
+        <input type="hidden" id="f_soSao" value="5"/>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Nội dung <span class="opt">(không bắt buộc)</span></div>
+        <textarea id="f_noiDung" rows="3" placeholder="Món ăn rất ngon..."></textarea>
+      </div>`,
+    body: () => ({
+      ma_hoa_don:    parseInt(v('f_maHoaDon')) || 0,
+      ma_nguoi_dung: parseInt(v('f_maNguoiDung')) || 0,
+      ma_mon_an:     parseInt(v('f_maMonAn')) || 0,
+      so_sao:        parseInt(v('f_soSao')) || 5,
+      noi_dung:      v('f_noiDung'),
+    }),
+  },
+
+  listByMon: {
+    method: 'GET',
+    path: () => `/danh-gia/mon/${v('f_monId') || ':id'}`,
+    title: 'Đánh giá theo món ăn',
+    desc: 'Lấy danh sách đánh giá của một món ăn, kèm thông tin người dùng.',
+    form: `
+      <div class="field-group">
+        <div class="field-label">Mã món ăn (ID) <span class="required">*</span></div>
+        <input type="number" id="f_monId" placeholder="1" min="1" oninput="updateUrlPreview()"/>
+      </div>`,
+    body: null,
+  },
+
+  ratingByMon: {
+    method: 'GET',
+    path: () => '/danh-gia/mon',
+    title: 'Rating trung bình tất cả món',
+    desc: 'Trả về điểm trung bình và tổng số đánh giá cho từng món ăn.',
+    form: `<p style="color:var(--muted);font-size:13px;">Không cần tham số. Nhấn Gửi để lấy toàn bộ dữ liệu.</p>`,
+    body: null,
+  },
+
+  update: {
+    method: 'PUT',
+    path: () => `/danh-gia/${v('f_updateId') || ':id'}`,
+    title: 'Cập nhật đánh giá',
+    desc: 'Chỉnh sửa nội dung hoặc số sao của một đánh giá.',
+    form: `
+      <div class="field-group">
+        <div class="field-label">ID đánh giá <span class="required">*</span></div>
+        <input type="number" id="f_updateId" placeholder="1" min="1" oninput="updateUrlPreview()"/>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Số sao mới <span class="required">*</span></div>
+        <div class="stars" id="starPickerU">
+          <button class="star-btn" data-val="1" onclick="setStarU(1)">★</button>
+          <button class="star-btn" data-val="2" onclick="setStarU(2)">★</button>
+          <button class="star-btn" data-val="3" onclick="setStarU(3)">★</button>
+          <button class="star-btn" data-val="4" onclick="setStarU(4)">★</button>
+          <button class="star-btn" data-val="5" onclick="setStarU(5)">★</button>
+        </div>
+        <input type="hidden" id="f_updateSoSao" value="5"/>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Nội dung mới</div>
+        <textarea id="f_updateNoiDung" rows="3" placeholder="Nhập nội dung mới..."></textarea>
+      </div>`,
+    body: () => ({
+      so_sao:   parseInt(v('f_updateSoSao')) || 5,
+      noi_dung: v('f_updateNoiDung'),
+    }),
+  },
+
+  delete: {
+    method: 'DELETE',
+    path: () => `/danh-gia/${v('f_deleteId') || ':id'}`,
+    title: 'Xoá đánh giá',
+    desc: 'Xoá vĩnh viễn một đánh giá khỏi hệ thống.',
+    form: `
+      <div class="field-group">
+        <div class="field-label">ID đánh giá <span class="required">*</span></div>
+        <input type="number" id="f_deleteId" placeholder="1" min="1" oninput="updateUrlPreview()"/>
+      </div>
+      <div style="background:var(--red-dim);border:1px solid rgba(245,101,101,.3);border-radius:7px;padding:12px 14px;margin-bottom:18px;">
+        <span style="color:var(--red);font-size:12px;font-weight:600;">⚠ Cảnh báo:</span>
+        <span style="color:var(--muted);font-size:12px;"> Hành động này không thể hoàn tác.</span>
+      </div>`,
+    body: null,
+  },
+
+  check: {
+    method: 'GET',
+    path: () => {
+      const hd = v('f_checkHD'), u = v('f_checkUser'), m = v('f_checkMon');
+      const p = new URLSearchParams();
+      if (hd) p.set('ma_hoa_don', hd);
+      if (u)  p.set('ma_nguoi_dung', u);
+      if (m)  p.set('ma_mon_an', m);
+      return `/danh-gia/check?${p.toString()}`;
+    },
+    title: 'Kiểm tra đã đánh giá',
+    desc: 'Kiểm tra người dùng đã đánh giá món ăn trong hóa đơn chưa.',
+    form: `
+      <div class="form-row">
+        <div class="field-group">
+          <div class="field-label">Mã hóa đơn <span class="required">*</span></div>
+          <input type="number" id="f_checkHD" placeholder="1" oninput="updateUrlPreview()"/>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Mã người dùng <span class="required">*</span></div>
+          <input type="number" id="f_checkUser" placeholder="1" oninput="updateUrlPreview()"/>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Mã món ăn <span class="required">*</span></div>
+        <input type="number" id="f_checkMon" placeholder="1" oninput="updateUrlPreview()"/>
+      </div>`,
+    body: null,
+  },
+
+  soLuong: {
+    method: 'GET',
+    path: () => '/danh-gia/so_luong_danh_gia',
+    title: 'Số lượng đánh giá hôm nay',
+    desc: 'Thống kê tổng số đánh giá được tạo trong ngày hiện tại.',
+    form: `<p style="color:var(--muted);font-size:13px;">Không cần tham số. Hệ thống tự lấy ngày hôm nay.</p>`,
+    body: null,
+  },
+};
+
+// ── Helpers ──
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+function base() {
+  return document.getElementById('baseUrl').value.replace(/\/$/, '');
+}
+
+// ── Star pickers ──
+let starValue = 5, starValueU = 5;
+
+function setStar(n) {
+  starValue = n;
+  document.getElementById('f_soSao').value = n;
+  document.querySelectorAll('#starPicker .star-btn').forEach(b => {
+    b.classList.toggle('lit', parseInt(b.dataset.val) <= n);
+  });
+}
+
+function setStarU(n) {
+  starValueU = n;
+  document.getElementById('f_updateSoSao').value = n;
+  document.querySelectorAll('#starPickerU .star-btn').forEach(b => {
+    b.classList.toggle('lit', parseInt(b.dataset.val) <= n);
+  });
+}
+
+// ── Endpoint selection ──
+function selectEndpoint(key) {
+  currentEndpoint = key;
+  const ep = endpoints[key];
+
+  // Header update
+  const mEl = document.getElementById('ep-method');
+  mEl.textContent = ep.method;
+  mEl.className = `method-tag ${ep.method}`;
+  document.getElementById('ep-title').textContent = ep.title;
+  document.getElementById('ep-desc').textContent = ep.desc;
+
+  // Form
+  document.getElementById('form-area').innerHTML = ep.form;
+
+  // Sidebar active state
+  document.querySelectorAll('.ep-btn').forEach((b, i) => {
+    b.classList.remove('active');
+    if (Object.keys(endpoints)[i] === key) b.classList.add('active');
+  });
+
+  // Init stars after DOM injection
+  if (key === 'create') setStar(5);
+  if (key === 'update') setStarU(5);
+
+  updateUrlPreview();
+  switchTab('params');
+  document.getElementById('statusPill').className = 'status-pill status-pending';
+  document.getElementById('statusPill').textContent = '—';
+  document.getElementById('timeLabel').textContent = '';
+  document.getElementById('responseBody').textContent = 'Chưa có kết quả. Nhấn "Gửi Request" để bắt đầu.';
+}
+
+function updateUrlPreview() {
+  const ep = endpoints[currentEndpoint];
+  const path = ep.path();
+  document.getElementById('urlPreviewMethod').textContent = ep.method;
+  document.getElementById('urlPreviewMethod').style.color =
+    ep.method === 'GET' ? 'var(--green)' :
+    ep.method === 'POST' ? '#63b3ed' :
+    ep.method === 'PUT' ? 'var(--accent)' : 'var(--red)';
+  document.getElementById('urlPreviewPath').textContent = base() + path;
+}
+
+document.getElementById('baseUrl').addEventListener('input', updateUrlPreview);
+
+// ── Tabs ──
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const idx = ['params','response'].indexOf(name);
+  document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+// ── JSON syntax highlight ──
+function highlight(json) {
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) return `<span class="json-key">${match}</span>`;
+        return `<span class="json-string">${match}</span>`;
+      }
+      if (/true|false/.test(match)) return `<span class="json-bool">${match}</span>`;
+      if (/null/.test(match))       return `<span class="json-null">${match}</span>`;
+      return `<span class="json-number">${match}</span>`;
+    });
+}
+
+// ── Send request ──
+async function sendRequest() {
+  const ep = endpoints[currentEndpoint];
+  const url = base() + ep.path();
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang gửi...';
+
+  const opts = { method: ep.method, headers: { 'Content-Type': 'application/json' } };
+  if (ep.body) {
+    try { opts.body = JSON.stringify(ep.body()); }
+    catch(e) { opts.body = '{}'; }
+  }
+
+  const t0 = performance.now();
+  try {
+    const res = await fetch(url, opts);
+    const ms = Math.round(performance.now() - t0);
+    let text;
+    try { text = JSON.stringify(await res.json(), null, 2); }
+    catch { text = await res.text(); }
+
+    const pill = document.getElementById('statusPill');
+    pill.textContent = `${res.status} ${res.statusText}`;
+    pill.className   = `status-pill ${res.ok ? 'status-ok' : 'status-err'}`;
+    document.getElementById('timeLabel').textContent = `${ms} ms`;
+    document.getElementById('responseBody').innerHTML = highlight(text);
+    switchTab('response');
+  } catch(err) {
+    document.getElementById('statusPill').textContent = 'Lỗi kết nối';
+    document.getElementById('statusPill').className = 'status-pill status-err';
+    document.getElementById('timeLabel').textContent = '';
+    document.getElementById('responseBody').textContent =
+      `Không thể kết nối tới server.\n\n${err.message}\n\nKiểm tra lại Base URL và đảm bảo server đang chạy.`;
+    switchTab('response');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Gửi Request';
+  }
+}
+
+// ── Init ──
+selectEndpoint('create');
+</script>
+</body>
+</html>
