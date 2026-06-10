@@ -7,11 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/config"
 	"github.com/vpa/quanlynhahang-backend/models"
-	"github.com/vpa/quanlynhahang-backend/services/send_mail"
+	"github.com/vpa/quanlynhahang-backend/utils"
 )
 
 func CreateDatBan(c *gin.Context) {
 	var input models.DatBan
+	userID, _ := c.Get("user_id")
 
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -28,6 +29,7 @@ func CreateDatBan(c *gin.Context) {
 		Ngay:         input.Ngay,
 		Gio:          input.Gio,
 		TrangThai:    "dang_xu_ly",
+		MaNguoiDung:  userID.(uint),
 		// IDNhanVienXacNhan = nil
 	}
 
@@ -37,11 +39,22 @@ func CreateDatBan(c *gin.Context) {
 	}
 
 	// 🔔 GỬI MAIL SAU KHI ĐẶT BÀN THÀNH CÔNG
-	go func(email string) {
-		if err := send_mail.SendDatBanMail(email); err != nil {
-			log.Println("❌ Gửi mail thất bại:", err)
+	go func(db models.DatBan) {
+		var ban models.BanAn
+		config.DB.First(&ban, db.MaBanAn)
+
+		if err := utils.SendMailDatBan(db.Email, utils.DatBanMailInfo{
+			TenKhachHang: db.TenKhachHang,
+			MaDatBan:     db.MaDatBan,
+			Ngay:         db.Ngay,
+			Gio:          db.Gio,
+			TenBan:       ban.TenBan,
+			Email:        db.Email,
+			GhiChu:       db.GhiChu,
+		}); err != nil {
+			log.Println("Send mail dat ban error:", err)
 		}
-	}(datban.Email)
+	}(datban)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Đặt bàn thành công",
@@ -113,30 +126,50 @@ func UpdateDatBan(c *gin.Context) {
 func XacNhanDatBan(c *gin.Context) {
 	id := c.Param("id")
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Không xác định được nhân viên"})
-		return
-	}
-	nhanVienID := userID.(uint)
-
 	var datban models.DatBan
 	if err := config.DB.First(&datban, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy đặt bàn"})
 		return
 	}
 
-	if datban.IDNhanVienXacNhan != nil {
+	// tránh xác nhận lại
+	if datban.TrangThai == "da_xac_nhan" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Đặt bàn đã được xác nhận"})
 		return
 	}
 
-	config.DB.Model(&datban).Updates(map[string]interface{}{
-		"id_nhan_vien_xac_nhan": nhanVienID,
-		"trang_thai":            "da_xac_nhan",
-	})
+	// update trạng thái
+	if err := config.DB.Model(&datban).Updates(map[string]interface{}{
+		"trang_thai": "da_xac_nhan",
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể xác nhận đặt bàn"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Xác nhận đặt bàn thành công"})
+	// load lại thông tin bàn (optional)
+	var ban models.BanAn
+	config.DB.First(&ban, datban.MaBanAn)
+
+	// gửi email async
+	go func(db models.DatBan, tenBan string) {
+		err := utils.SendMailDatBanXacNhan(db.Email, utils.DatBanXacNhanMailInfo{
+			TenKhachHang: db.TenKhachHang,
+			MaDatBan:     db.MaDatBan,
+			Ngay:         db.Ngay,
+			Gio:          db.Gio,
+			TenBan:       tenBan,
+			Email:        db.Email,
+			GhiChu:       db.GhiChu,
+		})
+
+		if err != nil {
+			log.Println("Send mail xác nhận đặt bàn lỗi:", err)
+		}
+	}(datban, ban.TenBan)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Xác nhận đặt bàn thành công",
+	})
 }
 
 func DeleteDatBan(c *gin.Context) {

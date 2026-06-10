@@ -13,7 +13,4 @@ type DatBan struct {
 	MaNguoiDung uint
 	TrangThai   string `gorm:"type:varchar(50);default:'dang_xu_ly'" json:"trang_thai"`
 
-	// 🔑 Khóa ngoại – cho phép NULL
-	IDNhanVienXacNhan *uint      `json:"id_nhan_vien_xac_nhan"`
-	NhanVienXacNhan   *NguoiDung `gorm:"foreignKey:IDNhanVienXacNhan;references:MaNguoiDung" json:"nhan_vien_xac_nhan,omitempty"`
 }
