@@ -81,7 +81,7 @@ func SendMailSauKhiDatDoAn(email string, info DatDoAnMailInfo) error {
 					<!-- Header -->
 					<div style="background:#1a1a1a;padding:32px 32px 24px;text-align:center;">
 					<div style="font-size:22px;letter-spacing:4px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
-					<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">SAIGON KITCHEN</div>
+					<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">FOOD HUB</div>
 					</div>
 
 					<!-- Title -->
@@ -148,7 +148,7 @@ func SendMailSauKhiDatDoAn(email string, info DatDoAnMailInfo) error {
 					<!-- Footer -->
 					<div style="padding:16px 32px;background:#1a1a1a;text-align:center;">
 					<p style="font-size:11px;color:#6a5a3a;margin:0;letter-spacing:1px;font-family:'Courier New',monospace;">
-						123 Đường ABC, Q.1, TP.HCM &nbsp;|&nbsp; 028-xxxx-xxxx
+						123 Đường ABC, Q.1, TP.HCM &nbsp;|&nbsp; 0933924075
 					</p>
 					</div>
 
@@ -178,7 +178,7 @@ func SendMailSauKhiThanhToan(email string, info ThanhToanMailInfo) error {
 
     <div style="background:#1a1a1a;padding:32px 32px 24px;text-align:center;">
         <div style="font-size:22px;letter-spacing:4px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
-        <div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">SAIGON KITCHEN</div>
+        <div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">FOOD HUB</div>
     </div>
 
     <div style="background:#f7f0e3;padding:24px 32px 16px;text-align:center;border-bottom:1px solid #e0d0b0;">
@@ -196,7 +196,7 @@ func SendMailSauKhiThanhToan(email string, info ThanhToanMailInfo) error {
             Kính gửi <strong>%s</strong>,
         </p>
         <p style="font-size:14px;color:#4a3c20;line-height:1.8;margin:0 0 24px;">
-            Chúng tôi xác nhận đã nhận được thanh toán của bạn. Cảm ơn bạn đã dùng bữa tại <strong>Saigon Kitchen</strong>!
+            Chúng tôi xác nhận đã nhận được thanh toán của bạn. Cảm ơn bạn đã dùng bữa tại <strong>FOOD HUB</strong>!
         </p>
 
         <table style="width:100%%;border-collapse:collapse;font-size:13px;background:#fff;border:0.5px solid #e0d0b0;border-radius:8px;overflow:hidden;margin-bottom:24px;">
@@ -220,7 +220,7 @@ func SendMailSauKhiThanhToan(email string, info ThanhToanMailInfo) error {
 
         <div style="background:#f7f0e3;border-left:3px solid #c4a55a;padding:12px 14px;">
             <p style="font-size:13px;color:#5a4520;margin:0;line-height:1.6;">
-                Nếu có bất kỳ thắc mắc nào về hóa đơn, vui lòng liên hệ nhân viên hoặc gọi <strong>028-xxxx-xxxx</strong>.
+                Nếu có bất kỳ thắc mắc nào về hóa đơn, vui lòng liên hệ nhân viên hoặc gọi <strong>0933924075</strong>.
             </p>
         </div>
     </div>
@@ -233,7 +233,7 @@ func SendMailSauKhiThanhToan(email string, info ThanhToanMailInfo) error {
 
     <div style="padding:16px 32px;background:#1a1a1a;text-align:center;">
         <p style="font-size:11px;color:#6a5a3a;margin:0;letter-spacing:1px;font-family:'Courier New',monospace;">
-            123 Đường ABC, Q.1, TP.HCM &nbsp;|&nbsp; 028-xxxx-xxxx
+            Chung cư Saigon intela Phong phú, Bình chánh TP.HCM &nbsp;|&nbsp; 0933924075
         </p>
     </div>
 
@@ -247,7 +247,7 @@ func SendMailSauKhiThanhToan(email string, info ThanhToanMailInfo) error {
 		formatVND(info.SoTienDaTra),
 	)
 
-	return SendMail(email, "✦ Xác nhận thanh toán thành công – Saigon Kitchen", body)
+	return SendMail(email, "✦ Xác nhận thanh toán thành công – FOOD HUB", body)
 }
 
 func formatVND(amount float64) string {
@@ -281,7 +281,7 @@ func SendMailSauKhiDangKy(email string, info DangKyMailInfo) error {
 			<!-- Header -->
 			<div style="background:#1a1a1a;padding:32px 32px 24px;text-align:center;">
 			<div style="font-size:22px;letter-spacing:4px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
-			<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">SAIGON KITCHEN</div>
+			<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">FOOD HUB</div>
 			</div>
 
 			<!-- Title -->
@@ -297,7 +297,7 @@ func SendMailSauKhiDangKy(email string, info DangKyMailInfo) error {
 				Kính gửi <strong>%s</strong>,
 			</p>
 			<p style="font-size:14px;color:#4a3c20;line-height:1.8;margin:0 0 24px;">
-				Chúc mừng bạn đã đăng ký tài khoản thành công tại <strong>Saigon Kitchen</strong>. Dưới đây là thông tin tài khoản của bạn:
+				Chúc mừng bạn đã đăng ký tài khoản thành công tại <strong>FOOD HUB</strong>. Dưới đây là thông tin tài khoản của bạn:
 			</p>
 
 			<!-- Info table -->
@@ -338,7 +338,7 @@ func SendMailSauKhiDangKy(email string, info DangKyMailInfo) error {
 			<!-- Footer -->
 			<div style="padding:16px 32px;background:#1a1a1a;text-align:center;">
 			<p style="font-size:11px;color:#6a5a3a;margin:0;letter-spacing:1px;font-family:'Courier New',monospace;">
-				123 Đường ABC, Q.1, TP.HCM &nbsp;|&nbsp; 028-xxxx-xxxx
+				Chung cư Saigon intela Phong phú, Bình chánh TP.HCM &nbsp;|&nbsp; 0933924075
 			</p>
 			</div>
 
@@ -351,7 +351,7 @@ func SendMailSauKhiDangKy(email string, info DangKyMailInfo) error {
 		info.Email,
 	)
 
-	return SendMail(email, "✦ Chào mừng bạn đến với Saigon Kitchen", body)
+	return SendMail(email, "✦ Chào mừng bạn đến với FOOD HUB", body)
 }
 func SendMailDatBan(email string, info DatBanMailInfo) error {
 
@@ -369,7 +369,7 @@ func SendMailDatBan(email string, info DatBanMailInfo) error {
     <!-- HEADER -->
     <div style="background:#1a1a1a;padding:32px;text-align:center;">
         <div style="font-size:22px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
-        <div style="font-size:11px;color:#8a7a5a;">SAIGON KITCHEN</div>
+        <div style="font-size:11px;color:#8a7a5a;">FOOD HUB</div>
     </div>
 
     <!-- TITLE -->
@@ -435,7 +435,7 @@ func SendMailDatBan(email string, info DatBanMailInfo) error {
 
     <!-- FOOTER -->
     <div style="padding:16px;text-align:center;background:#1a1a1a;color:#6a5a3a;">
-        Saigon Kitchen • Xin cảm ơn quý khách
+        FOOD HUB • Xin cảm ơn quý khách
     </div>
 
 </div>
@@ -451,7 +451,7 @@ func SendMailDatBan(email string, info DatBanMailInfo) error {
 		info.GhiChu,
 	)
 
-	return SendMail(email, "✦ Xác nhận đặt bàn - Saigon Kitchen", body)
+	return SendMail(email, "✦ Xác nhận đặt bàn - FOOD HUB", body)
 }
 func SendMailDatBanXacNhan(email string, info DatBanXacNhanMailInfo) error {
 	body := fmt.Sprintf(`
@@ -469,7 +469,7 @@ func SendMailDatBanXacNhan(email string, info DatBanXacNhanMailInfo) error {
     <div style="background:#1a1a1a;padding:32px 32px 24px;text-align:center;">
         <div style="font-size:22px;letter-spacing:4px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
         <div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">
-            SAIGON KITCHEN
+            FOOD HUB
         </div>
     </div>
 
@@ -499,7 +499,7 @@ func SendMailDatBanXacNhan(email string, info DatBanXacNhanMailInfo) error {
 
         <p style="font-size:14px;color:#4a3c20;line-height:1.8;margin:0 0 24px;">
             Chúng tôi xác nhận <strong>đặt bàn của bạn đã được ghi nhận thành công</strong>.
-            Rất hân hạnh được phục vụ bạn tại <strong>Saigon Kitchen</strong>.
+            Rất hân hạnh được phục vụ bạn tại <strong>FOOD HUB</strong>.
         </p>
 
         <!-- INFO TABLE -->
@@ -530,7 +530,7 @@ func SendMailDatBanXacNhan(email string, info DatBanXacNhanMailInfo) error {
         <div style="background:#f7f0e3;border-left:3px solid #c4a55a;padding:12px 14px;">
             <p style="font-size:13px;color:#5a4520;margin:0;line-height:1.6;">
                 Vui lòng đến đúng giờ đã đặt. Nếu cần hỗ trợ, hãy liên hệ nhân viên hoặc gọi
-                <strong>028-xxxx-xxxx</strong>.
+                <strong>0933924075</strong>.
             </p>
         </div>
     </div>
@@ -544,7 +544,7 @@ func SendMailDatBanXacNhan(email string, info DatBanXacNhanMailInfo) error {
 
     <div style="padding:16px 32px;background:#1a1a1a;text-align:center;">
         <p style="font-size:11px;color:#6a5a3a;margin:0;letter-spacing:1px;font-family:'Courier New',monospace;">
-            123 Đường ABC, Q.1, TP.HCM &nbsp;|&nbsp; 028-xxxx-xxxx
+            Chung cư Saigon intela Phong phú, Bình chánh TP.HCM &nbsp;|&nbsp; 0933924075
         </p>
     </div>
 
@@ -559,7 +559,7 @@ func SendMailDatBanXacNhan(email string, info DatBanXacNhanMailInfo) error {
 		info.Gio,
 	)
 
-	return SendMail(email, "✦ Xác nhận đặt bàn thành công – Saigon Kitchen", body)
+	return SendMail(email, "✦ Xác nhận đặt bàn thành công – FOOD HUB", body)
 }
 
 // type RegisterOTPData struct {

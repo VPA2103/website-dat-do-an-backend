@@ -36,16 +36,9 @@ func HoaDonRoutes(r *gin.Engine, hub *websocket.Hub) {
 
 		hoaDon.GET("/cho-thanh-toan", middleware.AuthMiddleware(), ctrl.GetHoaDonChoThanhToan)
 		//thongke
-		hoaDon.GET("/doanh-thu-ngay", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetDoanhThuTheoNgay)
-		hoaDon.GET("/export-doanh-thu-ngay", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.ExportDoanhThuNgay)
-		hoaDon.GET("/danh-sach-doanh-thu-ngay", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetDanhSachNgayDoanhThu)
-		hoaDon.GET("/doanh-thu-thang", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetDoanhThuTheoThang)
-		hoaDon.GET("/doanh-thu-nam", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetDoanhThuTheoNam)
-		hoaDon.GET("/mon-an-ban-chay", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetTopMonAnBanChay)
-		hoaDon.GET("/ti-le-hoan-thanh-hom-nay", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.GetTiLeHoanThanhHomNay)
+		
 		hoaDon.GET("/so-don-theo-ngay", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.SoDonTheoNgay)
 		hoaDon.GET("/don-da-giao-hom-nay",middleware.AuthMiddleware(),middleware.RoleMiddleware("admin"),ctrl.DonHangDaGiaoHomNay)
-		hoaDon.GET("/top-mon-ban-chay-nhat", middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"), ctrl.TopMonBanChay)
 		// hoaDon.POST("/:ma_hd/thanh-toan", controllers.ThanhToanHoaDon)
 
 		// hoaDon.POST("/:ma_hoa_don/thanh-toan", controllers.ThanhToanHoaDon)

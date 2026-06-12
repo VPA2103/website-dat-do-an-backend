@@ -1,6 +1,8 @@
 package routes
 
 import (
+
+
 	"github.com/gin-gonic/gin"
 	"github.com/vpa/quanlynhahang-backend/controllers"
 	"github.com/vpa/quanlynhahang-backend/internal/usecase"
@@ -22,12 +24,13 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	auth.GET("/profile", controllers.GetProfile)
 
 	// 👑 Nhóm chỉ cho admin
-	admin := auth.Group("/admin")
-	admin.Use(middleware.RoleMiddleware("admin"))
-	admin.GET("/dashboard", controllers.AdminDashboard)
+	// admin := auth.Group("/admin")
+	// admin.Use(middleware.RoleMiddleware("admin"))
+	// admin.GET("/dashboard", controllers.AdminDashboard)
 	contactHandler := &controllers.ContactHandler{
 		NotiUC: notiUC,
 	}
+
 	// 👨‍💼 Nhân viên routes (có thể để ngoài hoặc trong nhóm admin)
 	AuthRoutes(r)
 
@@ -66,4 +69,8 @@ func SetupRoutes(r *gin.Engine, chatUC *usecase.ChatUseCase,
 	ShipRoutes(r, hub)
 
 	NhaHangRoutes(r,chatHandler)
+
+	UserRoutes(r)
+
+	AdminRoutes(r)
 }

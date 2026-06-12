@@ -14,6 +14,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+
+
 // 🧱 Thêm nhân viên
 func CreateNhanVien(c *gin.Context) {
 	var nv models.NguoiDung

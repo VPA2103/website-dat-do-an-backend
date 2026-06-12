@@ -100,8 +100,6 @@ func Login(c *gin.Context) {
 	})
 }
 
-
-
 type OTPData struct {
 	Code      string
 	ExpiredAt time.Time
@@ -147,11 +145,80 @@ func SendOTP(c *gin.Context) {
 		ExpiredAt: time.Now().Add(5 * time.Minute),
 	}
 
-	body := `
-		<h2>Mã OTP đổi mật khẩu</h2>
-		<p>OTP của bạn là: <b>` + otp + `</b></p>
-		<p>OTP có hiệu lực trong 5 phút</p>
-	`
+	body := fmt.Sprintf(`
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:20px;background:#f4ede0;font-family:Georgia,'Times New Roman',serif;">
+<div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;">
+
+	<!-- Header -->
+	<div style="background:#1a1a1a;padding:32px 32px 24px;text-align:center;">
+		<div style="font-size:22px;letter-spacing:4px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
+		<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">
+			FOOD HUB
+		</div>
+	</div>
+
+	<!-- Title -->
+	<div style="background:#f7f0e3;padding:24px 32px 16px;text-align:center;border-bottom:1px solid #e0d0b0;">
+		<div style="font-size:11px;letter-spacing:5px;color:#8a7a5a;font-family:'Courier New',monospace;margin-bottom:8px;">
+			BẢO MẬT TÀI KHOẢN
+		</div>
+		<div style="font-size:22px;color:#2a1f0a;letter-spacing:1px;">
+			Xác nhận đổi mật khẩu
+		</div>
+		<div style="width:40px;height:1px;background:#c4a55a;margin:12px auto 0;"></div>
+	</div>
+
+	<!-- Body -->
+	<div style="padding:24px 32px;background:#fdfaf4;">
+		<p style="font-size:14px;color:#4a3c20;line-height:1.8;margin-bottom:16px;">
+			Chúng tôi đã nhận được yêu cầu <strong>đổi mật khẩu</strong> cho tài khoản của bạn.
+		</p>
+
+		<p style="font-size:14px;color:#4a3c20;line-height:1.8;margin-bottom:24px;">
+			Mã OTP xác nhận của bạn là:
+		</p>
+
+		<!-- OTP BOX -->
+		<div style="background:#1a1a1a;color:#e8d5b0;
+			font-size:28px;
+			letter-spacing:6px;
+			text-align:center;
+			padding:18px 0;
+			border-radius:6px;
+			font-family:'Courier New',monospace;
+			margin-bottom:24px;">
+			%s
+		</div>
+
+		<div style="background:#f7f0e3;border-left:3px solid #c4a55a;padding:12px 14px;margin-bottom:24px;">
+			<p style="font-size:13px;color:#5a4520;margin:0;line-height:1.6;">
+				Mã OTP có hiệu lực trong <strong>5 phút</strong>.  
+				Vui lòng không chia sẻ mã này với bất kỳ ai.
+			</p>
+		</div>
+
+		<p style="font-size:13px;color:#6a5a3a;line-height:1.8;margin:0;">
+			Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email hoặc liên hệ ngay với chúng tôi.
+		</p>
+	</div>
+
+	<!-- Footer -->
+	<div style="padding:16px 32px;background:#1a1a1a;text-align:center;">
+		<p style="font-size:11px;color:#6a5a3a;margin:0;letter-spacing:1px;font-family:'Courier New',monospace;">
+			Chung cư Saigon Intela, Bình Chánh, TP.HCM &nbsp;|&nbsp; 0933924075
+		</p>
+	</div>
+
+</div>
+</body>
+</html>
+`, otp)
 
 	err := utils.SendMail(
 		input.Email,
@@ -291,7 +358,7 @@ func SendRegisterOTP(c *gin.Context) {
 					<!-- Header -->
 					<div style="background:#1a1a1a;padding:32px 32px 24px;text-align:center;">
 					<div style="font-size:22px;letter-spacing:4px;color:#e8d5b0;">✦ NHÀ HÀNG ✦</div>
-					<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">SAIGON KITCHEN</div>
+					<div style="font-size:11px;letter-spacing:6px;color:#8a7a5a;margin-top:4px;font-family:'Courier New',monospace;">FOOD HUB</div>
 					</div>
 
 					<!-- Title -->
@@ -307,7 +374,7 @@ func SendRegisterOTP(c *gin.Context) {
 						Kính gửi quý khách,
 					</p>
 					<p style="font-size:14px;color:#4a3c20;line-height:1.8;margin:0 0 24px;">
-						Chúng tôi nhận được yêu cầu xác thực tài khoản của bạn tại <strong>Saigon Kitchen</strong>. Vui lòng sử dụng mã OTP dưới đây:
+						Chúng tôi nhận được yêu cầu xác thực tài khoản của bạn tại <strong>FOOD HUB</strong>. Vui lòng sử dụng mã OTP dưới đây:
 					</p>
 
 					<!-- OTP Box -->
@@ -333,7 +400,7 @@ func SendRegisterOTP(c *gin.Context) {
 					<!-- Footer -->
 					<div style="padding:16px 32px;background:#1a1a1a;text-align:center;">
 					<p style="font-size:11px;color:#6a5a3a;margin:0;letter-spacing:1px;font-family:'Courier New',monospace;">
-						123 Đường ABC, Q.1, TP.HCM &nbsp;|&nbsp; 028-xxxx-xxxx
+						Chung cư Saigon intela Phong phú, Bình chánh TP.HCM &nbsp;|&nbsp; 0933924075
 					</p>
 					</div>
 

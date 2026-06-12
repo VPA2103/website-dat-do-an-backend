@@ -1,7 +1,7 @@
 package models
 
 type LoaiMonAn struct {
-	MaLoaiMonAn  uint   `gorm:"primaryKey;size:10;autoIncrement" json:"ma_loai_mon_an"`
-	TenLoaiMonAn string `gorm:"size:10" json:"ten_loai_mon_an" form:"ten_loai_mon_an"`
+	MaLoaiMonAn  uint   `gorm:"primaryKey;size:255;autoIncrement" json:"ma_loai_mon_an"`
+	TenLoaiMonAn string `gorm:"size:255" json:"ten_loai_mon_an" form:"ten_loai_mon_an"`
 	AnhLoaiMonAn string `json:"anh_loai_mon_an" form:"anh_loai_mon_an"`
 }
