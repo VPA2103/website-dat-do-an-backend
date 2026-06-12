@@ -12,6 +12,7 @@ func BinhLuanRoutes(r *gin.Engine, hub *websocket.Hub) {
 
 	binhluan := r.Group("/binh-luan")
 	{
+		binhluan.GET("/get-all-binh-luan-by-nguoi-dung",middleware.AuthMiddleware(), ctrl.GetALLBinhLuanByNguoiDung)
 		binhluan.POST("", middleware.AuthMiddleware(), ctrl.CreateBinhLuan)
 		binhluan.GET("/mon-an/:ma_mon_an", ctrl.GetBinhLuanByMonAn)
 		binhluan.GET("/:id", middleware.AuthMiddleware(), ctrl.GetBinhLuanByID)

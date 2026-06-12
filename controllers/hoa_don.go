@@ -15,6 +15,7 @@ import (
 	"github.com/vpa/quanlynhahang-backend/models"
 	"github.com/vpa/quanlynhahang-backend/utils"
 	"gorm.io/gorm"
+	"github.com/xuri/excelize/v2"
 )
 
 type HoaDonController struct {
@@ -542,6 +543,40 @@ func (ctrl *HoaDonController) GetHoaDons(c *gin.Context) {
 		"data": hoaDons,
 	})
 }
+
+func (ctrl *HoaDonController) GetHoaDonsToday(c *gin.Context) {
+
+	var hoaDons []models.HoaDon
+
+	// Lấy thời gian hiện tại theo VN (nếu cần)
+	loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
+	now := time.Now().In(loc)
+
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	endOfDay := startOfDay.Add(24*time.Hour - time.Nanosecond)
+
+	if err := config.DB.
+		Preload("Shipper").
+		Preload("ChiTietHoaDons").
+		Preload("ChiTietHoaDons.MonAn").
+		Preload("ChiTietHoaDons.Options").
+		Preload("ChiTietHoaDons.Options.OptionItem").
+		Preload("ChiTietHoaDons.Options.OptionItem.NhomOption").
+		Where("ngay BETWEEN ? AND ?", startOfDay, endOfDay).
+		Order("ma_hoa_don DESC").
+		Find(&hoaDons).Error; err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Không thể lấy danh sách hóa đơn hôm nay",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": hoaDons,
+	})
+}
+
 func (ctrl *HoaDonController) GetHoaDonByShipper(c *gin.Context) {
 
 	shipperIDAny, exists := c.Get("user_id")
@@ -557,7 +592,7 @@ func (ctrl *HoaDonController) GetHoaDonByShipper(c *gin.Context) {
 	var hoaDons []models.HoaDon
 
 	if err := config.DB.
-		Where("ma_shipper = ? AND trang_thai = ?", shipperID, "dang_giao").
+		Where("ma_shipper = ? AND trang_thai = ?", shipperID, "da_giao_shipper").
 		Preload("Shipper").
 		Preload("Shipper").
 		Preload("ChiTietHoaDons").
@@ -573,7 +608,6 @@ func (ctrl *HoaDonController) GetHoaDonByShipper(c *gin.Context) {
 		})
 		return
 	}
-
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": hoaDons,
@@ -980,11 +1014,13 @@ func (ctrl *HoaDonController) GetHoaDonChoThanhToan(c *gin.Context) {
 
 func (ctrl *HoaDonController) GetDoanhThuTheoNgay(c *gin.Context) {
 
-	// yyyy-mm-dd (VD: 2026-06-04)
 	ngay := c.Query("ngay")
 	if ngay == "" {
 		ngay = time.Now().Format("2006-01-02")
 	}
+
+	start := ngay + " 00:00:00"
+	end := ngay + " 23:59:59"
 
 	var result DoanhThuDTO
 
@@ -992,13 +1028,13 @@ func (ctrl *HoaDonController) GetDoanhThuTheoNgay(c *gin.Context) {
 		Model(&models.HoaDon{}).
 		Select(`
 			COALESCE(SUM(tong_tien), 0) AS doanh_thu,
-			COUNT(ma_hoa_don) AS so_don
+			COUNT(*) AS so_don
 		`).
 		Where(`
-			CAST(ngay AS DATE) = ?
+			ngay BETWEEN ? AND ?
 			AND trang_thai = ?
 			AND trang_thai_thanh_toan = ?
-		`, ngay, "da_giao", "da_thanh_toan").
+		`, start, end, "da_giao", "da_thanh_toan").
 		Scan(&result).Error
 
 	if err != nil {
@@ -1008,13 +1044,169 @@ func (ctrl *HoaDonController) GetDoanhThuTheoNgay(c *gin.Context) {
 		return
 	}
 
-	// gán ngày thủ công
 	result.Ngay = ngay
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": result,
 	})
 }
+
+func (ctrl *HoaDonController) ExportDoanhThuNgay(c *gin.Context) {
+
+	ngay := c.Query("ngay")
+	if ngay == "" {
+		ngay = time.Now().Format("2006-01-02")
+	}
+
+	var hoaDons []models.HoaDon
+
+	config.DB.
+		Preload("ChiTietHoaDons.MonAn").
+		Preload("ChiTietHoaDons.Options.OptionItem").
+		Where("DATE(ngay)=? AND trang_thai=? AND trang_thai_thanh_toan=?",
+			ngay, "da_giao", "da_thanh_toan").
+		Find(&hoaDons)
+
+	f := excelize.NewFile()
+	sheet := "DoanhThu"
+	f.NewSheet(sheet)
+
+	// ======================
+	// STYLE
+	// ======================
+	titleStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 18},
+		Alignment: &excelize.Alignment{Horizontal: "center"},
+	})
+
+	headerStyle, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"#D9E1F2"},
+			Pattern: 1,
+		},
+		Alignment: &excelize.Alignment{Horizontal: "center"},
+	})
+
+	// ======================
+	// TITLE
+	// ======================
+	f.SetCellValue(sheet, "A1", "BÁO CÁO DOANH THU NGÀY "+ngay)
+	f.MergeCell(sheet, "A1", "F1")
+	f.SetCellStyle(sheet, "A1", "F1", titleStyle)
+
+	row := 3
+	var grandTotal float64
+
+	// ======================
+	// HEADER
+	// ======================
+	headers := []string{"MAHD", "Họ tên", "SĐT", "Tạm tính", "Giảm", "Tổng"}
+
+	for i, h := range headers {
+		cell, _ := excelize.CoordinatesToCellName(i+1, row)
+		f.SetCellValue(sheet, cell, h)
+		f.SetCellStyle(sheet, cell, cell, headerStyle)
+	}
+
+	row++
+
+	// ======================
+	// DATA
+	// ======================
+	for _, hd := range hoaDons {
+
+		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), hd.MaHoaDon)
+		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), hd.HoTen)
+		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), hd.SDT)
+
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), formatMoneyVND(hd.TamTinh))
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), formatMoneyVND(hd.TienGiam))
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), formatMoneyVND(hd.TongTien))
+
+		row++
+
+		// ======================
+		// CHI TIẾT MÓN
+		// ======================
+		for _, ct := range hd.ChiTietHoaDons {
+
+			f.SetCellValue(sheet, fmt.Sprintf("B%d", row),
+				"   "+ct.MonAn.TenMonAn)
+
+			f.SetCellValue(sheet, fmt.Sprintf("C%d", row),
+				fmt.Sprintf("SL: %d", ct.SoLuong))
+
+			f.SetCellValue(sheet, fmt.Sprintf("F%d", row),
+				formatMoneyVND(ct.ThanhTien))
+
+			row++
+
+			// OPTIONS
+			for _, op := range ct.Options {
+
+				name := op.TenOption
+				if name == "" {
+					name = op.OptionItem.TenOption
+				}
+
+				f.SetCellValue(sheet, fmt.Sprintf("B%d", row),
+					"      + "+name)
+
+				f.SetCellValue(sheet, fmt.Sprintf("F%d", row),
+					formatMoneyVND(op.GiaThem))
+
+				row++
+			}
+		}
+
+		grandTotal += hd.TongTien
+		row++
+	}
+
+	// ======================
+	// TOTAL
+	// ======================
+	f.SetCellValue(sheet, fmt.Sprintf("E%d", row), "TỔNG DOANH THU:")
+	f.SetCellValue(sheet, fmt.Sprintf("F%d", row), formatMoneyVND(grandTotal))
+
+	// ======================
+	// COLUMN WIDTH
+	// ======================
+	f.SetColWidth(sheet, "A", "A", 10)
+	f.SetColWidth(sheet, "B", "B", 35)
+	f.SetColWidth(sheet, "C", "C", 15)
+	f.SetColWidth(sheet, "D", "F", 18)
+
+	f.DeleteSheet("Sheet1")
+
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", "attachment; filename=doanh_thu.xlsx")
+
+	_ = f.Write(c.Writer)
+}
+func (ctrl *HoaDonController) GetDanhSachNgayDoanhThu(c *gin.Context) {
+
+	var days []string
+
+	err := config.DB.
+		Model(&models.HoaDon{}).
+		Select("DISTINCT CAST(ngay AS DATE)").
+		Where("trang_thai = ? AND trang_thai_thanh_toan = ?", "da_giao", "da_thanh_toan").
+		Order("ngay DESC").
+		Pluck("ngay", &days).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "fail"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"data": days,
+	})
+}
+
 func (ctrl *HoaDonController) GetDoanhThuTheoThang(c *gin.Context) {
 
 	thang, _ := strconv.Atoi(c.DefaultQuery("thang", fmt.Sprint(int(time.Now().Month()))))
@@ -1275,4 +1467,29 @@ func (ctrl *HoaDonController) GetALLHoaDonByShipper(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": hoaDons,
 	})
+}
+
+func formatMoneyVND(n float64) string {
+	// ép về int trước cho an toàn
+	v := int64(n)
+
+	s := fmt.Sprintf("%d", v)
+
+	// format thủ công dấu chấm
+	nStr := ""
+	for i, c := range reverse(s) {
+		if i != 0 && i%3 == 0 {
+			nStr += "."
+		}
+		nStr += string(c)
+	}
+
+	return reverse(nStr) + " ₫"
+}
+func reverse(s string) string {
+	r := []rune(s)
+	for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
+	return string(r)
 }

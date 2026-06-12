@@ -17,6 +17,12 @@ import (
 	
 )
 
+type MonAnChiTietResponse struct {
+	MonAn     models.MonAn      `json:"mon_an"`
+	DanhGias  []models.DanhGia  `json:"danh_gias"`
+	BinhLuans []models.BinhLuan `json:"binh_luans"`
+}
+
 func (h *ChatHandler) CreateMonAn(c *gin.Context) {
 	var monan models.MonAn
 
@@ -395,3 +401,116 @@ func SearchMonAn(c *gin.Context) {
 		"data": list,
 	})
 }
+
+func GetMonAnCoBinhLuanVaDanhGia(c *gin.Context) {
+	var monAns []models.MonAn
+
+	err := config.DB.
+		Preload("AnhMonAn").
+		Find(&monAns).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Lỗi truy vấn"})
+		return
+	}
+
+	type MonAnQuanLy struct {
+		MaMonAn     uint        `json:"ma_mon_an"`
+		TenMonAn    string      `json:"ten_mon_an"`
+		AnhMonAn    interface{} `json:"anh_mon_an"`
+		SoBinhLuan  int64       `json:"so_binh_luan"`
+		SoDanhGia   int64       `json:"so_danh_gia"`
+	}
+
+	var result []MonAnQuanLy
+
+	for _, m := range monAns {
+		var soBL int64
+		var soDG int64
+
+		config.DB.Model(&models.BinhLuan{}).
+			Where("ma_mon_an = ?", m.MaMonAn).
+			Count(&soBL)
+
+		config.DB.Model(&models.DanhGia{}).
+			Where("ma_mon_an = ?", m.MaMonAn).
+			Count(&soDG)
+
+		if soBL > 0 || soDG > 0 {
+			result = append(result, MonAnQuanLy{
+				MaMonAn:    m.MaMonAn,
+				TenMonAn:   m.TenMonAn,
+				AnhMonAn:   m.AnhMonAn,
+				SoBinhLuan: soBL,
+				SoDanhGia:  soDG,
+			})
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"data": result, // ✅ ARRAY
+	})
+}
+func GetMonAnCoBinhLuanVaDanhGiaCuaNguoiDung(c *gin.Context) {
+
+	// 🔐 Lấy user đăng nhập
+	maNguoiDungAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Chưa đăng nhập"})
+		return
+	}
+	maNguoiDung := maNguoiDungAny.(uint)
+
+	var monAns []models.MonAn
+
+	err := config.DB.
+		Preload("AnhMonAn").
+		Find(&monAns).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Lỗi truy vấn"})
+		return
+	}
+
+	type MonAnQuanLy struct {
+		MaMonAn     uint        `json:"ma_mon_an"`
+		TenMonAn    string      `json:"ten_mon_an"`
+		AnhMonAn    interface{} `json:"anh_mon_an"`
+		SoBinhLuan  int64       `json:"so_binh_luan"`
+		SoDanhGia   int64       `json:"so_danh_gia"`
+	}
+
+	var result []MonAnQuanLy
+
+	for _, m := range monAns {
+		var soBL int64
+		var soDG int64
+
+		// 🗨️ Bình luận của user
+		config.DB.Model(&models.BinhLuan{}).
+			Where("ma_mon_an = ? AND ma_nguoi_dung = ?", m.MaMonAn, maNguoiDung).
+			Count(&soBL)
+
+		// ⭐ Đánh giá của user
+		config.DB.Model(&models.DanhGia{}).
+			Where("ma_mon_an = ? AND ma_nguoi_dung = ?", m.MaMonAn, maNguoiDung).
+			Count(&soDG)
+
+		// ✅ Chỉ lấy món user đã từng tương tác
+		if soBL > 0 || soDG > 0 {
+			result = append(result, MonAnQuanLy{
+				MaMonAn:    m.MaMonAn,
+				TenMonAn:   m.TenMonAn,
+				AnhMonAn:   m.AnhMonAn,
+				SoBinhLuan: soBL,
+				SoDanhGia:  soDG,
+			})
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"data": result,
+	})
+}
+
+

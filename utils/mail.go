@@ -69,6 +69,7 @@ type DatBanXacNhanMailInfo struct {
 	Email        string
 	GhiChu       string
 }
+
 func SendMailSauKhiDatDoAn(email string, info DatDoAnMailInfo) error {
 	body := fmt.Sprintf(`
 				<!DOCTYPE html>
@@ -441,16 +442,16 @@ func SendMailDatBan(email string, info DatBanMailInfo) error {
 </body>
 </html>
 `,
-        info.TenKhachHang,
-        info.MaDatBan,
-        info.TenBan,
-        info.Ngay,
-        info.Gio,
-        info.Email,
-        info.GhiChu,
-    )
+		info.TenKhachHang,
+		info.MaDatBan,
+		info.TenBan,
+		info.Ngay,
+		info.Gio,
+		info.Email,
+		info.GhiChu,
+	)
 
-    return SendMail(email, "✦ Xác nhận đặt bàn - Saigon Kitchen", body)
+	return SendMail(email, "✦ Xác nhận đặt bàn - Saigon Kitchen", body)
 }
 func SendMailDatBanXacNhan(email string, info DatBanXacNhanMailInfo) error {
 	body := fmt.Sprintf(`

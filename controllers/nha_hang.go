@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
@@ -12,86 +11,73 @@ import (
 	"github.com/vpa/quanlynhahang-backend/models"
 )
 
-type UpdateNhaHangmodels struct {
-	TenNhaHang string `form:"ten_nha_hang"`
-	TrangThai  int    `form:"trang_thai"`
-	DiaChi   string    `form:"dia_chi"`
-	SoTaiKhoan   int   `form:"so_tai_khoan"`
-	NganHang   int     `form:"ngan_hang"`
+type UpdateNhaHangRequest struct {
+	TenNhaHang  string `form:"ten_nha_hang"`
+	TrangThai   int    `form:"trang_thai"`
+	DiaChi      string `form:"dia_chi"`
 
+	SoTaiKhoan   string    `form:"so_tai_khoan"`
+	NganHang     string `form:"ngan_hang"`
+	TenNguoiNhan string `form:"ten_nguoi_nhan"`
+
+	GioMoCua   string `form:"gio_mo_cua"`
+	GioDongCua string `form:"gio_dong_cua"`
+	MoTa       string `form:"mo_ta"`
 }
 
 func (h *ChatHandler) CreateNhaHang(c *gin.Context) {
 	var nhahang models.NhaHang
 
-	// 1️⃣ Bind
 	if err := c.ShouldBind(&nhahang); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 2️⃣ Validate
 	if nhahang.TenNhaHang == "" || nhahang.DiaChi == "" {
 		c.JSON(400, gin.H{"error": "Thiếu dữ liệu"})
 		return
 	}
-	if nhahang.SoTaiKhoan == 0 || nhahang.NganHang == "" {
-		c.JSON(400, gin.H{"error": "Thiếu thông tin ngân hàng"})
-		return
-	}
 
-	// 3️⃣ Lấy user
-	userAny, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(401, gin.H{"error": "Chưa đăng nhập"})
-		return
-	}
-	nhahang.MaNguoiDung = userAny.(uint)
-
-	// 4️⃣ Save domain
+	// save DB
 	if err := config.DB.Create(&nhahang).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	// =========================
-	// 🧠 BUILD DOCUMENT
-	// =========================
+	// ================= EMBEDDING =================
 	document := fmt.Sprintf(
-		"Nhà hàng: %s\nĐịa chỉ: %s\nNgân hàng: %s\nSố tài khoản: %d",
+`Nhà hàng: %s
+Địa chỉ: %s
+Mô tả: %s
+Giờ mở cửa: %s
+Giờ đóng cửa: %s
+Ngân hàng: %s
+Số tài khoản: %d
+Tên người nhận: %s`,
 		nhahang.TenNhaHang,
 		nhahang.DiaChi,
+		nhahang.MoTa,
+		nhahang.GioMoCua,
+		nhahang.GioDongCua,
 		nhahang.NganHang,
 		nhahang.SoTaiKhoan,
+		nhahang.TenNguoiNhan,
 	)
 
-	// =========================
-	// 🔥 EMBEDDING
-	// =========================
 	embedding, err := h.llm.Embed(c.Request.Context(), document)
-	if err != nil {
-		log.Println("embed error:", err)
-	}
+	if err == nil && len(embedding) > 0 {
 
-	// =========================
-	// 📦 METADATA
-	// =========================
-	metaJSON, _ := json.Marshal(map[string]any{
-		"type": "nha_hang",
-		"id":   nhahang.MaNhaHang,
-		"name": nhahang.TenNhaHang,
-	})
+		metaJSON, _ := json.Marshal(map[string]any{
+			"type": "nha_hang",
+			"id":   nhahang.MaNhaHang,
+			"name": nhahang.TenNhaHang,
+			"dia_chi": nhahang.DiaChi,
+			"mo_ta": nhahang.MoTa,
+		})
 
-	// =========================
-	// 📦 VECTOR STRING
-	// =========================
-	vectorStr := vectorToString(embedding)
+		vectorStr := vectorToString(embedding)
 
-	// =========================
-	// INSERT VECTOR DB (RAW SQL)
-	// =========================
-	if len(embedding) > 0 {
-		result := config.DB.Exec(`
+		config.DB.Exec(`
 			INSERT INTO menu_embeddings (id, document, metadata, embedding)
 			VALUES ($1, $2, $3, $4)
 		`,
@@ -100,42 +86,31 @@ func (h *ChatHandler) CreateNhaHang(c *gin.Context) {
 			string(metaJSON),
 			vectorStr,
 		)
-
-		if result.Error != nil {
-			log.Println("vector insert error:", result.Error)
-		}
 	}
 
-	// =========================
-	// 🖼️ UPLOAD IMAGE
-	// =========================
+	// ================= IMAGE =================
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
-		src, err := file.Open()
+		src, _ := file.Open()
+		defer src.Close()
+
+		uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
+			Folder: "nhahang",
+		})
+
 		if err == nil {
-			defer src.Close()
-
-			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-				Folder: "nhahang",
+			config.DB.Create(&models.HinhAnh{
+				OwnerID:   nhahang.MaNhaHang,
+				OwnerType: "nha_hang",
+				Url:       uploadResult.SecureURL,
 			})
-
-			if err == nil {
-				config.DB.Create(&models.HinhAnh{
-					OwnerID:   nhahang.MaNhaHang,
-					OwnerType: "nha_hang",
-					Url:       uploadResult.SecureURL,
-				})
-			}
 		}
 	}
 
-	// =========================
-	// RESPONSE
-	// =========================
 	config.DB.Preload("AnhNhaHang").First(&nhahang, nhahang.MaNhaHang)
 
 	c.JSON(201, gin.H{
-		"message": "Tạo nhà hàng + embedding thành công",
+		"message": "Tạo nhà hàng thành công",
 		"data":    nhahang,
 	})
 }
@@ -175,39 +150,12 @@ func GetNhaHangByID(c *gin.Context) {
 	})
 }
 
-func GetNhaHangByUser(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(401, gin.H{
-			"message": "Không xác định được user",
-		})
-		return
-	}
-
-	var nhaHangs []models.NhaHang
-
-	err := config.DB.
-		Where("ma_nguoi_dung = ?", userID).
-		Preload("AnhNhaHang").
-		Find(&nhaHangs).Error
-
-	if err != nil {
-		c.JSON(500, gin.H{
-			"message": "Lỗi khi lấy nhà hàng",
-		})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"data": nhaHangs,
-		"message": "Lấy nhà hàng theo user thành công",
-	})
-}
-
-func UpdateNhaHang(c *gin.Context) {
+func (h *ChatHandler) UpdateNhaHang(c *gin.Context) {
 	id := c.Param("id")
+
 	var nhahang models.NhaHang
 
+	// 1. FIND
 	if err := config.DB.First(&nhahang, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Không tìm thấy nhà hàng",
@@ -215,60 +163,113 @@ func UpdateNhaHang(c *gin.Context) {
 		return
 	}
 
-	// ===== CHECK USER (CHỦ NHÀ HÀNG)
-	userAny, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Chưa đăng nhập"})
-		return
-	}
-	userID := userAny.(uint)
-
-	if nhahang.MaNguoiDung != userID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Không có quyền sửa"})
-		return
-	}
-
-	// ===== BIND DATA
-	if err := c.ShouldBind(&nhahang); err != nil {
+	// 3. BIND REQUEST (KHÔNG OVERWRITE ENTITY)
+	var req UpdateNhaHangRequest
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// ===== UPLOAD ẢNH MỚI
+	// 4. UPDATE FIELD TAY
+	nhahang.TenNhaHang = req.TenNhaHang
+	nhahang.TrangThai = req.TrangThai
+	nhahang.DiaChi = req.DiaChi
+	nhahang.SoTaiKhoan = req.SoTaiKhoan
+	nhahang.NganHang = req.NganHang
+	nhahang.TenNguoiNhan = req.TenNguoiNhan
+	nhahang.GioMoCua = req.GioMoCua
+	nhahang.GioDongCua = req.GioDongCua
+	nhahang.MoTa = req.MoTa
+
+	// 5. HANDLE IMAGE
 	file, err := c.FormFile("image")
 	if err == nil && file != nil {
 
-		// ❌ XÓA ẢNH CŨ
+		// delete old image
 		config.DB.
 			Where("owner_id = ? AND owner_type = ?", nhahang.MaNhaHang, "nha_hang").
 			Delete(&models.HinhAnh{})
 
-		src, _ := file.Open()
-		defer src.Close()
+		src, err := file.Open()
+		if err == nil {
+			defer src.Close()
 
-		uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
-			Folder: "nhahang",
-		})
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
+			uploadResult, err := config.CLD.Upload.Upload(c, src, uploader.UploadParams{
+				Folder: "nhahang",
+			})
 
-		hinhAnh := models.HinhAnh{
-			Url:       uploadResult.SecureURL,
-			OwnerID:   nhahang.MaNhaHang,
-			OwnerType: "nha_hang",
+			if err != nil {
+				c.JSON(500, gin.H{"error": "Upload ảnh thất bại"})
+				return
+			}
+
+			config.DB.Create(&models.HinhAnh{
+				Url:       uploadResult.SecureURL,
+				OwnerID:   nhahang.MaNhaHang,
+				OwnerType: "nha_hang",
+			})
 		}
-		config.DB.Create(&hinhAnh)
 	}
 
+	// 6. SAVE DB
 	if err := config.DB.Save(&nhahang).Error; err != nil {
 		c.JSON(500, gin.H{"error": "Không thể cập nhật"})
 		return
 	}
 
+	// 7. UPDATE EMBEDDING (QUAN TRỌNG)
+	document := fmt.Sprintf(
+`Nhà hàng: %s
+Địa chỉ: %s
+Mô tả: %s
+Giờ mở cửa: %s
+Giờ đóng cửa: %s
+Ngân hàng: %s
+Số tài khoản: %d
+Tên người nhận: %s`,
+		nhahang.TenNhaHang,
+		nhahang.DiaChi,
+		nhahang.MoTa,
+		nhahang.GioMoCua,
+		nhahang.GioDongCua,
+		nhahang.NganHang,
+		nhahang.SoTaiKhoan,
+		nhahang.TenNguoiNhan,
+	)
+
+	embedding, err := h.llm.Embed(c.Request.Context(), document)
+	if err == nil && len(embedding) > 0 {
+
+		metaJSON, _ := json.Marshal(map[string]any{
+			"type": "nha_hang",
+			"id": nhahang.MaNhaHang,
+			"name": nhahang.TenNhaHang,
+			"dia_chi": nhahang.DiaChi,
+			"mo_ta": nhahang.MoTa,
+		})
+
+		vectorStr := vectorToString(embedding)
+
+		config.DB.Exec(`
+			UPDATE menu_embeddings
+			SET document = $1,
+			    metadata = $2,
+			    embedding = $3
+			WHERE id = $4
+		`,
+			document,
+			string(metaJSON),
+			vectorStr,
+			fmt.Sprintf("nha_hang_%d", nhahang.MaNhaHang),
+		)
+	}
+
+	// 8. RETURN FULL DATA
+	config.DB.Preload("AnhNhaHang").First(&nhahang, nhahang.MaNhaHang)
+
 	c.JSON(200, gin.H{
 		"message": "Cập nhật thành công",
+		"data":    nhahang,
 	})
 }
 

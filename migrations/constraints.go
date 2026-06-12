@@ -21,6 +21,7 @@ func CreateConstraints(db *gorm.DB) {
 		`ALTER TABLE yeu_thiches ADD CONSTRAINT fk_yeuthich_user FOREIGN KEY (ma_nguoi_dung) REFERENCES nguoi_dungs(ma_nguoi_dung) ON DELETE CASCADE;`,
 		`ALTER TABLE yeu_thiches ADD CONSTRAINT fk_yeuthich_monan FOREIGN KEY (ma_mon_an) REFERENCES mon_ans(ma_mon_an) ON DELETE CASCADE;`,
 		`ALTER TABLE yeu_thiches ADD CONSTRAINT uq_user_mon UNIQUE(ma_nguoi_dung, ma_mon_an);`,
+		`ALTER TABLE binh_luans ADD CONSTRAINT fk_binhluan_nguoidung FOREIGN KEY (ma_nguoi_dung) REFERENCES nguoi_dungs(ma_nguoi_dung) ON DELETE CASCADE;`,
 	}
 
 	for _, query := range constraints {

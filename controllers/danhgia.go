@@ -15,12 +15,17 @@ type DanhGiaController struct {
 }
 
 type ThongKeDanhGiaNgaymodels struct {
-	Ngay        string `json:"ngay"`
-	SoDanhGia   int64  `json:"so_danh_gia"`
+	Ngay      string `json:"ngay"`
+	SoDanhGia int64  `json:"so_danh_gia"`
 }
 
 func NewDanhGiaController(hub *websocket.Hub) *DanhGiaController {
 	return &DanhGiaController{Hub: hub}
+}
+
+type DanhGiaTheoMonResponse struct {
+	MonAn    models.MonAn     `json:"mon_an"`
+	DanhGias []models.DanhGia `json:"danh_gias"`
 }
 
 type DanhGiaInput struct {
@@ -29,6 +34,7 @@ type DanhGiaInput struct {
 	MaMonAn     uint   `json:"ma_mon_an"`
 	SoSao       int    `json:"so_sao"`
 	NoiDung     string `json:"noi_dung"`
+	TrangThai string `json:"trang_thai"`
 }
 type NguoiDungMini struct {
 	MaNguoiDung uint   `json:"ma_nguoi_dung"`
@@ -41,12 +47,28 @@ type DanhGiaResponse struct {
 	SoSao     int           `json:"so_sao"`
 	NoiDung   string        `json:"noi_dung"`
 	NguoiDung NguoiDungMini `json:"nguoi_dung"`
+	TrangThai string `json:"trang_thai"`
 }
 
 func (ctrl *DanhGiaController) CreateDanhGia(c *gin.Context) {
 	var input DanhGiaInput
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 🔥 CHECK TRÙNG ĐÁNH GIÁ
+	var count int64
+	config.DB.Model(&models.DanhGia{}).
+		Where("ma_hoa_don = ? AND ma_nguoi_dung = ? AND ma_mon_an = ?",
+			input.MaHoaDon, input.MaNguoiDung, input.MaMonAn).
+		Count(&count)
+
+	if count > 0 {
+		c.JSON(400, gin.H{
+			"error": "Bạn đã đánh giá món này rồi",
+		})
 		return
 	}
 
@@ -56,11 +78,65 @@ func (ctrl *DanhGiaController) CreateDanhGia(c *gin.Context) {
 		MaMonAn:     input.MaMonAn,
 		SoSao:       input.SoSao,
 		NoiDung:     input.NoiDung,
+		TrangThai:   "hien",
 	}
 
 	config.DB.Create(&dg)
 
 	c.JSON(200, dg)
+}
+
+func (ctrl *DanhGiaController) AnDanhGia(c *gin.Context) {
+	id := c.Param("id")
+
+	var danhGia models.DanhGia
+
+	// 🔍 kiểm tra tồn tại
+	if err := config.DB.First(&danhGia, id).Error; err != nil {
+		c.JSON(404, gin.H{
+			"error": "Không tìm thấy đánh giá",
+		})
+		return
+	}
+
+	// 🔒 cập nhật trạng thái = ẩn
+	if err := config.DB.Model(&danhGia).
+		Update("trang_thai", "an").Error; err != nil {
+		c.JSON(500, gin.H{
+			"error": "Không thể ẩn đánh giá",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Ẩn đánh giá thành công",
+	})
+}
+func (ctrl *DanhGiaController) HienDanhGia(c *gin.Context) {
+	id := c.Param("id")
+
+	var danhGia models.DanhGia
+
+	// 🔍 kiểm tra tồn tại
+	if err := config.DB.First(&danhGia, id).Error; err != nil {
+		c.JSON(404, gin.H{
+			"error": "Không tìm thấy đánh giá",
+		})
+		return
+	}
+
+	// 🔒 cập nhật trạng thái = ẩn
+	if err := config.DB.Model(&danhGia).
+		Update("trang_thai", "hien").Error; err != nil {
+		c.JSON(500, gin.H{
+			"error": "Không thể hiện đánh giá",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Hiện đánh giá thành công",
+	})
 }
 
 func GetRatingByMon(c *gin.Context) {
@@ -96,6 +172,7 @@ func GetRatingByMon(c *gin.Context) {
 	c.JSON(200, result)
 }
 
+//cua giao dien menu
 func GetDanhGiaByMonAn(c *gin.Context) {
 	maMon := c.Param("id")
 
@@ -104,7 +181,7 @@ func GetDanhGiaByMonAn(c *gin.Context) {
 	config.DB.
 		Preload("NguoiDung").
 		Preload("NguoiDung.AnhNhanVien").
-		Where("ma_mon_an = ?", maMon).
+		Where("ma_mon_an = ? AND trang_thai = ?", maMon, "hien").
 		Find(&data)
 
 	var res []DanhGiaResponse
@@ -172,9 +249,14 @@ func (ctrl *DanhGiaController) DeleteDanhGia(c *gin.Context) {
 }
 
 func CheckDanhGia(c *gin.Context) {
-	maHD, _ := strconv.Atoi(c.Query("ma_hoa_don"))
-	maUser, _ := strconv.Atoi(c.Query("ma_nguoi_dung"))
-	maMon, _ := strconv.Atoi(c.Query("ma_mon_an"))
+	maHD, err1 := strconv.Atoi(c.Query("ma_hoa_don"))
+	maUser, err2 := strconv.Atoi(c.Query("ma_nguoi_dung"))
+	maMon, err3 := strconv.Atoi(c.Query("ma_mon_an"))
+
+	if err1 != nil || err2 != nil || err3 != nil {
+		c.JSON(400, gin.H{"error": "invalid params"})
+		return
+	}
 
 	var count int64
 
@@ -211,5 +293,94 @@ func (ctrl *DanhGiaController) GetSoLuongDanhGiaHomNay(c *gin.Context) {
 			Ngay:      ngay,
 			SoDanhGia: soDanhGia,
 		},
+	})
+}
+func (ctrl *DanhGiaController) GetAllDanhGiaByNguoiDung(c *gin.Context) {
+
+	// 1️⃣ Lấy user_id từ middleware
+	maNguoiDungAny, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Chưa đăng nhập"})
+		return
+	}
+	maNguoiDung := maNguoiDungAny.(uint)
+
+	// 2️⃣ Lấy toàn bộ đánh giá của user
+	var danhGias []models.DanhGia
+	err := config.DB.
+		Where("ma_nguoi_dung = ?", maNguoiDung).
+		Preload("NguoiDung").
+		Preload("NguoiDung.AnhNhanVien").
+		Preload("MonAn").
+		Preload("MonAn.AnhMonAn").
+		Find(&danhGias).Error
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Không thể lấy đánh giá"})
+		return
+	}
+
+	// 3️⃣ Gom theo món ăn
+	mapTheoMon := make(map[uint][]models.DanhGia)
+
+	for _, dg := range danhGias {
+		mapTheoMon[dg.MaMonAn] = append(mapTheoMon[dg.MaMonAn], dg)
+	}
+
+	// 4️⃣ Build response
+	var result []DanhGiaTheoMonResponse
+
+	for _, listDG := range mapTheoMon {
+		if len(listDG) == 0 {
+			continue
+		}
+
+		result = append(result, DanhGiaTheoMonResponse{
+			MonAn:    listDG[0].MonAn, // cùng món
+			DanhGias: listDG,
+		})
+	}
+
+	// 5️⃣ Response
+	c.JSON(200, gin.H{
+		"data": result,
+	})
+}
+func GetAllDanhGiaByMonAn(c *gin.Context) {
+	maMon := c.Param("id")
+
+	var data []models.DanhGia
+
+	config.DB.
+		Preload("NguoiDung").
+		Preload("NguoiDung.AnhNhanVien").
+		Where("ma_mon_an = ? ", maMon).
+		Find(&data)
+
+	var res []DanhGiaResponse
+
+	for _, d := range data {
+
+		anh := ""
+		if len(d.NguoiDung.AnhNhanVien) > 0 {
+			anh = d.NguoiDung.AnhNhanVien[0].Url
+		}
+
+		res = append(res, DanhGiaResponse{
+			ID:      d.ID,
+			MaMonAn: d.MaMonAn,
+			SoSao:   d.SoSao,
+			NoiDung: d.NoiDung,
+			TrangThai: d.TrangThai,
+			NguoiDung: NguoiDungMini{
+				MaNguoiDung: d.NguoiDung.MaNguoiDung,
+				HoTen:       d.NguoiDung.HoTen,
+				Anh:         anh,
+			},
+		})
+	}
+
+	c.JSON(200, gin.H{
+		"data": res,
 	})
 }

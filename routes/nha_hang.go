@@ -15,9 +15,8 @@ func NhaHangRoutes(r *gin.Engine,h*controllers.ChatHandler) {
 
 		nhahang.GET("/:id", controllers.GetNhaHangByID)
 
-		nhahang.GET("/user",middleware.AuthMiddleware(), controllers.GetNhaHangByUser)
 
-		nhahang.PATCH("/update/:id",middleware.AuthMiddleware(),controllers.UpdateNhaHang)
+		nhahang.PATCH("/update/:id",middleware.AuthMiddleware(),h.UpdateNhaHang)
 
 		nhahang.DELETE("/delete/:id",middleware.AuthMiddleware(), controllers.DeleteNhaHang)
 	}

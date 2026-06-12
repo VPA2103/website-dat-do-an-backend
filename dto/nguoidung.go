@@ -13,10 +13,10 @@ type NguoiDung struct {
 	TrangThai     string `json:"trang_thai" form:"trang_thai"`
 
 	// Quan hệ
-	DiaChis     []DiaChi  `json:"dia_chis,omitempty"`
-	DatBans     []DatBan  `json:"dat_bans,omitempty"`
-	AnhNhanVien []HinhAnh `json:"anh_nguoi_dung,omitempty"`
+	DiaChis     []DiaChi   `json:"dia_chis,omitempty"`
+	DatBans     []DatBan   `json:"dat_bans,omitempty"`
+	AnhNhanVien []HinhAnh  `json:"anh_nguoi_dung,omitempty"`
 	YeuThichs   []YeuThich `json:"yeu_thichs,omitempty"`
 	DanhGias    []DanhGia  `json:"danh_gias,omitempty"`
-	BinhLuans   []BinhLuan `json:"binh_luans,omitempty"`
+	//BinhLuans   []BinhLuan `json:"binh_luans,omitempty"`
 }

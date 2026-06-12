@@ -130,7 +130,7 @@ func UpdateNhanVien(c *gin.Context) {
 	hoTen := c.PostForm("ho_ten")
 	ngaySinh := c.PostForm("ngay_sinh")
 	sdt := c.PostForm("sdt")
-
+	trangThai := c.PostForm("trang_thai")
 	loaiNhanVien := c.PostForm("loai_nhan_vien")
 	email := c.PostForm("email")
 
@@ -154,6 +154,9 @@ func UpdateNhanVien(c *gin.Context) {
 	}
 	if ngaySinh != "" {
 		nv.NgaySinh = ngaySinh
+	}
+	if trangThai != "" {
+		nv.TrangThai = trangThai
 	}
 	if sdt != "" {
 		nv.SDT = sdt
@@ -398,7 +401,7 @@ func AssignShipper(hub *websocket.Hub) gin.HandlerFunc {
 		// 3️⃣ update shipper + trạng thái
 		if err := config.DB.Model(&hoaDon).Updates(map[string]interface{}{
 			"ma_shipper": input.MaShipper,
-			"trang_thai": "dang_giao",
+			"trang_thai": "da_giao_shipper",
 		}).Error; err != nil {
 
 			c.JSON(500, gin.H{"error": "Không thể assign shipper"})
