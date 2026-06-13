@@ -171,7 +171,7 @@ func (ctrl *BinhLuanController) GetBinhLuanByMonAn(c *gin.Context) {
 			MaNguoiDung: cmt.MaNguoiDung,
 			ID:          cmt.ID,
 			MaMonAn:     cmt.MaMonAn,
-			ParentID: 	cmt.ParentID,
+			ParentID: 		cmt.ParentID,
 			NoiDung:     cmt.NoiDung,
 			CreatedAt:   cmt.CreatedAt.Format("2006-01-02 15:04:05"),
 			NguoiDung: NguoiDungMinii{
