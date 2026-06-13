@@ -41,6 +41,7 @@ type BinhLuanResponse struct {
 	CreatedAt   string             `json:"created_at"`
 	MaNguoiDung uint               `json:"ma_nguoi_dung"`
 	NguoiDung   NguoiDungMinii     `json:"nguoi_dung"`
+	ParentID    *uint              `json:"parent_id"`
 	Replies     []BinhLuanResponse `json:"replies"`
 }
 
@@ -155,6 +156,7 @@ func (ctrl *BinhLuanController) GetBinhLuanByMonAn(c *gin.Context) {
 				MaNguoiDung: r.MaNguoiDung,
 				ID:          r.ID,
 				MaMonAn:     r.MaMonAn,
+				ParentID: r.ParentID,
 				NoiDung:     r.NoiDung,
 				CreatedAt:   r.CreatedAt.Format("2006-01-02 15:04:05"),
 				NguoiDung: NguoiDungMinii{
@@ -169,6 +171,7 @@ func (ctrl *BinhLuanController) GetBinhLuanByMonAn(c *gin.Context) {
 			MaNguoiDung: cmt.MaNguoiDung,
 			ID:          cmt.ID,
 			MaMonAn:     cmt.MaMonAn,
+			ParentID: 	cmt.ParentID,
 			NoiDung:     cmt.NoiDung,
 			CreatedAt:   cmt.CreatedAt.Format("2006-01-02 15:04:05"),
 			NguoiDung: NguoiDungMinii{
@@ -328,6 +331,7 @@ func mapBinhLuanToResponse(cmt models.BinhLuan) BinhLuanResponse {
 		ID:          cmt.ID,
 		MaMonAn:     cmt.MaMonAn,
 		NoiDung:     cmt.NoiDung,
+		ParentID: 	cmt.ParentID,
 		CreatedAt:   cmt.CreatedAt.Format("2006-01-02 15:04:05"),
 		MaNguoiDung: cmt.MaNguoiDung,
 		NguoiDung: NguoiDungMinii{

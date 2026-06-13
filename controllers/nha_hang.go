@@ -12,11 +12,11 @@ import (
 )
 
 type UpdateNhaHangRequest struct {
-	TenNhaHang  string `form:"ten_nha_hang"`
-	TrangThai   int    `form:"trang_thai"`
-	DiaChi      string `form:"dia_chi"`
+	TenNhaHang string `form:"ten_nha_hang"`
+	TrangThai  int    `form:"trang_thai"`
+	DiaChi     string `form:"dia_chi"`
 
-	SoTaiKhoan   string    `form:"so_tai_khoan"`
+	SoTaiKhoan   string `form:"so_tai_khoan"`
 	NganHang     string `form:"ngan_hang"`
 	TenNguoiNhan string `form:"ten_nguoi_nhan"`
 
@@ -46,14 +46,14 @@ func (h *ChatHandler) CreateNhaHang(c *gin.Context) {
 
 	// ================= EMBEDDING =================
 	document := fmt.Sprintf(
-`Nhà hàng: %s
-Địa chỉ: %s
-Mô tả: %s
-Giờ mở cửa: %s
-Giờ đóng cửa: %s
-Ngân hàng: %s
-Số tài khoản: %d
-Tên người nhận: %s`,
+		`Nhà hàng: %s
+		Địa chỉ: %s
+		Mô tả: %s
+		Giờ mở cửa: %s
+		Giờ đóng cửa: %s
+		Ngân hàng: %s
+		Số tài khoản: %d
+		Tên người nhận: %s`,
 		nhahang.TenNhaHang,
 		nhahang.DiaChi,
 		nhahang.MoTa,
@@ -68,11 +68,11 @@ Tên người nhận: %s`,
 	if err == nil && len(embedding) > 0 {
 
 		metaJSON, _ := json.Marshal(map[string]any{
-			"type": "nha_hang",
-			"id":   nhahang.MaNhaHang,
-			"name": nhahang.TenNhaHang,
+			"type":    "nha_hang",
+			"id":      nhahang.MaNhaHang,
+			"name":    nhahang.TenNhaHang,
 			"dia_chi": nhahang.DiaChi,
-			"mo_ta": nhahang.MoTa,
+			"mo_ta":   nhahang.MoTa,
 		})
 
 		vectorStr := vectorToString(embedding)
@@ -219,7 +219,7 @@ func (h *ChatHandler) UpdateNhaHang(c *gin.Context) {
 
 	// 7. UPDATE EMBEDDING (QUAN TRỌNG)
 	document := fmt.Sprintf(
-`Nhà hàng: %s
+		`Nhà hàng: %s
 Địa chỉ: %s
 Mô tả: %s
 Giờ mở cửa: %s
@@ -241,11 +241,11 @@ Tên người nhận: %s`,
 	if err == nil && len(embedding) > 0 {
 
 		metaJSON, _ := json.Marshal(map[string]any{
-			"type": "nha_hang",
-			"id": nhahang.MaNhaHang,
-			"name": nhahang.TenNhaHang,
+			"type":    "nha_hang",
+			"id":      nhahang.MaNhaHang,
+			"name":    nhahang.TenNhaHang,
 			"dia_chi": nhahang.DiaChi,
-			"mo_ta": nhahang.MoTa,
+			"mo_ta":   nhahang.MoTa,
 		})
 
 		vectorStr := vectorToString(embedding)
